@@ -1,0 +1,3 @@
+# On-demand ISR via Sanity webhook
+
+Content lives in Sanity but pages are rendered by Next.js, so the site needs a strategy for picking up content changes without a full redeploy. We chose on-demand ISR: publishing in Sanity fires a webhook to a Next.js revalidation route, which invalidates just the affected pages. This was picked over time-based ISR (accepts a staleness window for no benefit here) and full rebuild-on-publish (wastes build minutes and adds propagation delay for single-document edits). The trade-off is a small amount of extra plumbing — a webhook secret and a revalidation API route — in exchange for near-instant, precise updates.

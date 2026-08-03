@@ -1,0 +1,48 @@
+{
+  "name": "mach-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.18.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typegen": "sanity schema extract --path=sanity/extract.json --enforce-required-fields --force && sanity typegen generate"
+  },
+  "dependencies": {
+    "@portabletext/react": "^7.0.1",
+    "@sanity/client": "^7.26.0",
+    "@sanity/image-url": "^2.1.1",
+    "@sanity/vision": "^6.8.0",
+    "@sanity/webhook": "^4.0.4",
+    "groq": "^6.8.0",
+    "next": "^16.2.12",
+    "next-sanity": "^13.2.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sanity": "^6.8.0",
+    "styled-components": "^6.4.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.12",
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.25",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

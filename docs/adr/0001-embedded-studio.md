@@ -1,0 +1,3 @@
+# Embed Sanity Studio in the Next.js app
+
+Sanity Studio can be deployed as its own standalone app (its own repo, its own hosting, its own domain) or mounted as a route inside the consuming app. We chose to embed it at `/studio` in this Next.js app instead of standing up a separate Studio deployment: there's a single owner/editor, a single content consumer, and a single repo already holding the schema, so a second deployment would just be another thing to host, deploy, and keep in sync for no added isolation benefit. The trade-off is that Studio's admin UI ships as part of the same app bundle and deploy pipeline as the public site — acceptable here since the site has no separate release cadence to protect.

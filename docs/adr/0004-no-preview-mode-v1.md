@@ -1,0 +1,3 @@
+# Defer Next.js Draft Mode / Sanity preview for v1
+
+Sanity content can be viewed as drafts before publishing via Next.js Draft Mode combined with Sanity's `previewDrafts` perspective. We deliberately left this out of v1: as the sole editor, the cost of "publish, then check the live page" is low, while wiring up auth-gated preview routes and draft-aware queries is nontrivial setup for a benefit that mostly matters with multiple editors or an editorial review step. A reader who knows the `next-sanity` starter template (which includes preview by default) might assume it was overlooked — it wasn't; it can be added later if the workflow proves annoying.

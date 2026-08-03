@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and specs live as markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+Issues and PRDs live as GitHub issues in this repo (`mt-ch/mach-portfolio`), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
