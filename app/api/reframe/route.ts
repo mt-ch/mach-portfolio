@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getClientIp } from "@/lib/guardrails/getClientIp";
+import { checkRequestGuardrails } from "@/lib/guardrails/rateLimit";
 import { sanitizeInput } from "@/lib/guardrails/sanitize";
 import { cannedReframe } from "@/lib/reframe/cannedReframe";
 
@@ -10,6 +12,14 @@ function sseEvent(event: string, data: unknown) {
 }
 
 export async function POST(request: Request) {
+  const guardrail = await checkRequestGuardrails(getClientIp(request));
+  if (!guardrail.ok) {
+    return NextResponse.json(
+      { message: "Unable to process request" },
+      { status: 429 },
+    );
+  }
+
   const body = (await request.json()) as { intent?: unknown };
   const raw = typeof body.intent === "string" ? body.intent : "";
 
