@@ -4,6 +4,8 @@ import { getClientIp } from "@/lib/guardrails/getClientIp";
 import { checkRequestGuardrails } from "@/lib/guardrails/rateLimit";
 import { sanitizeInput } from "@/lib/guardrails/sanitize";
 import { cannedReframe } from "@/lib/reframe/cannedReframe";
+import { selectProjects } from "@/lib/reframe/selectProjects";
+import { getProjects } from "@/lib/sanity";
 
 export const runtime = "nodejs";
 
@@ -31,7 +33,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const { selection, copy } = cannedReframe(sanitized.value);
+  const projects = await getProjects();
+  const selected = await selectProjects(sanitized.value, projects);
+  const selection = { selected };
+  const { copy } = cannedReframe(sanitized.value);
 
   const stream = new ReadableStream({
     start(controller) {
