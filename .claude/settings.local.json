@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git init *)"
+      "Bash(git init *)",
+      "Bash(gh issue *)",
+      "Bash(pnpm --version)",
+      "Bash(npm view *)",
+      "Bash(pnpm install *)",
+      "Bash(gh run *)",
+      "Bash(pnpm why *)"
     ]
   }
 }
