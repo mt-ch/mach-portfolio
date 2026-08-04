@@ -1,6 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { POST } from "./route";
+const { checkRequestGuardrailsMock, cannedReframeMock } = vi.hoisted(() => ({
+  checkRequestGuardrailsMock: vi.fn(),
+  cannedReframeMock: vi.fn(),
+}));
+
+vi.mock("@/lib/guardrails/rateLimit", () => ({
+  checkRequestGuardrails: checkRequestGuardrailsMock,
+}));
+
+vi.mock("@/lib/reframe/cannedReframe", () => ({
+  cannedReframe: cannedReframeMock,
+}));
+
+const { cannedReframe: actualCannedReframe } = await vi.importActual<
+  typeof import("@/lib/reframe/cannedReframe")
+>("@/lib/reframe/cannedReframe");
+
+const { POST } = await import("./route");
 
 function makeRequest(body: unknown) {
   return new Request("http://localhost/api/reframe", {
@@ -11,6 +28,11 @@ function makeRequest(body: unknown) {
 }
 
 describe("POST /api/reframe", () => {
+  beforeEach(() => {
+    checkRequestGuardrailsMock.mockReset().mockResolvedValue({ ok: true });
+    cannedReframeMock.mockReset().mockImplementation(actualCannedReframe);
+  });
+
   it("rejects whitespace-only input with 400 and no SSE stream", async () => {
     const response = await POST(makeRequest({ intent: "   " }));
 
@@ -69,5 +91,32 @@ describe("POST /api/reframe", () => {
       expect(typeof project.slug).toBe("string");
       expect(typeof project.blurb).toBe("string");
     }
+  });
+
+  it("short-circuits to a non-2xx fallback response when the burst limit trips, without calling cannedReframe", async () => {
+    checkRequestGuardrailsMock.mockResolvedValue({ ok: false, reason: "burst_limit" });
+
+    const response = await POST(makeRequest({ intent: "distributed systems work" }));
+
+    expect(response.ok).toBe(false);
+    expect(cannedReframeMock).not.toHaveBeenCalled();
+  });
+
+  it("short-circuits to a non-2xx fallback response when the daily limit trips, without calling cannedReframe", async () => {
+    checkRequestGuardrailsMock.mockResolvedValue({ ok: false, reason: "daily_limit" });
+
+    const response = await POST(makeRequest({ intent: "distributed systems work" }));
+
+    expect(response.ok).toBe(false);
+    expect(cannedReframeMock).not.toHaveBeenCalled();
+  });
+
+  it("short-circuits to a non-2xx fallback response when the global cost cap trips, without calling cannedReframe", async () => {
+    checkRequestGuardrailsMock.mockResolvedValue({ ok: false, reason: "cost_cap" });
+
+    const response = await POST(makeRequest({ intent: "distributed systems work" }));
+
+    expect(response.ok).toBe(false);
+    expect(cannedReframeMock).not.toHaveBeenCalled();
   });
 });
