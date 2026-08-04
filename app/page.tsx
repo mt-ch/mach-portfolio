@@ -5,13 +5,25 @@ import { FeaturedProjects } from "@/components/FeaturedProjects";
 import { PrototypeSwitcher } from "@/components/prototype/PrototypeSwitcher";
 import { VariantA } from "@/components/prototype/VariantA";
 import { VariantB } from "@/components/prototype/VariantB";
+import { VariantC1 } from "@/components/prototype/VariantC1";
+import { VariantC2 } from "@/components/prototype/VariantC2";
 
-// PROTOTYPE wiring for issue #12 (default homepage state) — remove the
-// ?variant= branch and prototype/ components once a variant is chosen.
+// PROTOTYPE wiring for issues #12 (default homepage state) and #13
+// (loading/reframing interaction) — remove the ?variant= branch and
+// prototype/ components once a variant is chosen.
 const PROTOTYPE_VARIANTS = [
   { key: "A", label: "Content-first" },
   { key: "B", label: "Input-first" },
+  { key: "C1", label: "Reframe: collapse to bar" },
+  { key: "C2", label: "Reframe: recede to pill" },
 ];
+
+const PROTOTYPE_COMPONENTS = {
+  A: VariantA,
+  B: VariantB,
+  C1: VariantC1,
+  C2: VariantC2,
+};
 
 export default async function Home({
   searchParams,
@@ -20,10 +32,13 @@ export default async function Home({
 }) {
   if (process.env.NODE_ENV !== "production") {
     const { variant } = await searchParams;
-    const resolved = variant === "B" ? "B" : "A";
+    const key = (
+      variant && variant in PROTOTYPE_COMPONENTS ? variant : "A"
+    ) as keyof typeof PROTOTYPE_COMPONENTS;
+    const Variant = PROTOTYPE_COMPONENTS[key];
     return (
       <>
-        {resolved === "A" ? <VariantA /> : <VariantB />}
+        <Variant />
         <PrototypeSwitcher variants={PROTOTYPE_VARIANTS} />
       </>
     );
