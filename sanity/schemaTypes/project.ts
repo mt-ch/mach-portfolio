@@ -43,6 +43,36 @@ export const project = defineType({
       of: [{ type: "string" }],
     }),
     defineField({
+      name: "skills",
+      title: "Skills",
+      description:
+        "Controlled vocabulary of skills demonstrated by this project, distinct from the free-text tech stack.",
+      type: "array",
+      of: [
+        {
+          type: "string",
+          options: {
+            list: [
+              "state management",
+              "accessibility",
+              "data visualization",
+              "performance",
+              "backend/infra",
+              "design systems",
+            ],
+          },
+        },
+      ],
+    }),
+    defineField({
+      name: "impact",
+      title: "Impact",
+      description:
+        "Optional business-outcome framing, e.g. \"reduced load time 40%\" or \"led a team of 3\".",
+      type: "array",
+      of: [{ type: "string" }],
+    }),
+    defineField({
       name: "role",
       title: "Role",
       type: "string",
