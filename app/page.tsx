@@ -1,7 +1,6 @@
 import { getAbout, getExperience, getProjects } from "@/lib/sanity";
-import { AboutSection } from "@/components/AboutSection";
 import { ExperienceList } from "@/components/ExperienceList";
-import { FeaturedProjects } from "@/components/FeaturedProjects";
+import { ReframeHome } from "@/components/reframe/ReframeHome";
 
 export default async function Home() {
   const [about, experience, projects] = await Promise.all([
@@ -11,10 +10,9 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-16 px-6 py-16">
-      {about && <AboutSection about={about} />}
+    <main className="relative mx-auto max-w-3xl space-y-16 px-6 py-16">
+      {about && <ReframeHome about={about} projects={projects} />}
       <ExperienceList entries={experience} />
-      <FeaturedProjects projects={projects} />
     </main>
   );
 }
