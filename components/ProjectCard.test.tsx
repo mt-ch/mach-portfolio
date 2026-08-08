@@ -10,7 +10,6 @@ const project: ProjectListItem = {
   title: "Portfolio Site",
   slug: { _type: "slug", current: "portfolio-site" },
   summary: "A recruiter-facing portfolio.",
-  body: null,
   coverImage: null,
   techStack: ["Next.js", "Sanity"],
   skills: null,

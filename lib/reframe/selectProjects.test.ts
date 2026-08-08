@@ -18,7 +18,6 @@ function makeProject(overrides: Partial<ProjectListItem>): ProjectListItem {
     title: "Untitled",
     slug: { _type: "slug", current: "untitled" },
     summary: "A project",
-    body: null,
     coverImage: null,
     techStack: null,
     skills: null,
@@ -109,7 +108,6 @@ describe("selectProjects", () => {
     const projects = [
       makeProject({
         slug: { _type: "slug", current: "collab-canvas" },
-        body: [{ _type: "block", _key: "k", children: [] }] as never,
       }),
     ];
 
@@ -129,5 +127,38 @@ describe("selectProjects", () => {
     expect(userContent).toContain("<visitor_intent>distributed systems work</visitor_intent>");
     expect(userContent).toContain("\"slug\":\"collab-canvas\"");
     expect(userContent).not.toContain("_key");
+  });
+
+  it("returns an empty selection instead of throwing when the model output isn't valid JSON", async () => {
+    const projects = [
+      makeProject({ slug: { _type: "slug", current: "collab-canvas" } }),
+    ];
+    createMock.mockResolvedValue({
+      content: [{ type: "text", text: "not json" }],
+      stop_reason: "max_tokens",
+    });
+
+    const result = await selectProjects("distributed systems work", projects);
+
+    expect(result).toEqual([]);
+  });
+
+  it("logs discarded slugs that aren't in the real Project set", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const projects = [
+      makeProject({ slug: { _type: "slug", current: "collab-canvas" } }),
+    ];
+    mockResponse([
+      { slug: "collab-canvas", match_reason: "Direct match." },
+      { slug: "hallucinated-slug", match_reason: "Made up." },
+    ]);
+
+    await selectProjects("distributed systems work", projects);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("discarded"),
+      ["hallucinated-slug"],
+    );
+    warnSpy.mockRestore();
   });
 });

@@ -97,10 +97,29 @@ export async function selectProjects(
     (block: { type: string }) => block.type === "text",
   ) as { type: "text"; text: string } | undefined;
 
-  const candidate = textBlock
-    ? (JSON.parse(textBlock.text) as { selected: SelectionEntry[] })
-    : { selected: [] };
+  let candidate: { selected: SelectionEntry[] } = { selected: [] };
+  if (textBlock) {
+    try {
+      candidate = JSON.parse(textBlock.text) as { selected: SelectionEntry[] };
+    } catch {
+      console.error("selectProjects: failed to parse model output as JSON", {
+        stopReason: response.stop_reason,
+      });
+    }
+  }
 
   const validSlugs = new Set(projects.map((project) => project.slug.current));
-  return validateSelection(candidate, validSlugs).slice(0, 6);
+  const validated = validateSelection(candidate, validSlugs);
+
+  const discarded = candidate.selected.filter(
+    (entry) => !validSlugs.has(entry.slug),
+  );
+  if (discarded.length > 0) {
+    console.warn(
+      "selectProjects: discarded selection entries with unknown slugs",
+      discarded.map((entry) => entry.slug),
+    );
+  }
+
+  return validated.slice(0, 6);
 }

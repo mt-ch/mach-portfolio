@@ -47,7 +47,6 @@ function makeProject(overrides: Partial<ProjectListItem>): ProjectListItem {
     title: "Untitled",
     slug: { _type: "slug", current: "untitled" },
     summary: "A project",
-    body: null,
     coverImage: null,
     techStack: null,
     skills: null,

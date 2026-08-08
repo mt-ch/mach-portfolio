@@ -6,7 +6,6 @@ export const projectsQuery = defineQuery(`
     title,
     slug,
     summary,
-    body,
     coverImage,
     techStack,
     skills,

@@ -8,7 +8,9 @@ export type CopyEvent = {
   about: { emphasis: string };
 };
 
-// Canned selection + copy, standing in for a real LLM call (see issue #18).
+// Canned copy, standing in for a real LLM call (see issue #21).
+// The canned `selection` shape is now unused by the route (real selection
+// call landed in #20) but stays exported for the type and any future fallback use.
 // Slugs mirror the placeholder set used in the #13 prototype.
 export function cannedReframe(intent: string): {
   selection: SelectionEvent;

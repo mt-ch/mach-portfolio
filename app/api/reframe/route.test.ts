@@ -145,6 +145,19 @@ describe("POST /api/reframe", () => {
     ]);
   });
 
+  it("returns a 502 without crashing when the Anthropic call fails", async () => {
+    createMock.mockRejectedValue(new Error("upstream unavailable"));
+
+    const response = await POST(
+      makeRequest({ intent: "distributed systems work" }),
+    );
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("content-type")).not.toContain(
+      "text/event-stream",
+    );
+  });
+
   it("short-circuits to a non-2xx fallback response when the burst limit trips, without calling the Anthropic client", async () => {
     checkRequestGuardrailsMock.mockResolvedValue({ ok: false, reason: "burst_limit" });
 

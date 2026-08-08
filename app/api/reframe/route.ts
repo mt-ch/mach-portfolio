@@ -34,7 +34,18 @@ export async function POST(request: Request) {
   }
 
   const projects = await getProjects();
-  const selected = await selectProjects(sanitized.value, projects);
+
+  let selected;
+  try {
+    selected = await selectProjects(sanitized.value, projects);
+  } catch (error) {
+    console.error("POST /api/reframe: selection call failed", error);
+    return NextResponse.json(
+      { message: "Unable to process request" },
+      { status: 502 },
+    );
+  }
+
   const selection = { selected };
   const { copy } = cannedReframe(sanitized.value);
 
