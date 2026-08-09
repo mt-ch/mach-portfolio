@@ -7,7 +7,11 @@
       "Bash(npm view *)",
       "Bash(pnpm install *)",
       "Bash(gh run *)",
-      "Bash(pnpm why *)"
+      "Bash(pnpm why *)",
+      "Bash(gh pr *)",
+      "Bash(git fetch *)",
+      "Bash(git ls-tree *)",
+      "Bash(git pull *)"
     ]
   }
 }
