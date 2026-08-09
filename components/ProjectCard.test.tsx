@@ -12,6 +12,8 @@ const project: ProjectListItem = {
   summary: "A recruiter-facing portfolio.",
   coverImage: null,
   techStack: ["Next.js", "Sanity"],
+  skills: null,
+  impact: null,
   role: "Full-stack engineer",
   links: null,
   featured: true,

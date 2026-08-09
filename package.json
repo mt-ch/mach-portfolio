@@ -15,6 +15,7 @@
     "typegen": "sanity schema extract --path=sanity/extract.json --enforce-required-fields --force && sanity typegen generate"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@portabletext/react": "^7.0.1",
     "@sanity/client": "^7.26.0",
     "@sanity/image-url": "^2.1.1",

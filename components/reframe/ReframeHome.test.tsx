@@ -49,6 +49,8 @@ function makeProject(overrides: Partial<ProjectListItem>): ProjectListItem {
     summary: "A project",
     coverImage: null,
     techStack: null,
+    skills: null,
+    impact: null,
     role: null,
     links: null,
     featured: true,

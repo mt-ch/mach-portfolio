@@ -4,6 +4,8 @@ import { getClientIp } from "@/lib/guardrails/getClientIp";
 import { checkRequestGuardrails } from "@/lib/guardrails/rateLimit";
 import { sanitizeInput } from "@/lib/guardrails/sanitize";
 import { cannedReframe } from "@/lib/reframe/cannedReframe";
+import { selectProjects } from "@/lib/reframe/selectProjects";
+import { getProjects } from "@/lib/sanity";
 
 export const runtime = "nodejs";
 
@@ -31,7 +33,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const { selection, copy } = cannedReframe(sanitized.value);
+  const projects = await getProjects();
+
+  let selected;
+  try {
+    selected = await selectProjects(sanitized.value, projects);
+  } catch (error) {
+    console.error("POST /api/reframe: selection call failed", error);
+    return NextResponse.json(
+      { message: "Unable to process request" },
+      { status: 502 },
+    );
+  }
+
+  const selection = { selected };
+  const { copy } = cannedReframe(sanitized.value);
 
   const stream = new ReadableStream({
     start(controller) {

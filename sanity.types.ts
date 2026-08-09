@@ -158,6 +158,15 @@ export type Project = {
     _type: "image";
   };
   techStack?: Array<string>;
+  skills?: Array<
+    | "state management"
+    | "accessibility"
+    | "data visualization"
+    | "performance"
+    | "backend/infra"
+    | "design systems"
+  >;
+  impact?: Array<string>;
   role?: string;
   links?: Array<{
     label: string;
@@ -293,7 +302,7 @@ export type AllSanitySchemaTypes =
 
 // Source: lib/sanity/queries.ts
 // Variable: projectsQuery
-// Query: *[_type == "project"] | order(order asc) {    _id,    title,    slug,    summary,    coverImage,    techStack,    role,    links,    featured,    order,    dateCompleted  }
+// Query: *[_type == "project"] | order(order asc) {    _id,    title,    slug,    summary,    coverImage,    techStack,    skills,    impact,    role,    links,    featured,    order,    dateCompleted  }
 export type ProjectsQueryResult = Array<{
   _id: string;
   title: string;
@@ -307,6 +316,15 @@ export type ProjectsQueryResult = Array<{
     _type: "image";
   } | null;
   techStack: Array<string> | null;
+  skills: Array<
+    | "accessibility"
+    | "backend/infra"
+    | "data visualization"
+    | "design systems"
+    | "performance"
+    | "state management"
+  > | null;
+  impact: Array<string> | null;
   role: string | null;
   links: Array<{
     label: string;
@@ -321,7 +339,7 @@ export type ProjectsQueryResult = Array<{
 
 // Source: lib/sanity/queries.ts
 // Variable: projectBySlugQuery
-// Query: *[_type == "project" && slug.current == $slug][0] {    _id,    title,    slug,    summary,    body,    coverImage,    techStack,    role,    links,    featured,    order,    dateCompleted  }
+// Query: *[_type == "project" && slug.current == $slug][0] {    _id,    title,    slug,    summary,    body,    coverImage,    techStack,    skills,    impact,    role,    links,    featured,    order,    dateCompleted  }
 export type ProjectBySlugQueryResult = {
   _id: string;
   title: string;
@@ -353,6 +371,15 @@ export type ProjectBySlugQueryResult = {
     _type: "image";
   } | null;
   techStack: Array<string> | null;
+  skills: Array<
+    | "accessibility"
+    | "backend/infra"
+    | "data visualization"
+    | "design systems"
+    | "performance"
+    | "state management"
+  > | null;
+  impact: Array<string> | null;
   role: string | null;
   links: Array<{
     label: string;
@@ -441,8 +468,8 @@ export type AboutQueryResult = {
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n  *[_type == "project"] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    techStack,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectsQueryResult;
-    '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    body,\n    coverImage,\n    techStack,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectBySlugQueryResult;
+    '\n  *[_type == "project"] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectsQueryResult;
+    '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    body,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectBySlugQueryResult;
     '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceQueryResult;
     '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks\n  }\n': AboutQueryResult;
   }
