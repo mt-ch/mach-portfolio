@@ -2,11 +2,20 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import type { CopyEvent, SelectionEvent } from "@/lib/reframe/cannedReframe";
+import type { ValidatedCopy } from "@/lib/guardrails/validate";
+import type { SelectionEvent } from "@/lib/reframe/cannedReframe";
+
+// The server streams validated copy, so any surface that failed its length
+// bounds arrives as null and the original site copy stands.
+export type CopyEvent = ValidatedCopy;
 
 export type ReframeStatus = "input" | "selecting" | "selected" | "done" | "fallback";
 
-const OUTER_TIMEOUT_MS = 8000;
+// Budget per SSE event, not for the whole request. Measured against the live
+// two-call pipeline, the selection event alone lands at 6-8s, so the original
+// 8s total was tripping on healthy requests; this leaves headroom over that
+// while still failing a genuinely dead request in a reasonable time.
+export const OUTER_TIMEOUT_MS = 15000;
 
 export function useReframe() {
   const [status, setStatus] = useState<ReframeStatus>("input");
@@ -42,10 +51,18 @@ export function useReframe() {
     setCopy(null);
     setStatus("selecting");
 
-    timeoutRef.current = setTimeout(() => {
-      controller.abort();
-      setStatus("fallback");
-    }, OUTER_TIMEOUT_MS);
+    // The budget is time-since-last-progress, not time-for-the-whole-pipeline:
+    // the two-call server pipeline outruns any single deadline, but a genuinely
+    // dead request still produces no event and trips the timer.
+    const armTimer = () => {
+      clearTimer();
+      timeoutRef.current = setTimeout(() => {
+        controller.abort();
+        setStatus("fallback");
+      }, OUTER_TIMEOUT_MS);
+    };
+
+    armTimer();
 
     void (async () => {
       try {
@@ -65,10 +82,19 @@ export function useReframe() {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        let sawSelection = false;
+        let sawCopy = false;
 
         for (;;) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            clearTimer();
+            // Generation can fail after selection already streamed; the
+            // tailored ordering still stands, and each copy surface falls
+            // back to the original on its own.
+            if (!sawCopy) setStatus(sawSelection ? "done" : "fallback");
+            break;
+          }
           buffer += decoder.decode(value, { stream: true });
 
           let boundary = buffer.indexOf("\n\n");
@@ -83,9 +109,12 @@ export function useReframe() {
               const data = JSON.parse(dataMatch[1]);
 
               if (eventName === "selection") {
+                sawSelection = true;
                 setSelection(data);
                 setStatus("selected");
+                armTimer();
               } else if (eventName === "copy") {
+                sawCopy = true;
                 setCopy(data);
                 setStatus("done");
                 clearTimer();

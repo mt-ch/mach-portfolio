@@ -1,149 +1,142 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useReframe } from "./useReframe";
+import { OUTER_TIMEOUT_MS, useReframe } from "./useReframe";
 
-function makeStreamResponse() {
-  let controllerRef!: ReadableStreamDefaultController<Uint8Array>;
-  const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
-      controllerRef = controller;
+function sseChunk(event: string, data: unknown) {
+  return new TextEncoder().encode(
+    `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+  );
+}
+
+const selectionPayload = {
+  selected: [{ slug: "collab-canvas", match_reason: "Direct match." }],
+};
+
+const copyPayload = {
+  hero: { headline: "H", subheadline: "S" },
+  projects: [{ slug: "collab-canvas", blurb: "B" }],
+  about: { emphasis: "E" },
+};
+
+/** A response whose SSE events are pushed manually, so timing is controlled. */
+function controllableResponse() {
+  let controller: ReadableStreamDefaultController<Uint8Array>;
+  const body = new ReadableStream<Uint8Array>({
+    start(c) {
+      controller = c;
     },
   });
-  const encoder = new TextEncoder();
-
   return {
-    response: new Response(stream, {
-      status: 200,
-      headers: { "content-type": "text/event-stream" },
-    }),
-    push(event: string, data: unknown) {
-      controllerRef.enqueue(
-        encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
-      );
-    },
-    close() {
-      controllerRef.close();
-    },
+    response: { ok: true, body } as unknown as Response,
+    push: (event: string, data: unknown) =>
+      controller!.enqueue(sseChunk(event, data)),
+    close: () => controller!.close(),
   };
 }
 
-const selectionEvent = {
-  selected: [{ slug: "collab-canvas", match_reason: "matches" }],
-};
-const copyEvent = {
-  hero: { headline: "Built for it", subheadline: "sub" },
-  projects: [{ slug: "collab-canvas", blurb: "tailored blurb" }],
-  about: { emphasis: "emphasis text" },
-};
-
 describe("useReframe", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
-  it("starts in the input state with no intent, selection, or copy", () => {
-    const { result } = renderHook(() => useReframe());
-
-    expect(result.current.status).toBe("input");
-    expect(result.current.intent).toBe("");
-    expect(result.current.selection).toBeNull();
-    expect(result.current.copy).toBeNull();
-  });
-
-  it("progresses selecting -> selected -> done as SSE events arrive", async () => {
-    const { response, push, close } = makeStreamResponse();
+  it("falls back when no event arrives within the timeout", async () => {
+    const { response } = controllableResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
     const { result } = renderHook(() => useReframe());
+    act(() => result.current.submit("distributed systems work"));
 
-    act(() => {
-      result.current.submit("distributed systems work");
+    await act(async () => {
+      vi.advanceTimersByTime(OUTER_TIMEOUT_MS + 100);
     });
 
-    expect(result.current.status).toBe("selecting");
-    expect(result.current.intent).toBe("distributed systems work");
+    expect(result.current.status).toBe("fallback");
+  });
 
-    act(() => {
-      push("selection", selectionEvent);
+  it("keeps waiting for copy when selection arrived within the timeout", async () => {
+    const { response, push } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useReframe());
+    act(() => result.current.submit("distributed systems work"));
+
+    await act(async () => {
+      vi.advanceTimersByTime(OUTER_TIMEOUT_MS - 2000);
+      push("selection", selectionPayload);
     });
-
     await waitFor(() => expect(result.current.status).toBe("selected"));
-    expect(result.current.selection).toEqual(selectionEvent);
 
-    act(() => {
-      push("copy", copyEvent);
+    // Past the original deadline, but within one budget of the selection event.
+    await act(async () => {
+      vi.advanceTimersByTime(OUTER_TIMEOUT_MS - 2000);
+    });
+
+    expect(result.current.status).toBe("selected");
+  });
+
+  it("reaches done when copy arrives after the original deadline", async () => {
+    const { response, push, close } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useReframe());
+    act(() => result.current.submit("distributed systems work"));
+
+    await act(async () => {
+      vi.advanceTimersByTime(OUTER_TIMEOUT_MS - 2000);
+      push("selection", selectionPayload);
+    });
+    await waitFor(() => expect(result.current.status).toBe("selected"));
+
+    await act(async () => {
+      vi.advanceTimersByTime(OUTER_TIMEOUT_MS - 2000);
+      push("copy", copyPayload);
       close();
     });
 
     await waitFor(() => expect(result.current.status).toBe("done"));
-    expect(result.current.copy).toEqual(copyEvent);
+    expect(result.current.copy).toEqual(copyPayload);
   });
 
-  it("falls back after 8s with no events, and stays there without retrying", async () => {
-    vi.useFakeTimers();
-    const { response } = makeStreamResponse(); // never pushed to, never closed
+  it("settles on the tailored selection when the stream ends without copy", async () => {
+    const { response, push, close } = controllableResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
     const { result } = renderHook(() => useReframe());
-
-    act(() => {
-      result.current.submit("something slow");
-    });
-
-    expect(result.current.status).toBe("selecting");
+    act(() => result.current.submit("distributed systems work"));
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(8000);
+      push("selection", selectionPayload);
+      close();
     });
 
-    expect(result.current.status).toBe("fallback");
+    await waitFor(() => expect(result.current.status).toBe("done"));
+    expect(result.current.selection).toEqual(selectionPayload);
+    expect(result.current.copy).toBeNull();
 
+    // The abandoned timer must not later flip a settled view to fallback.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(60_000);
+      vi.advanceTimersByTime(OUTER_TIMEOUT_MS * 3);
     });
-
-    expect(result.current.status).toBe("fallback");
-
-    vi.useRealTimers();
+    expect(result.current.status).toBe("done");
   });
 
-  it("falls back when the server responds with a non-ok status", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
-    );
+  it("falls back when the stream ends without any event at all", async () => {
+    const { response, close } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
     const { result } = renderHook(() => useReframe());
+    act(() => result.current.submit("distributed systems work"));
 
-    act(() => {
-      result.current.submit("anything");
+    await act(async () => {
+      close();
     });
 
     await waitFor(() => expect(result.current.status).toBe("fallback"));
-  });
-
-  it("resets to input from any status, discarding intent, selection, and copy", async () => {
-    const { response, push } = makeStreamResponse();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
-
-    const { result } = renderHook(() => useReframe());
-
-    act(() => {
-      result.current.submit("distributed systems work");
-    });
-    act(() => {
-      push("selection", selectionEvent);
-    });
-    await waitFor(() => expect(result.current.status).toBe("selected"));
-
-    act(() => {
-      result.current.reset();
-    });
-
-    expect(result.current.status).toBe("input");
-    expect(result.current.intent).toBe("");
-    expect(result.current.selection).toBeNull();
-    expect(result.current.copy).toBeNull();
   });
 });

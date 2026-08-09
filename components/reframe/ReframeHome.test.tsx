@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { About, ProjectListItem } from "@/lib/sanity";
 
 import { ReframeHome } from "./ReframeHome";
+import { OUTER_TIMEOUT_MS } from "./useReframe";
 
 function makeStreamResponse() {
   let controllerRef!: ReadableStreamDefaultController<Uint8Array>;
@@ -249,7 +250,7 @@ describe("ReframeHome", () => {
     fireEvent.click(screen.getByRole("button", { name: /^go$/i }));
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(8000);
+      await vi.advanceTimersByTimeAsync(OUTER_TIMEOUT_MS + 100);
     });
 
     expect(

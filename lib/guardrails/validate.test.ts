@@ -123,4 +123,21 @@ describe("validateCopy", () => {
       { slug: "real-project-a", blurb: "A real blurb." },
     ]);
   });
+
+  it("rejects a hero or about surface the candidate omits entirely", () => {
+    const validSlugs = new Set(["real-project-a"]);
+    const candidate = {
+      hero: null,
+      projects: [{ slug: "real-project-a", blurb: "A real blurb." }],
+      about: null,
+    };
+
+    const result = validateCopy(candidate, validSlugs, BOUNDS);
+
+    expect(result.hero).toBeNull();
+    expect(result.about).toBeNull();
+    expect(result.projects).toEqual([
+      { slug: "real-project-a", blurb: "A real blurb." },
+    ]);
+  });
 });
