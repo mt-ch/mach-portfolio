@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { getClientIp } from "@/lib/guardrails/getClientIp";
 import { checkRequestGuardrails } from "@/lib/guardrails/rateLimit";
 import { sanitizeInput } from "@/lib/guardrails/sanitize";
-import { cannedReframe } from "@/lib/reframe/cannedReframe";
+import { generateCopy, type SelectedProject } from "@/lib/reframe/generateCopy";
 import { selectProjects } from "@/lib/reframe/selectProjects";
-import { getProjects } from "@/lib/sanity";
+import { getAbout, getProject, getProjects } from "@/lib/sanity";
 
 export const runtime = "nodejs";
 
@@ -33,7 +33,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const projects = await getProjects();
+  const [projects, about] = await Promise.all([getProjects(), getAbout()]);
+
+  if (!about) {
+    console.error("POST /api/reframe: no About record to generate copy from");
+    return NextResponse.json(
+      { message: "Unable to process request" },
+      { status: 502 },
+    );
+  }
 
   let selected;
   try {
@@ -47,7 +55,31 @@ export async function POST(request: Request) {
   }
 
   const selection = { selected };
-  const { copy } = cannedReframe(sanitized.value);
+
+  // Generation needs case-study depth, so the selected Projects — and only
+  // those — are re-fetched in full rather than widening the list query.
+  const details = await Promise.all(
+    selected.map(async (entry) => {
+      const project = await getProject(entry.slug);
+      return project
+        ? ({ project, match_reason: entry.match_reason } as SelectedProject)
+        : null;
+    }),
+  );
+  const selectedProjects = details.filter(
+    (entry): entry is SelectedProject => entry !== null,
+  );
+
+  let copy;
+  try {
+    copy = await generateCopy(sanitized.value, selectedProjects, about);
+  } catch (error) {
+    console.error("POST /api/reframe: generation call failed", error);
+    return NextResponse.json(
+      { message: "Unable to process request" },
+      { status: 502 },
+    );
+  }
 
   const stream = new ReadableStream({
     start(controller) {

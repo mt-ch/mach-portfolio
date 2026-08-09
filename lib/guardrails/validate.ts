@@ -20,9 +20,9 @@ export interface CopyProjectEntry {
 }
 
 export interface CopyCandidate {
-  hero: { headline: string; subheadline: string };
+  hero: { headline: string; subheadline: string } | null;
   projects: CopyProjectEntry[];
-  about: { emphasis: string };
+  about: { emphasis: string } | null;
 }
 
 export interface CopyBounds {
@@ -44,10 +44,13 @@ export function validateCopy(
   bounds: CopyBounds,
 ): ValidatedCopy {
   const heroValid =
+    candidate.hero !== null &&
     candidate.hero.headline.length <= bounds.headline &&
     candidate.hero.subheadline.length <= bounds.subheadline;
 
-  const aboutValid = candidate.about.emphasis.length <= bounds.emphasis;
+  const aboutValid =
+    candidate.about !== null &&
+    candidate.about.emphasis.length <= bounds.emphasis;
 
   return {
     hero: heroValid ? candidate.hero : null,

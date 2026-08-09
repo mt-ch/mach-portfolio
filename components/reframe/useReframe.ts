@@ -2,7 +2,12 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import type { CopyEvent, SelectionEvent } from "@/lib/reframe/cannedReframe";
+import type { ValidatedCopy } from "@/lib/guardrails/validate";
+import type { SelectionEvent } from "@/lib/reframe/cannedReframe";
+
+// The server streams validated copy, so any surface that failed its length
+// bounds arrives as null and the original site copy stands.
+export type CopyEvent = ValidatedCopy;
 
 export type ReframeStatus = "input" | "selecting" | "selected" | "done" | "fallback";
 

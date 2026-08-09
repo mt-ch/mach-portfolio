@@ -115,8 +115,10 @@ export function ReframeHome({
 
       <AboutSection
         about={about}
-        heroOverride={status === "done" ? copy?.hero : undefined}
-        emphasisOverride={status === "done" ? copy?.about.emphasis : undefined}
+        heroOverride={status === "done" ? (copy?.hero ?? undefined) : undefined}
+        emphasisOverride={
+          status === "done" ? (copy?.about?.emphasis ?? undefined) : undefined
+        }
         highlight={status === "done"}
       />
 
