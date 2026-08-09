@@ -70,22 +70,26 @@ export async function POST(request: Request) {
     (entry): entry is SelectedProject => entry !== null,
   );
 
-  let copy;
-  try {
-    copy = await generateCopy(sanitized.value, selectedProjects, about);
-  } catch (error) {
-    console.error("POST /api/reframe: generation call failed", error);
-    return NextResponse.json(
-      { message: "Unable to process request" },
-      { status: 502 },
-    );
-  }
-
+  // Selection is flushed as soon as it is known so the client can reorder and
+  // highlight cards while the slower generation call is still running; a
+  // generation failure then ends the stream rather than failing the request,
+  // leaving the already-delivered selection in place.
   const stream = new ReadableStream({
-    start(controller) {
+    async start(controller) {
       const encoder = new TextEncoder();
       controller.enqueue(encoder.encode(sseEvent("selection", selection)));
-      controller.enqueue(encoder.encode(sseEvent("copy", copy)));
+
+      try {
+        const copy = await generateCopy(
+          sanitized.value,
+          selectedProjects,
+          about,
+        );
+        controller.enqueue(encoder.encode(sseEvent("copy", copy)));
+      } catch (error) {
+        console.error("POST /api/reframe: generation call failed", error);
+      }
+
       controller.close();
     },
   });

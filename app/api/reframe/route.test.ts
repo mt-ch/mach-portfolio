@@ -299,6 +299,90 @@ describe("POST /api/reframe", () => {
     ).toBe(false);
   });
 
+  it("streams the selection event before the generation call has finished", async () => {
+    let releaseGeneration: () => void = () => {};
+    const generationStarted = new Promise<void>((resolveStarted) => {
+      createMock.mockImplementation((request) => {
+        if (isSelectionCall(request)) {
+          return Promise.resolve({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  selected: [
+                    { slug: "collab-canvas", match_reason: "Direct match." },
+                  ],
+                }),
+              },
+            ],
+          });
+        }
+        resolveStarted();
+        return new Promise((resolveGeneration) => {
+          releaseGeneration = () =>
+            resolveGeneration({
+              content: [{ type: "text", text: JSON.stringify(defaultCopy) }],
+            });
+        });
+      });
+    });
+
+    const response = await POST(
+      makeRequest({ intent: "distributed systems work" }),
+    );
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+
+    await generationStarted;
+
+    // The selection event must be readable while generation is still pending.
+    const first = await reader.read();
+    const firstBlock = decoder.decode(first.value);
+    expect(firstBlock).toContain("event: selection");
+    expect(firstBlock).not.toContain("event: copy");
+
+    releaseGeneration();
+
+    let rest = "";
+    for (;;) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      rest += decoder.decode(chunk.value);
+    }
+    expect(rest).toContain("event: copy");
+  });
+
+  it("still closes the stream with a usable selection when generation fails mid-stream", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    createMock.mockImplementation((request) => {
+      if (isSelectionCall(request)) {
+        return Promise.resolve({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                selected: [
+                  { slug: "collab-canvas", match_reason: "Direct match." },
+                ],
+              }),
+            },
+          ],
+        });
+      }
+      return Promise.reject(new Error("generation upstream failed"));
+    });
+
+    const response = await POST(
+      makeRequest({ intent: "distributed systems work" }),
+    );
+
+    expect(response.status).toBe(200);
+    const text = await response.text();
+    expect(text).toContain("event: selection");
+    expect(text).not.toContain("event: copy");
+    errorSpy.mockRestore();
+  });
+
   it("returns a 502 without crashing when the Anthropic call fails", async () => {
     createMock.mockRejectedValue(new Error("upstream unavailable"));
 
