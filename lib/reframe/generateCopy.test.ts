@@ -282,6 +282,58 @@ describe("generateCopy", () => {
     expect(system).toContain(String(COPY_BOUNDS.emphasis));
   });
 
+  it("logs a warning naming the copy surfaces discarded for violating their bounds", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const selected = [
+      {
+        project: makeProject({
+          slug: { _type: "slug", current: "collab-canvas" },
+        }),
+        match_reason: "Direct match.",
+      },
+    ];
+
+    mockCopyResponse({
+      hero: { headline: "x".repeat(500), subheadline: "S" },
+      projects: [{ slug: "collab-canvas", blurb: "y".repeat(500) }],
+      about: { emphasis: "E" },
+    });
+
+    await generateCopy("distributed systems work", selected, about);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("discarded"),
+      expect.objectContaining({
+        hero: true,
+        projects: ["collab-canvas"],
+      }),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn when every copy surface is within bounds", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const selected = [
+      {
+        project: makeProject({
+          slug: { _type: "slug", current: "collab-canvas" },
+        }),
+        match_reason: "Direct match.",
+      },
+    ];
+
+    mockCopyResponse({
+      hero: { headline: "H", subheadline: "S" },
+      projects: [{ slug: "collab-canvas", blurb: "B" }],
+      about: { emphasis: "E" },
+    });
+
+    await generateCopy("distributed systems work", selected, about);
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it("returns empty copy instead of throwing when the model output isn't valid JSON", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const selected = [
