@@ -9,15 +9,13 @@ function formatDate(date: string) {
 
 export function ExperienceItem({ entry }: { entry: ExperienceEntry }) {
   return (
-    <li>
+    <li className="py-4 first:pt-0 last:pb-0">
       <div className="flex items-baseline justify-between gap-4">
         <div>
           <p className="font-semibold">{entry.title}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {entry.company}
-          </p>
+          <p className="text-sm text-muted-foreground">{entry.company}</p>
         </div>
-        <p className="whitespace-nowrap text-sm text-gray-500">
+        <p className="whitespace-nowrap text-sm text-muted-foreground">
           {formatDate(entry.startDate)} –{" "}
           {entry.isCurrent ? "Present" : formatDate(entry.endDate!)}
         </p>

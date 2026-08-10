@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { AboutSection } from "@/components/AboutSection";
 import { ProjectCard } from "@/components/ProjectCard";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import type { About, ProjectListItem } from "@/lib/sanity";
 
 import { useReframe } from "./useReframe";
@@ -21,6 +25,15 @@ export function ReframeHome({
 
   useEffect(() => {
     if (overlayOpen) inputRef.current?.focus();
+  }, [overlayOpen]);
+
+  useEffect(() => {
+    if (!overlayOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [overlayOpen]);
 
   const featured = projects.filter((project) => project.featured);
@@ -64,35 +77,32 @@ export function ReframeHome({
       </div>
 
       {overlayOpen && (
-        <div className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-white/95 px-6 text-center backdrop-blur dark:bg-black/95">
-          <h2 className="text-2xl font-semibold">
+        <div className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-background/95 px-6 text-center backdrop-blur">
+          <h2 className="text-2xl font-semibold tracking-tight">
             Tell me what you&apos;re looking for
           </h2>
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 text-muted-foreground">
             I&apos;ll tailor this page to it.
           </p>
           <form onSubmit={onSubmit} className="mt-8 flex w-full max-w-2xl gap-2">
             <label htmlFor="reframe-intent" className="sr-only">
               What are you looking for?
             </label>
-            <input
+            <Input
               ref={inputRef}
               id="reframe-intent"
               name="intent"
               type="text"
               placeholder="e.g. show me something with complex state management"
-              className="w-full rounded-md border border-black/15 bg-transparent px-4 py-3 text-sm outline-none focus:border-black/40 dark:border-white/20 dark:focus:border-white/50"
+              className="h-11 px-4 text-sm"
             />
-            <button
-              type="submit"
-              className="shrink-0 rounded-md bg-black px-4 py-3 text-sm font-medium text-white dark:bg-white dark:text-black"
-            >
+            <Button type="submit" size="lg" className="h-11 shrink-0 px-5">
               Go
-            </button>
+            </Button>
           </form>
-          <button type="button" onClick={skipOverlay} className="mt-6 text-xs text-gray-400 underline">
+          <Button type="button" variant="link" size="sm" onClick={skipOverlay} className="mt-6 text-muted-foreground">
             Skip — show me the default page
-          </button>
+          </Button>
         </div>
       )}
 
@@ -100,17 +110,20 @@ export function ReframeHome({
         <div
           role="status"
           aria-label="Tailoring page"
-          className="fixed right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs shadow-md dark:border-white/10 dark:bg-neutral-900"
+          className="fixed right-4 top-4 z-20 flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs text-card-foreground shadow-md"
         >
-          <span className="h-2 w-2 animate-pulse rounded-full bg-black motion-reduce:animate-none dark:bg-white" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-foreground motion-reduce:animate-none" />
           Tailoring for &ldquo;{intent}&rdquo;…
         </div>
       )}
 
       {!overlayOpen && status === "done" && (
-        <div className="fixed right-4 top-4 z-20 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs shadow-md dark:border-white/10 dark:bg-neutral-900">
+        <Badge
+          variant="outline"
+          className="fixed right-4 top-4 z-20 bg-card px-3 py-1.5 text-xs shadow-md"
+        >
           Tailored for &ldquo;{intent}&rdquo;
-        </div>
+        </Badge>
       )}
 
       <AboutSection
@@ -124,13 +137,13 @@ export function ReframeHome({
 
       <section aria-labelledby="featured-projects-heading">
         <div className="flex items-center justify-between">
-          <h2 id="featured-projects-heading" className="text-2xl font-bold">
+          <h2 id="featured-projects-heading" className="text-2xl font-bold tracking-tight">
             Featured Projects
           </h2>
           {!overlayOpen && (
-            <button type="button" onClick={reopenOverlay} className="text-xs text-gray-400 underline">
+            <Button type="button" variant="link" size="sm" onClick={reopenOverlay} className="text-muted-foreground">
               Try a different intent
-            </button>
+            </Button>
           )}
         </div>
         <div className="mt-6 grid gap-6 transition-all duration-500 motion-reduce:transition-none sm:grid-cols-2">
@@ -144,13 +157,14 @@ export function ReframeHome({
               <div
                 key={project._id}
                 data-matching={matching || undefined}
-                className={`rounded-md transition-all duration-500 motion-reduce:transition-none ${
-                  matching ? "ring-2 ring-black/40 dark:ring-white/40" : ""
-                }`}
+                className={cn(
+                  "rounded-xl transition-all duration-500 motion-reduce:transition-none",
+                  matching && "ring-2 ring-ring"
+                )}
               >
                 <ProjectCard project={displayProject} />
                 {matching && status !== "done" && (
-                  <p className="mt-2 text-xs italic text-gray-400">Matching…</p>
+                  <p className="mt-2 text-xs italic text-muted-foreground">Matching…</p>
                 )}
               </div>
             );

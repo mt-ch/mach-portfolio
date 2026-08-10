@@ -1,5 +1,7 @@
 import { PortableText } from "@portabletext/react";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { About } from "@/lib/sanity";
 
 export function AboutSection({
@@ -19,17 +21,19 @@ export function AboutSection({
 
   return (
     <section aria-labelledby="about-heading">
-      <h1 id="about-heading" className="text-3xl font-bold">
+      <h1 id="about-heading" className="text-3xl font-bold tracking-tight">
         {about.name}
       </h1>
-      <p className={`mt-2 text-xl text-gray-600 dark:text-gray-400 ${highlightClass}`}>
+      <p className={cn("mt-2 text-xl text-muted-foreground", highlightClass)}>
         {heroOverride ? heroOverride.headline : about.headline}
       </p>
       {heroOverride && (
-        <p className="mt-1 text-sm text-gray-500">{heroOverride.subheadline}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {heroOverride.subheadline}
+        </p>
       )}
       {emphasisOverride ? (
-        <p className={`prose mt-6 dark:prose-invert ${highlightClass}`}>
+        <p className={cn("prose mt-6 dark:prose-invert", highlightClass)}>
           {emphasisOverride}
         </p>
       ) : (
@@ -39,25 +43,24 @@ export function AboutSection({
           </div>
         )
       )}
-      <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         {about.resumeUrl && (
-          <a href={about.resumeUrl} className="underline" download>
+          <Button variant="outline" size="sm" render={<a href={about.resumeUrl} download />}>
             Resume
-          </a>
+          </Button>
         )}
-        <a href={`mailto:${about.email}`} className="underline">
+        <Button variant="link" size="sm" render={<a href={`mailto:${about.email}`} />}>
           {about.email}
-        </a>
+        </Button>
         {about.socialLinks?.map((link) => (
-          <a
+          <Button
             key={link._key}
-            href={link.url}
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
+            variant="link"
+            size="sm"
+            render={<a href={link.url} target="_blank" rel="noreferrer" />}
           >
             {link.platform}
-          </a>
+          </Button>
         ))}
       </div>
     </section>
