@@ -1,4 +1,4 @@
-export { getAbout } from "./about";
+export { getAbout, getAboutFresh } from "./about";
 export { getExperience, getExperienceEntryById } from "./experience";
 export { toPlainText } from "./portableText";
 export {

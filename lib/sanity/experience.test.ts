@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
+const freshFetchMock = vi.fn();
 
 vi.mock("./client", () => ({
   client: { fetch: (...args: unknown[]) => fetchMock(...args) },
+  freshClient: { fetch: (...args: unknown[]) => freshFetchMock(...args) },
 }));
 
 const { getExperience, getExperienceEntryById } = await import("./experience");
@@ -46,8 +48,8 @@ describe("getExperience", () => {
 });
 
 describe("getExperienceEntryById", () => {
-  it("fetches an entry by id and marks it current when endDate is null", async () => {
-    fetchMock.mockResolvedValueOnce({
+  it("fetches an entry by id via the non-CDN client and marks it current when endDate is null", async () => {
+    freshFetchMock.mockResolvedValueOnce({
       _id: "1",
       company: "Acme",
       title: "Engineer",
@@ -58,12 +60,14 @@ describe("getExperienceEntryById", () => {
 
     const entry = await getExperienceEntryById("1");
 
-    expect(fetchMock).toHaveBeenCalledWith(expect.any(String), { id: "1" });
+    expect(freshFetchMock).toHaveBeenCalledWith(expect.any(String), {
+      id: "1",
+    });
     expect(entry?.isCurrent).toBe(true);
   });
 
   it("returns null when no entry matches the id", async () => {
-    fetchMock.mockResolvedValueOnce(null);
+    freshFetchMock.mockResolvedValueOnce(null);
 
     const entry = await getExperienceEntryById("missing");
 

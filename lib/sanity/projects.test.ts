@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
+const freshFetchMock = vi.fn();
 
 vi.mock("./client", () => ({
   client: { fetch: (...args: unknown[]) => fetchMock(...args) },
+  freshClient: { fetch: (...args: unknown[]) => freshFetchMock(...args) },
 }));
 
 const { getProject, getProjectForIndexById, getProjects, getProjectsForIndex } =
@@ -63,20 +65,21 @@ describe("getProjectsForIndex", () => {
 });
 
 describe("getProjectForIndexById", () => {
-  it("fetches a single project by id, including body, for reindexing", async () => {
+  it("fetches a single project by id via the non-CDN client, including body, for reindexing", async () => {
     const project = { _id: "1", title: "A", slug: { current: "a" }, body: [] };
-    fetchMock.mockResolvedValueOnce(project);
+    freshFetchMock.mockResolvedValueOnce(project);
 
     const result = await getProjectForIndexById("1");
 
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("body"), {
-      id: "1",
-    });
+    expect(freshFetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("body"),
+      { id: "1" },
+    );
     expect(result).toEqual(project);
   });
 
   it("returns null when no project matches the id", async () => {
-    fetchMock.mockResolvedValueOnce(null);
+    freshFetchMock.mockResolvedValueOnce(null);
 
     const result = await getProjectForIndexById("missing");
 

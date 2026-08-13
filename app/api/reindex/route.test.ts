@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   reindexChunksMock,
-  getAboutMock,
+  getAboutFreshMock,
   getExperienceEntryByIdMock,
   getProjectForIndexByIdMock,
 } = vi.hoisted(() => ({
   reindexChunksMock: vi.fn(),
-  getAboutMock: vi.fn(),
+  getAboutFreshMock: vi.fn(),
   getExperienceEntryByIdMock: vi.fn(),
   getProjectForIndexByIdMock: vi.fn(),
 }));
@@ -16,7 +16,7 @@ vi.mock("@/lib/corpus/reindexDocument", () => ({
   reindexChunks: reindexChunksMock,
 }));
 vi.mock("@/lib/sanity", () => ({
-  getAbout: getAboutMock,
+  getAboutFresh: getAboutFreshMock,
   getExperienceEntryById: getExperienceEntryByIdMock,
   getProjectForIndexById: getProjectForIndexByIdMock,
 }));
@@ -47,7 +47,7 @@ describe("POST /api/reindex", () => {
   beforeEach(() => {
     process.env.SANITY_REINDEX_SECRET = SECRET;
     reindexChunksMock.mockReset();
-    getAboutMock.mockReset();
+    getAboutFreshMock.mockReset();
     getExperienceEntryByIdMock.mockReset();
     getProjectForIndexByIdMock.mockReset();
     reindexChunksMock.mockResolvedValue(0);
@@ -162,7 +162,7 @@ describe("POST /api/reindex", () => {
       email: "a@b.com",
       socialLinks: [],
     };
-    getAboutMock.mockResolvedValueOnce(about);
+    getAboutFreshMock.mockResolvedValueOnce(about);
     reindexChunksMock.mockResolvedValueOnce(1);
     const body = JSON.stringify({ _id: "doc-3", _type: "about" });
     const signature = await sign(body);
@@ -177,7 +177,7 @@ describe("POST /api/reindex", () => {
   });
 
   it("purges the about singleton's chunks when the refetch returns null (deleted)", async () => {
-    getAboutMock.mockResolvedValueOnce(null);
+    getAboutFreshMock.mockResolvedValueOnce(null);
     const body = JSON.stringify({ _id: "doc-3", _type: "about" });
     const signature = await sign(body);
 
@@ -192,7 +192,7 @@ describe("POST /api/reindex", () => {
 
     await POST(makeRequest(body, signature));
 
-    expect(getAboutMock).not.toHaveBeenCalled();
+    expect(getAboutFreshMock).not.toHaveBeenCalled();
     expect(getExperienceEntryByIdMock).not.toHaveBeenCalled();
     expect(getProjectForIndexByIdMock).not.toHaveBeenCalled();
     expect(reindexChunksMock).toHaveBeenCalledWith("doc-4", []);

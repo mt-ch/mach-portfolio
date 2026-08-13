@@ -5,7 +5,7 @@ import { chunkAbout, chunkExperience, chunkProject } from "@/lib/corpus/chunk";
 import { reindexChunks } from "@/lib/corpus/reindexDocument";
 import type { CorpusChunk } from "@/lib/corpus/types";
 import {
-  getAbout,
+  getAboutFresh,
   getExperienceEntryById,
   getProjectForIndexById,
 } from "@/lib/sanity";
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   // Always refetch the document by id rather than trusting the webhook
   // payload's content — an empty result (deleted/unpublished) purges via
   // reindexChunks' delete-then-upsert with no chunks to upsert.
-  const chunks = await chunksForDocument(payload);
+  const chunks = await fetchChunksForDocument(payload);
   const chunksIndexed = await reindexChunks(payload._id, chunks);
 
   return NextResponse.json({
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   });
 }
 
-async function chunksForDocument(payload: WebhookPayload): Promise<CorpusChunk[]> {
+async function fetchChunksForDocument(payload: WebhookPayload): Promise<CorpusChunk[]> {
   switch (payload._type) {
     case "project": {
       const project = await getProjectForIndexById(payload._id);
@@ -60,7 +60,7 @@ async function chunksForDocument(payload: WebhookPayload): Promise<CorpusChunk[]
       return entry ? chunkExperience(entry) : [];
     }
     case "about": {
-      const about = await getAbout();
+      const about = await getAboutFresh();
       return about && about._id === payload._id ? chunkAbout(about) : [];
     }
     default:

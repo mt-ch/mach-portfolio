@@ -1,4 +1,4 @@
-import { client } from "./client";
+import { client, freshClient } from "./client";
 import {
   projectBySlugQuery,
   projectForIndexByIdQuery,
@@ -24,5 +24,7 @@ export async function getProjectsForIndex(): Promise<ProjectForIndex[]> {
 export async function getProjectForIndexById(
   id: string,
 ): Promise<ProjectForIndex | null> {
-  return client.fetch<ProjectForIndex | null>(projectForIndexByIdQuery, { id });
+  return freshClient.fetch<ProjectForIndex | null>(projectForIndexByIdQuery, {
+    id,
+  });
 }
