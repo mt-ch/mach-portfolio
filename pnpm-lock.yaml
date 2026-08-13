@@ -209,7 +209,7 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.115.0
-        version: 0.115.0(zod@4.4.3)
+        version: 0.115.0(zod@3.25.76)
       '@base-ui/react':
         specifier: ^1.7.0
         version: 1.7.0(@date-fns/tz@1.5.0)(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -234,6 +234,9 @@ importers:
       '@upstash/redis':
         specifier: ^1.38.1
         version: 1.38.1
+      '@upstash/vector':
+        specifier: ^1.2.3
+        version: 1.2.3
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -3147,6 +3150,9 @@ packages:
 
   '@upstash/redis@1.38.1':
     resolution: {integrity: sha512-hVqkWmhqobH7hpdzSCSrOwK7gWNASOAdf85l6/yxdB+giCYNYfl8FkSKxnqW2sqCdLDP7HzRTvy/ILC1AjBMUA==}
+
+  '@upstash/vector@1.2.3':
+    resolution: {integrity: sha512-yXsWKeuHNYyH72BcSZd3bV5ZD5MybAoTvKxkMaeV2UzuGfNzbHBVh5eO+ysTWTFAf8I9XcOueF4tZfAGjCa4Iw==}
 
   '@vanilla-extract/dynamic@2.1.5':
     resolution: {integrity: sha512-QGIFGb1qyXQkbzx6X6i3+3LMc/iv/ZMBttMBL+Wm/DetQd36KsKsFg5CtH3qy+1hCA/5w93mEIIAiL4fkM8ycw==}
@@ -7059,12 +7065,12 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@anthropic-ai/sdk@0.115.0(zod@4.4.3)':
+  '@anthropic-ai/sdk@0.115.0(zod@3.25.76)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.0.0
     optionalDependencies:
-      zod: 4.4.3
+      zod: 3.25.76
 
   '@architect/asap@7.0.10':
     dependencies:
@@ -10315,6 +10321,8 @@ snapshots:
   '@upstash/redis@1.38.1':
     dependencies:
       uncrypto: 0.1.3
+
+  '@upstash/vector@1.2.3': {}
 
   '@vanilla-extract/dynamic@2.1.5':
     dependencies:
