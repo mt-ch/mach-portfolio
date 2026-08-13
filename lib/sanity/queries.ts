@@ -37,6 +37,22 @@ export const projectBySlugQuery = defineQuery(`
   }
 `);
 
+// Unlike projectsQuery (used for the listing page), this includes `body` —
+// needed by the corpus indexing pipeline but wasted weight on the listing.
+export const projectsForIndexQuery = defineQuery(`
+  *[_type == "project"] {
+    _id,
+    title,
+    slug,
+    summary,
+    body,
+    techStack,
+    skills,
+    impact,
+    dateCompleted
+  }
+`);
+
 export const experienceQuery = defineQuery(`
   *[_type == "experience"] | order(order asc) {
     _id,

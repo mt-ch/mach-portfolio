@@ -7,7 +7,8 @@ import {
   type CopyCandidate,
   type ValidatedCopy,
 } from "@/lib/guardrails/validate";
-import type { About, ProjectDetail } from "@/lib/sanity";
+import { toPlainText } from "@/lib/sanity/portableText";
+import type { About, PortableTextBlock, ProjectDetail } from "@/lib/sanity";
 
 const MODEL = "claude-haiku-4-5";
 
@@ -78,25 +79,12 @@ const OUTPUT_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-type PortableTextBlocks = About["bio"];
-
-// The prompt is plain text, so Portable Text blocks are flattened to their spans.
-function toPlainText(blocks: PortableTextBlocks): string {
-  if (!blocks) return "";
-  return blocks
-    .map((block) =>
-      (block.children ?? []).map((span) => span.text ?? "").join(""),
-    )
-    .filter(Boolean)
-    .join("\n\n");
-}
-
 function toGenerationContext({ project, match_reason }: SelectedProject) {
   return {
     title: project.title,
     slug: project.slug.current,
     summary: project.summary,
-    body: toPlainText(project.body as PortableTextBlocks),
+    body: toPlainText(project.body as PortableTextBlock[] | null),
     techStack: project.techStack,
     skills: project.skills,
     impact: project.impact,
