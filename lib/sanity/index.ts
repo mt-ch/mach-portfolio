@@ -1,9 +1,12 @@
 export { getAbout } from "./about";
 export { getExperience } from "./experience";
-export { getProject, getProjects } from "./projects";
+export { toPlainText } from "./portableText";
+export { getProject, getProjects, getProjectsForIndex } from "./projects";
 export type {
   About,
   ExperienceEntry,
+  PortableTextBlock,
   ProjectDetail,
+  ProjectForIndex,
   ProjectListItem,
 } from "./types";

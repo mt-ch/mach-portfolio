@@ -6,7 +6,9 @@ vi.mock("./client", () => ({
   client: { fetch: (...args: unknown[]) => fetchMock(...args) },
 }));
 
-const { getProject, getProjects } = await import("./projects");
+const { getProject, getProjects, getProjectsForIndex } = await import(
+  "./projects"
+);
 
 describe("getProjects", () => {
   it("queries projects ordered by the `order` field and returns the raw ordering", async () => {
@@ -44,5 +46,19 @@ describe("getProject", () => {
     const result = await getProject("missing");
 
     expect(result).toBeNull();
+  });
+});
+
+describe("getProjectsForIndex", () => {
+  it("fetches all projects including body, for corpus indexing", async () => {
+    const projects = [
+      { _id: "1", title: "A", slug: { current: "a" }, body: [] },
+    ];
+    fetchMock.mockResolvedValueOnce(projects);
+
+    const result = await getProjectsForIndex();
+
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("body"));
+    expect(result).toEqual(projects);
   });
 });
