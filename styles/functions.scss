@@ -1,0 +1,22 @@
+$fluid-min-viewport: 480 !default;
+$fluid-max-viewport: 2560 !default;
+
+@function px-to-rem($px, $root: 16) {
+  @return calc($px / $root * 1rem);
+}
+
+@function fluid-space($min, $max) {
+  $min-vw: $fluid-min-viewport;
+  $max-vw: $fluid-max-viewport;
+
+  $min-rem: px-to-rem($min);
+  $max-rem: px-to-rem($max);
+
+  $slope: ($max - $min) / ($max-vw - $min-vw);
+
+  @return clamp(
+    #{$min-rem},
+    calc(#{$min-rem} + #{$slope} * (100vw - #{$min-vw}px)),
+    #{$max-rem}
+  );
+}

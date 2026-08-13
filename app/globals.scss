@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@import "../styles/functions";
+@import "../styles/tokens";
+@import "../styles/utilities";
+
+@layer base {
+  ::selection {
+    @apply bg-accent/20;
+  }
+}
+
+html,
+body {
+  overscroll-behavior: none;
+}
