@@ -6,7 +6,7 @@ vi.mock("./client", () => ({
   client: { fetch: (...args: unknown[]) => fetchMock(...args) },
 }));
 
-const { getExperience } = await import("./experience");
+const { getExperience, getExperienceEntryById } = await import("./experience");
 
 describe("getExperience", () => {
   it("marks an entry with a null endDate as current", async () => {
@@ -42,5 +42,31 @@ describe("getExperience", () => {
     const [entry] = await getExperience();
 
     expect(entry.isCurrent).toBe(false);
+  });
+});
+
+describe("getExperienceEntryById", () => {
+  it("fetches an entry by id and marks it current when endDate is null", async () => {
+    fetchMock.mockResolvedValueOnce({
+      _id: "1",
+      company: "Acme",
+      title: "Engineer",
+      startDate: "2024-01-01",
+      endDate: null,
+      order: 1,
+    });
+
+    const entry = await getExperienceEntryById("1");
+
+    expect(fetchMock).toHaveBeenCalledWith(expect.any(String), { id: "1" });
+    expect(entry?.isCurrent).toBe(true);
+  });
+
+  it("returns null when no entry matches the id", async () => {
+    fetchMock.mockResolvedValueOnce(null);
+
+    const entry = await getExperienceEntryById("missing");
+
+    expect(entry).toBeNull();
   });
 });

@@ -53,8 +53,38 @@ export const projectsForIndexQuery = defineQuery(`
   }
 `);
 
+// Unlike projectsForIndexQuery (used for a full backfill), this fetches a
+// single project by id — needed by the reindex webhook to refetch just the
+// document that was published/deleted.
+export const projectForIndexByIdQuery = defineQuery(`
+  *[_type == "project" && _id == $id][0] {
+    _id,
+    title,
+    slug,
+    summary,
+    body,
+    techStack,
+    skills,
+    impact,
+    dateCompleted
+  }
+`);
+
 export const experienceQuery = defineQuery(`
   *[_type == "experience"] | order(order asc) {
+    _id,
+    company,
+    title,
+    startDate,
+    endDate,
+    summary,
+    logo,
+    order
+  }
+`);
+
+export const experienceEntryByIdQuery = defineQuery(`
+  *[_type == "experience" && _id == $id][0] {
     _id,
     company,
     title,

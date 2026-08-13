@@ -6,9 +6,8 @@ vi.mock("./client", () => ({
   client: { fetch: (...args: unknown[]) => fetchMock(...args) },
 }));
 
-const { getProject, getProjects, getProjectsForIndex } = await import(
-  "./projects"
-);
+const { getProject, getProjectForIndexById, getProjects, getProjectsForIndex } =
+  await import("./projects");
 
 describe("getProjects", () => {
   it("queries projects ordered by the `order` field and returns the raw ordering", async () => {
@@ -60,5 +59,27 @@ describe("getProjectsForIndex", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("body"));
     expect(result).toEqual(projects);
+  });
+});
+
+describe("getProjectForIndexById", () => {
+  it("fetches a single project by id, including body, for reindexing", async () => {
+    const project = { _id: "1", title: "A", slug: { current: "a" }, body: [] };
+    fetchMock.mockResolvedValueOnce(project);
+
+    const result = await getProjectForIndexById("1");
+
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("body"), {
+      id: "1",
+    });
+    expect(result).toEqual(project);
+  });
+
+  it("returns null when no project matches the id", async () => {
+    fetchMock.mockResolvedValueOnce(null);
+
+    const result = await getProjectForIndexById("missing");
+
+    expect(result).toBeNull();
   });
 });
