@@ -6,7 +6,7 @@ export function SiteFooter({ about }: { about: About }) {
   return (
     <div className="p-md gap-xl bg-grey-400 relative flex flex-col h-screen justify-between">
       <h2 className="type-body font-medium text-white">
-        {about.name}
+        <span className="text-transparent">{about.name} </span>
         {about.availabilityStatus ? (
           <>
             {" is "}
@@ -26,22 +26,12 @@ export function SiteFooter({ about }: { about: About }) {
         <p className="type-body font-medium text-white">©{year}</p>
         <div className="flex gap-md">
           {about.resumeUrl && (
-            <a
-              href={about.resumeUrl}
-              className="type-body font-medium text-white"
-              download
-            >
+            <a href={about.resumeUrl} className="type-body font-medium text-white" download>
               Resume
             </a>
           )}
           {about.socialLinks?.map((link) => (
-            <a
-              key={link._key}
-              href={link.url}
-              target="_blank"
-              rel="noreferrer"
-              className="type-body font-medium text-white"
-            >
+            <a key={link._key} href={link.url} target="_blank" rel="noreferrer" className="type-body font-medium text-white">
               {link.platform}
             </a>
           ))}

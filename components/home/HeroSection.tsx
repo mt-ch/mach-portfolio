@@ -8,7 +8,7 @@ export function HeroSection({ about }: { about: About }) {
   return (
     <div className="p-md gap-xl bg-brand relative flex flex-col h-124">
       <h1 className="type-body font-medium text-accent">
-        <span className="text-transparent">{about.name}</span>
+        <span className="text-transparent">{about.name}{" "}</span>
         {about.headline}
         {about.bio && about.bio.length > 0 && (
           <>
