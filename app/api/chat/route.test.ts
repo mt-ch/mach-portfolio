@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { embedTextsMock, queryChunksMock, streamMock, createMock } = vi.hoisted(() => ({
-  embedTextsMock: vi.fn(),
-  queryChunksMock: vi.fn(),
-  streamMock: vi.fn(),
-  createMock: vi.fn(),
-}));
+const { embedTextsMock, queryChunksMock, streamMock, createMock, checkRateLimitsMock } =
+  vi.hoisted(() => ({
+    embedTextsMock: vi.fn(),
+    queryChunksMock: vi.fn(),
+    streamMock: vi.fn(),
+    createMock: vi.fn(),
+    checkRateLimitsMock: vi.fn(),
+  }));
 
 vi.mock("@/lib/corpus/embed", () => ({ embedTexts: embedTextsMock }));
 vi.mock("@/lib/corpus/vectorStore", () => ({ queryChunks: queryChunksMock }));
+vi.mock("@/lib/guardrails/rateLimit", () => ({
+  checkRateLimits: checkRateLimitsMock,
+}));
 
 vi.mock("@anthropic-ai/sdk", () => ({
   default: class {
@@ -39,7 +44,7 @@ function fakeStream(deltas: string[]) {
 const projectMatch = {
   id: "proj-1:0",
   score: 0.95,
-  text: "Title: Collab Canvas\n\nSummary: Real-time collaborative canvas under load.",
+  text: "Title: Collab Canvas\n\nSummary: Real-time collaborative canvas under load, built with distributed systems techniques.",
   metadata: {
     documentType: "project",
     documentId: "proj-1",
@@ -71,6 +76,7 @@ describe("POST /api/chat", () => {
     createMock.mockReset().mockResolvedValue({
       content: [{ type: "text", text: "condensed query" }],
     });
+    checkRateLimitsMock.mockReset().mockResolvedValue({ ok: true });
   });
 
   it("rejects whitespace-only input with 400 and no SSE stream", async () => {
@@ -99,6 +105,38 @@ describe("POST /api/chat", () => {
     const response = await POST(makeRequest({ message: "a".repeat(400) }));
 
     expect(response.status).toBe(200);
+  });
+
+  it("rejects with 429 and does not touch retrieval/generation when a guardrail rate limit trips", async () => {
+    checkRateLimitsMock.mockResolvedValue({ ok: false, reason: "burst_limit" });
+
+    const response = await POST(makeRequest({ message: "what has he built?" }));
+    const payload = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(payload).toEqual({ message: "Too many requests", reason: "burst_limit" });
+    expect(embedTextsMock).not.toHaveBeenCalled();
+    expect(streamMock).not.toHaveBeenCalled();
+  });
+
+  it("passes the request's client IP and session ID into the guardrail check", async () => {
+    await POST(
+      makeRequest({ message: "what has he built?", sessionId: "session-abc" }),
+    );
+
+    expect(checkRateLimitsMock).toHaveBeenCalledWith("unknown", "session-abc");
+  });
+
+  it("falls back to the client IP as the session key when no session ID is sent, rather than a shared bucket", async () => {
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.9" },
+      body: JSON.stringify({ message: "what has he built?" }),
+    });
+
+    await POST(request);
+
+    expect(checkRateLimitsMock).toHaveBeenCalledWith("203.0.113.9", "203.0.113.9");
   });
 
   it("streams delta events followed by a final citations event", async () => {
@@ -140,14 +178,57 @@ describe("POST /api/chat", () => {
 
     const call = streamMock.mock.calls[0][0];
     expect(call.messages[0].content).toContain("Collab Canvas");
-    expect(call.messages[0].content).toContain("Real-time collaborative canvas under load.");
+    expect(call.messages[0].content).toContain(
+      "Real-time collaborative canvas under load, built with distributed systems techniques.",
+    );
   });
 
-  it("still emits the citations event when generation fails mid-stream", async () => {
+  it("returns the fixed refusal event instead of generating when retrieval confidence is too low", async () => {
+    queryChunksMock.mockResolvedValue([{ ...projectMatch, score: 0.1 }]);
+
+    const response = await POST(makeRequest({ message: "what has he built?" }));
+    const events = await readEvents(response);
+
+    expect(response.status).toBe(200);
+    expect(streamMock).not.toHaveBeenCalled();
+    expect(events).toHaveLength(1);
+    expect(events[0].event).toBe("refusal");
+    expect(typeof events[0].data.message).toBe("string");
+    expect(events[0].data.message.length).toBeGreaterThan(0);
+  });
+
+  it("returns the fixed refusal event when retrieval finds nothing", async () => {
+    queryChunksMock.mockResolvedValue([]);
+
+    const response = await POST(makeRequest({ message: "what is the weather?" }));
+    const events = await readEvents(response);
+
+    expect(events).toEqual([
+      { event: "refusal", data: { message: events[0].data.message } },
+    ]);
+  });
+
+  it("discards a generated answer and returns the refusal event when it isn't traceable to the retrieved context", async () => {
+    streamMock.mockReturnValue(
+      fakeStream(["The weather today is sunny and warm in Paris."]),
+    );
+
+    const response = await POST(makeRequest({ message: "what has he built?" }));
+    const events = await readEvents(response);
+
+    expect(response.status).toBe(200);
+    expect(events).toHaveLength(1);
+    expect(events[0].event).toBe("refusal");
+  });
+
+  it("still returns citations for a generation call that fails mid-stream but yields grounded partial text", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     streamMock.mockReturnValue({
       [Symbol.asyncIterator]: async function* () {
-        yield { type: "content_block_delta", delta: { type: "text_delta", text: "partial" } };
+        yield {
+          type: "content_block_delta",
+          delta: { type: "text_delta", text: "Yes, Collab Canvas used distributed systems." },
+        };
         throw new Error("generation upstream failed");
       },
     });
@@ -156,7 +237,10 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     const events = await readEvents(response);
-    expect(events[0]).toEqual({ event: "delta", data: { text: "partial" } });
+    expect(events[0]).toEqual({
+      event: "delta",
+      data: { text: "Yes, Collab Canvas used distributed systems." },
+    });
     expect(events[events.length - 1].event).toBe("citations");
     errorSpy.mockRestore();
   });
@@ -173,18 +257,6 @@ describe("POST /api/chat", () => {
     );
     expect(streamMock).not.toHaveBeenCalled();
     errorSpy.mockRestore();
-  });
-
-  it("still answers with an empty citations list when retrieval finds nothing", async () => {
-    queryChunksMock.mockResolvedValue([]);
-
-    const response = await POST(makeRequest({ message: "what is the weather?" }));
-    const events = await readEvents(response);
-
-    expect(events[events.length - 1]).toEqual({
-      event: "citations",
-      data: { citations: [] },
-    });
   });
 
   it("skips condensation and embeds the raw message when history is absent", async () => {

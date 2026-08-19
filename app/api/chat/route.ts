@@ -5,6 +5,11 @@ import { condenseQuery } from "@/lib/chat/condense";
 import { streamAnswer } from "@/lib/chat/generateAnswer";
 import { retrieveChunks } from "@/lib/chat/retrieve";
 import type { ChatTurn } from "@/lib/chat/types";
+import { isAnswerGrounded } from "@/lib/guardrails/citationCheck";
+import { passesConfidenceGate } from "@/lib/guardrails/confidenceGate";
+import { getClientIp } from "@/lib/guardrails/getClientIp";
+import { checkRateLimits } from "@/lib/guardrails/rateLimit";
+import { REFUSAL_MESSAGE } from "@/lib/guardrails/refusal";
 import { sanitizeInput } from "@/lib/guardrails/sanitize";
 
 export const runtime = "nodejs";
@@ -14,6 +19,30 @@ const MESSAGE_MAX_LENGTH = 400;
 
 function sseEvent(event: string, data: unknown) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+// A single SSE event carrying the fixed refusal string, used both when the
+// pre-generation confidence gate skips generation outright and when the
+// post-generation citation check discards an ungrounded answer.
+function refusalStream(): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(
+        encoder.encode(sseEvent("refusal", { message: REFUSAL_MESSAGE })),
+      );
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache",
+      connection: "keep-alive",
+    },
+  });
 }
 
 function isChatTurn(item: unknown): item is ChatTurn {
@@ -31,9 +60,29 @@ function parseHistory(raw: unknown): ChatTurn[] {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { message?: unknown; history?: unknown };
+  const body = (await request.json()) as {
+    message?: unknown;
+    history?: unknown;
+    sessionId?: unknown;
+  };
   const raw = typeof body.message === "string" ? body.message : "";
   const history = parseHistory(body.history);
+  const ip = getClientIp(request);
+  // Ephemeral, client-generated — used only as a rate-limit key, never
+  // stored or treated as an identity/session record. Falls back to the IP
+  // (not a shared constant) so requests without one still get an
+  // individually-scoped session bucket rather than colliding into one
+  // site-wide bucket shared by every visitor.
+  const sessionId =
+    typeof body.sessionId === "string" && body.sessionId.length > 0 ? body.sessionId : ip;
+
+  const rateLimitResult = await checkRateLimits(ip, sessionId);
+  if (!rateLimitResult.ok) {
+    return NextResponse.json(
+      { message: "Too many requests", reason: rateLimitResult.reason },
+      { status: 429 },
+    );
+  }
 
   const sanitized = sanitizeInput(raw, MESSAGE_MAX_LENGTH);
   if (!sanitized.ok) {
@@ -63,30 +112,52 @@ export async function POST(request: Request) {
     );
   }
 
+  // Weak retrieval means generating against it risks a hallucinated answer,
+  // so generation is skipped entirely in favor of the fixed refusal — this
+  // is the first of the two grounding gates (the second runs post-generation
+  // below).
+  if (!passesConfidenceGate(chunks)) {
+    return refusalStream();
+  }
+
   const { contextText, citations } = buildContext(chunks);
 
-  // Citations are already known from retrieval before generation starts, so
-  // they're always flushed as the closing event even if generation fails
-  // partway through — the client keeps whatever text deltas did arrive.
+  // Deltas are buffered rather than forwarded live, so the full answer can
+  // be checked for citation traceability (the second grounding gate) before
+  // any of it reaches the client — an ungrounded answer must never be
+  // partially shown before the check catches it.
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
+      const deltas: string[] = [];
 
       try {
         for await (const delta of streamAnswer(sanitized.value, contextText)) {
-          controller.enqueue(encoder.encode(sseEvent("delta", { text: delta })));
+          deltas.push(delta);
         }
       } catch (error) {
         console.error("POST /api/chat: generation call failed", error);
       }
 
-      // Guards the same way the generation loop above does: if the client
-      // has already disconnected, the controller may throw on enqueue/close.
+      const answerText = deltas.join("");
+      const grounded = answerText.trim() === "" || isAnswerGrounded(answerText, contextText);
+
+      // Guards enqueue/close the same way: if the client has already
+      // disconnected, the controller may throw.
       try {
-        controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
+        if (grounded) {
+          for (const delta of deltas) {
+            controller.enqueue(encoder.encode(sseEvent("delta", { text: delta })));
+          }
+          controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
+        } else {
+          controller.enqueue(
+            encoder.encode(sseEvent("refusal", { message: REFUSAL_MESSAGE })),
+          );
+        }
         controller.close();
       } catch (error) {
-        console.error("POST /api/chat: failed to flush citations", error);
+        console.error("POST /api/chat: failed to flush response", error);
       }
     },
   });
