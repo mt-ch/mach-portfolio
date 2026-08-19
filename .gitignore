@@ -22,6 +22,9 @@ sanity/extract.json
 # agent worktrees
 .claude/worktrees/
 
+# pnpm store
+.pnpm-store/
+
 # misc
 .DS_Store
 *.pem

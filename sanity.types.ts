@@ -60,6 +60,15 @@ export type About = {
     _type: "socialLink";
     _key: string;
   }>;
+  logo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  availabilityStatus?: string;
+  footerMessage?: string;
 };
 
 export type SanityImageAssetReference = {
@@ -157,6 +166,28 @@ export type Project = {
     crop?: SanityImageCrop;
     _type: "image";
   };
+  coverPrimary?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  coverSecondary?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  coverMobile?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  coverLayout?: "left-dominant" | "right-dominant";
   techStack?: Array<string>;
   skills?: Array<
     | "state management"
@@ -299,6 +330,39 @@ export type AllSanitySchemaTypes =
   | SanityAssetSourceData
   | SanityImageAsset
   | Geopoint;
+
+// Source: lib/sanity/queries.ts
+// Variable: featuredProjectsQuery
+// Query: *[_type == "project" && featured == true] | order(order asc) {    _id,    title,    slug,    summary,    coverPrimary,    coverSecondary,    coverMobile,    coverLayout,    order  }
+export type FeaturedProjectsQueryResult = Array<{
+  _id: string;
+  title: string;
+  slug: Slug;
+  summary: string;
+  coverPrimary: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  coverSecondary: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  coverMobile: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  coverLayout: "left-dominant" | "right-dominant" | null;
+  order: number;
+}>;
 
 // Source: lib/sanity/queries.ts
 // Variable: projectsQuery
@@ -454,6 +518,15 @@ export type AboutQueryResult = {
     _type: "block";
     _key: string;
   }> | null;
+  logo: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  availabilityStatus: string | null;
+  footerMessage: string | null;
   resumeUrl: string | null;
   email: string;
   socialLinks: Array<{
@@ -468,9 +541,10 @@ export type AboutQueryResult = {
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
+    '\n  *[_type == "project" && featured == true] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverPrimary,\n    coverSecondary,\n    coverMobile,\n    coverLayout,\n    order\n  }\n': FeaturedProjectsQueryResult;
     '\n  *[_type == "project"] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectsQueryResult;
     '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    body,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectBySlugQueryResult;
     '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceQueryResult;
-    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks\n  }\n': AboutQueryResult;
+    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    logo,\n    availabilityStatus,\n    footerMessage,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks\n  }\n': AboutQueryResult;
   }
 }

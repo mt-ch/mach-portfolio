@@ -8,8 +8,27 @@ vi.mock("./client", () => ({
   freshClient: { fetch: (...args: unknown[]) => freshFetchMock(...args) },
 }));
 
-const { getProject, getProjectForIndexById, getProjects, getProjectsForIndex } =
+const { getFeaturedProjects, getProject, getProjectForIndexById, getProjects, getProjectsForIndex } =
   await import("./projects");
+
+describe("getFeaturedProjects", () => {
+  it("queries featured projects ordered by the `order` field", async () => {
+    const projects = [
+      { _id: "1", title: "A", order: 1, featured: true },
+    ];
+    fetchMock.mockResolvedValueOnce(projects);
+
+    const result = await getFeaturedProjects();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("featured == true"),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("order(order asc)"),
+    );
+    expect(result).toEqual(projects);
+  });
+});
 
 describe("getProjects", () => {
   it("queries projects ordered by the `order` field and returns the raw ordering", async () => {

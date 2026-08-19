@@ -1,0 +1,161 @@
+:root {
+  /* Colors */
+  --white: #fcfaf8;
+  --black: #090b0b;
+
+  --grey-100: #edf3ed;
+  --grey-200: #929599;
+  --grey-300: #706a68;
+  --grey-400: #202224;
+
+  --brand: #2f1c2f;
+  --accent: #ffc9e6;
+
+  /* Typography */
+  --type-display-size: #{fluid-space(48, 92)};
+  --type-heading-size: #{fluid-space(32, 56)};
+  --type-subheading-size: #{fluid-space(24, 34)};
+  --type-body-size: #{fluid-space(16, 20)};
+  --type-small-size: #{fluid-space(13, 16)};
+  --type-caption-size: #{fluid-space(11, 13)};
+
+  /* Mono-specific sizes */
+  --type-mono-small-size: #{fluid-space(13, 15)};
+  --type-mono-caption-size: #{fluid-space(11, 13)};
+  --type-mono-code-size: #{fluid-space(13, 15)};
+
+  /* Line heights */
+  --leading-display: 1;
+  --leading-heading: 1.05;
+  --leading-subheading: 1.15;
+  --leading-body: 1.45;
+  --leading-small: 1.35;
+  --leading-caption: 1.3;
+  --leading-code: 1.5;
+
+  /* Letter spacing */
+  --tracking-display: -0.02em;
+  --tracking-heading: -0.0125em;
+  --tracking-subheading: -0.0075em;
+  --tracking-body: 0em;
+  --tracking-small: 0em;
+  --tracking-caption: -0.005em;
+  --tracking-code: 0em;
+
+  /* Spacing */
+  --space-2xs: #{fluid-space(4, 4)};
+  --space-xs: #{fluid-space(8, 8)};
+  --space-sm: #{fluid-space(12, 16)};
+  --space-md: #{fluid-space(20, 24)};
+  --space-lg: #{fluid-space(32, 40)};
+  --space-xl: #{fluid-space(48, 64)};
+  --space-2xl: #{fluid-space(72, 96)};
+  --space-3xl: #{fluid-space(96, 128)};
+  --space-4xl: #{fluid-space(128, 176)};
+  --space-5xl: #{fluid-space(160, 224)};
+  --space-6xl: #{fluid-space(208, 288)};
+
+  /* Layout */
+  --layout-page-x: #{fluid-space(20, 48)};
+  --layout-section-y: #{fluid-space(72, 128)};
+  --layout-grid-gap: #{fluid-space(16, 32)};
+
+  /* Radius */
+  --radius-card: #{fluid-space(4, 8)};
+
+  /* Semantic */
+  --background: var(--grey-100);
+  --foreground: var(--black);
+
+  --card-background: var(--white);
+  --card-foreground: var(--black);
+}
+
+.dark {
+  /* Semantic */
+  --background: var(--black);
+  --foreground: var(--white);
+
+  --card-background: var(--grey-400);
+  --card-foreground: var(--white);
+}
+
+@theme {
+  /* Colors */
+  --color-white: var(--white);
+  --color-black: var(--black);
+
+  --color-grey-100: var(--grey-100);
+  --color-grey-200: var(--grey-200);
+  --color-grey-300: var(--grey-300);
+  --color-grey-400: var(--grey-400);
+
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+
+  /* Semantic */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card-background: var(--card-background);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --text-display: var(--type-display-size);
+  --text-display--line-height: var(--leading-display);
+  --text-display--letter-spacing: var(--tracking-display);
+
+  --text-heading: var(--type-heading-size);
+  --text-heading--line-height: var(--leading-heading);
+  --text-heading--letter-spacing: var(--tracking-heading);
+
+  --text-subheading: var(--type-subheading-size);
+  --text-subheading--line-height: var(--leading-subheading);
+  --text-subheading--letter-spacing: var(--tracking-subheading);
+
+  --text-body: var(--type-body-size);
+  --text-body--line-height: var(--leading-body);
+  --text-body--letter-spacing: var(--tracking-body);
+
+  --text-small: var(--type-small-size);
+  --text-small--line-height: var(--leading-small);
+  --text-small--letter-spacing: var(--tracking-small);
+
+  --text-caption: var(--type-caption-size);
+  --text-caption--line-height: var(--leading-caption);
+  --text-caption--letter-spacing: var(--tracking-caption);
+
+  --text-mono-small: var(--type-mono-small-size);
+  --text-mono-small--line-height: var(--leading-small);
+  --text-mono-small--letter-spacing: var(--tracking-caption);
+
+  --text-mono-caption: var(--type-mono-caption-size);
+  --text-mono-caption--line-height: var(--leading-caption);
+  --text-mono-caption--letter-spacing: var(--tracking-caption);
+
+  --text-mono-code: var(--type-mono-code-size);
+  --text-mono-code--line-height: var(--leading-code);
+  --text-mono-code--letter-spacing: var(--tracking-code);
+
+  /* Spacing */
+  --spacing-2xs: var(--space-2xs);
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-2xl: var(--space-2xl);
+  --spacing-3xl: var(--space-3xl);
+  --spacing-4xl: var(--space-4xl);
+  --spacing-5xl: var(--space-5xl);
+  --spacing-6xl: var(--space-6xl);
+
+  --spacing-page-x: var(--layout-page-x);
+  --spacing-section-y: var(--layout-section-y);
+  --spacing-grid-gap: var(--layout-grid-gap);
+
+  --radius-card: var(--radius-card);
+}

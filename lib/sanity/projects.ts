@@ -1,11 +1,21 @@
 import { client, freshClient } from "./client";
 import {
+  featuredProjectsQuery,
   projectBySlugQuery,
   projectForIndexByIdQuery,
   projectsForIndexQuery,
   projectsQuery,
 } from "./queries";
-import type { ProjectDetail, ProjectForIndex, ProjectListItem } from "./types";
+import type {
+  FeaturedProjectListItem,
+  ProjectDetail,
+  ProjectForIndex,
+  ProjectListItem,
+} from "./types";
+
+export async function getFeaturedProjects(): Promise<FeaturedProjectListItem[]> {
+  return client.fetch(featuredProjectsQuery);
+}
 
 export async function getProjects(): Promise<ProjectListItem[]> {
   return client.fetch(projectsQuery);

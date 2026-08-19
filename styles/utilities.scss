@@ -1,0 +1,91 @@
+@layer utilities {
+  .site-container {
+    width: 100%;
+    padding-inline: var(--layout-page-x);
+  }
+
+  .section {
+    padding-block: var(--layout-section-y);
+  }
+
+  .section-sm {
+    padding-block: var(--space-2xl);
+  }
+
+  .section-lg {
+    padding-block: var(--space-3xl);
+  }
+
+  .grid-gap {
+    gap: var(--layout-grid-gap);
+  }
+
+  .card-radius {
+    border-radius: var(--radius-card);
+  }
+
+  .type-display {
+    font-family: var(--font-geist-sans);
+    font-size: var(--type-display-size);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .type-heading {
+    font-family: var(--font-geist-sans);
+    font-size: var(--type-heading-size);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .type-subheading {
+    font-family: var(--font-geist-sans);
+    font-size: var(--type-subheading-size);
+    line-height: var(--leading-subheading);
+    letter-spacing: var(--tracking-subheading);
+  }
+
+  .type-body {
+    font-family: var(--font-geist-sans);
+    font-size: var(--type-body-size);
+    line-height: var(--leading-body);
+    letter-spacing: var(--tracking-body);
+  }
+
+  .type-small {
+    font-family: var(--font-geist-sans);
+    font-size: var(--type-small-size);
+    line-height: var(--leading-small);
+    letter-spacing: var(--tracking-small);
+  }
+
+  .type-caption {
+    font-family: var(--font-geist-mono);
+    font-size: var(--type-caption-size);
+    line-height: var(--leading-caption);
+    letter-spacing: var(--tracking-caption);
+  }
+
+  .type-mono-small {
+    font-family: var(--font-geist-mono);
+    font-size: var(--type-mono-small-size);
+    line-height: var(--leading-small);
+    letter-spacing: var(--tracking-caption);
+  }
+
+  .type-mono-caption {
+    font-family: var(--font-geist-mono);
+    font-size: var(--type-mono-caption-size);
+    line-height: var(--leading-caption);
+    letter-spacing: var(--tracking-caption);
+  }
+
+  .type-mono-code {
+    font-family: var(--font-geist-mono);
+    font-size: var(--type-mono-code-size);
+    line-height: var(--leading-code);
+    letter-spacing: var(--tracking-code);
+  }
+}
+
+
