@@ -54,8 +54,14 @@ export async function POST(request: Request) {
         console.error("POST /api/chat: generation call failed", error);
       }
 
-      controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
-      controller.close();
+      // Guards the same way the generation loop above does: if the client
+      // has already disconnected, the controller may throw on enqueue/close.
+      try {
+        controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
+        controller.close();
+      } catch (error) {
+        console.error("POST /api/chat: failed to flush citations", error);
+      }
     },
   });
 
