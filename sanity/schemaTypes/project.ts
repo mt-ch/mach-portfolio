@@ -33,8 +33,46 @@ export const project = defineType({
     defineField({
       name: "coverImage",
       title: "Cover image",
+      description:
+        "Used on project detail pages and corpus indexing. Homepage covers use the primary, secondary, and mobile fields below.",
       type: "image",
       options: { hotspot: true },
+    }),
+    defineField({
+      name: "coverPrimary",
+      title: "Homepage cover — primary",
+      description: "Single-column panel on desktop in the homepage cover grid.",
+      type: "image",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "coverSecondary",
+      title: "Homepage cover — secondary",
+      description: "Two-column panel on desktop in the homepage cover grid.",
+      type: "image",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "coverMobile",
+      title: "Homepage cover — mobile",
+      description: "Full-width cover shown on small screens.",
+      type: "image",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "coverLayout",
+      title: "Homepage cover layout",
+      description:
+        "Controls which side spans two columns on desktop: left-dominant (primary left) or right-dominant (secondary left).",
+      type: "string",
+      options: {
+        list: [
+          { title: "Left dominant", value: "left-dominant" },
+          { title: "Right dominant", value: "right-dominant" },
+        ],
+        layout: "radio",
+      },
+      initialValue: "left-dominant",
     }),
     defineField({
       name: "techStack",

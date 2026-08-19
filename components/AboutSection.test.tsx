@@ -10,6 +10,9 @@ const about: About = {
   name: "Matt Chan",
   headline: "Software Engineer",
   bio: null,
+  logo: null,
+  availabilityStatus: null,
+  footerMessage: null,
   resumeUrl: "https://cdn.sanity.io/resume.pdf",
   email: "matt@example.com",
   socialLinks: [

@@ -18,6 +18,25 @@ export const about = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "logo",
+      title: "Logo",
+      description: "Hero mark shown below the intro on the homepage.",
+      type: "image",
+    }),
+    defineField({
+      name: "availabilityStatus",
+      title: "Availability status",
+      description: "Highlighted word in the footer CTA, e.g. “available”.",
+      type: "string",
+    }),
+    defineField({
+      name: "footerMessage",
+      title: "Footer message",
+      description:
+        "Text after the availability status in the footer, e.g. “for collaborations and full time roles”.",
+      type: "string",
+    }),
+    defineField({
       name: "bio",
       title: "Bio",
       type: "array",

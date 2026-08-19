@@ -1,5 +1,19 @@
 import { defineQuery } from "groq";
 
+export const featuredProjectsQuery = defineQuery(`
+  *[_type == "project" && featured == true] | order(order asc) {
+    _id,
+    title,
+    slug,
+    summary,
+    coverPrimary,
+    coverSecondary,
+    coverMobile,
+    coverLayout,
+    order
+  }
+`);
+
 export const projectsQuery = defineQuery(`
   *[_type == "project"] | order(order asc) {
     _id,
@@ -102,6 +116,9 @@ export const aboutQuery = defineQuery(`
     name,
     headline,
     bio,
+    logo,
+    availabilityStatus,
+    footerMessage,
     "resumeUrl": resumeFile.asset->url,
     email,
     socialLinks

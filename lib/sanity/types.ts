@@ -1,11 +1,13 @@
 import type {
   AboutQueryResult,
   ExperienceQueryResult,
+  FeaturedProjectsQueryResult,
   ProjectBySlugQueryResult,
   ProjectsQueryResult,
 } from "@/sanity.types";
 
 export type ProjectListItem = ProjectsQueryResult[number];
+export type FeaturedProjectListItem = FeaturedProjectsQueryResult[number];
 export type ProjectDetail = NonNullable<ProjectBySlugQueryResult>;
 
 export type ExperienceEntry = ExperienceQueryResult[number] & {

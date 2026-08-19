@@ -2,6 +2,7 @@ export { getAbout, getAboutFresh } from "./about";
 export { getExperience, getExperienceEntryById } from "./experience";
 export { toPlainText } from "./portableText";
 export {
+  getFeaturedProjects,
   getProject,
   getProjectForIndexById,
   getProjects,
@@ -10,6 +11,7 @@ export {
 export type {
   About,
   ExperienceEntry,
+  FeaturedProjectListItem,
   PortableTextBlock,
   ProjectDetail,
   ProjectForIndex,
