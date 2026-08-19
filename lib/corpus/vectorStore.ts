@@ -11,6 +11,36 @@ function getIndex(): Index<CorpusChunkMetadata> {
   return index;
 }
 
+export interface CorpusChunkMatch {
+  id: string;
+  score: number;
+  metadata: CorpusChunkMetadata;
+  text: string;
+}
+
+export async function queryChunks(
+  vector: number[],
+  topK: number,
+): Promise<CorpusChunkMatch[]> {
+  const results = await getIndex().query({
+    vector,
+    topK,
+    includeMetadata: true,
+    includeData: true,
+  });
+
+  return results
+    .filter((result): result is typeof result & { metadata: CorpusChunkMetadata } =>
+      result.metadata != null,
+    )
+    .map((result) => ({
+      id: String(result.id),
+      score: result.score,
+      metadata: result.metadata,
+      text: result.data ?? "",
+    }));
+}
+
 export async function upsertChunks(
   chunks: CorpusChunk[],
   vectors: number[][],
@@ -25,6 +55,7 @@ export async function upsertChunks(
       id: chunk.id,
       vector: vectors[i],
       metadata: chunk.metadata,
+      data: chunk.text,
     })),
   );
 }

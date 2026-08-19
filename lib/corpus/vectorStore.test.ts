@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { upsertMock, deleteMock, fromEnvMock } = vi.hoisted(() => ({
+const { upsertMock, deleteMock, queryMock, fromEnvMock } = vi.hoisted(() => ({
   upsertMock: vi.fn(),
   deleteMock: vi.fn(),
+  queryMock: vi.fn(),
   fromEnvMock: vi.fn(),
 }));
 
@@ -10,14 +11,20 @@ vi.mock("@upstash/vector", () => ({
   Index: { fromEnv: fromEnvMock },
 }));
 
-const { upsertChunks, deleteDocumentChunks } = await import("./vectorStore");
+const { upsertChunks, deleteDocumentChunks, queryChunks } = await import(
+  "./vectorStore"
+);
 
 import type { CorpusChunk } from "./types";
 
 describe("vectorStore", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fromEnvMock.mockReturnValue({ upsert: upsertMock, delete: deleteMock });
+    fromEnvMock.mockReturnValue({
+      upsert: upsertMock,
+      delete: deleteMock,
+      query: queryMock,
+    });
   });
 
   describe("upsertChunks", () => {
@@ -42,7 +49,7 @@ describe("vectorStore", () => {
       expect(upsertMock).not.toHaveBeenCalled();
     });
 
-    it("upserts each chunk with its id, vector, and metadata", async () => {
+    it("upserts each chunk with its id, vector, metadata, and text as data", async () => {
       const chunks: CorpusChunk[] = [
         {
           id: "a:0",
@@ -60,6 +67,7 @@ describe("vectorStore", () => {
           id: "a:0",
           vector: [0.1, 0.2],
           metadata: { documentType: "project", documentId: "a", slug: "a" },
+          data: "some text",
         },
       ]);
     });
@@ -70,6 +78,77 @@ describe("vectorStore", () => {
       await deleteDocumentChunks("project-1");
 
       expect(deleteMock).toHaveBeenCalledWith({ prefix: "project-1:" });
+    });
+  });
+
+  describe("queryChunks", () => {
+    it("queries with the vector, topK, includeMetadata, and includeData", async () => {
+      queryMock.mockResolvedValue([]);
+
+      await queryChunks([0.1, 0.2], 4);
+
+      expect(queryMock).toHaveBeenCalledWith({
+        vector: [0.1, 0.2],
+        topK: 4,
+        includeMetadata: true,
+        includeData: true,
+      });
+    });
+
+    it("maps results to id, score, metadata, and text", async () => {
+      queryMock.mockResolvedValue([
+        {
+          id: "a:0",
+          score: 0.92,
+          metadata: { documentType: "project", documentId: "a", slug: "a" },
+          data: "some text",
+        },
+      ]);
+
+      const result = await queryChunks([0.1, 0.2], 4);
+
+      expect(result).toEqual([
+        {
+          id: "a:0",
+          score: 0.92,
+          metadata: { documentType: "project", documentId: "a", slug: "a" },
+          text: "some text",
+        },
+      ]);
+    });
+
+    it("falls back to empty text when data is missing", async () => {
+      queryMock.mockResolvedValue([
+        {
+          id: "a:0",
+          score: 0.92,
+          metadata: { documentType: "project", documentId: "a" },
+        },
+      ]);
+
+      const result = await queryChunks([0.1, 0.2], 4);
+
+      expect(result[0].text).toBe("");
+    });
+
+    it("drops results with no metadata", async () => {
+      queryMock.mockResolvedValue([
+        { id: "a:0", score: 0.92, metadata: undefined },
+      ]);
+
+      const result = await queryChunks([0.1, 0.2], 4);
+
+      expect(result).toEqual([]);
+    });
+
+    it("drops results with null metadata", async () => {
+      queryMock.mockResolvedValue([
+        { id: "a:0", score: 0.92, metadata: null },
+      ]);
+
+      const result = await queryChunks([0.1, 0.2], 4);
+
+      expect(result).toEqual([]);
     });
   });
 });
