@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { buildContext } from "@/lib/chat/context";
+import { condenseQuery } from "@/lib/chat/condense";
 import { streamAnswer } from "@/lib/chat/generateAnswer";
 import { retrieveChunks } from "@/lib/chat/retrieve";
+import type { ChatTurn } from "@/lib/chat/types";
 import { sanitizeInput } from "@/lib/guardrails/sanitize";
 
 export const runtime = "nodejs";
@@ -14,9 +16,24 @@ function sseEvent(event: string, data: unknown) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+function isChatTurn(item: unknown): item is ChatTurn {
+  if (!item || typeof item !== "object") return false;
+  const { role, text } = item as { role?: unknown; text?: unknown };
+  return (role === "user" || role === "assistant") && typeof text === "string";
+}
+
+// Shape validation only — a malformed or oversized history (tampered/forged,
+// or longer than the client's own truncation) is guardrails' concern (#48),
+// not this route's; malformed entries are dropped rather than erroring.
+function parseHistory(raw: unknown): ChatTurn[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isChatTurn);
+}
+
 export async function POST(request: Request) {
-  const body = (await request.json()) as { message?: unknown };
+  const body = (await request.json()) as { message?: unknown; history?: unknown };
   const raw = typeof body.message === "string" ? body.message : "";
+  const history = parseHistory(body.history);
 
   const sanitized = sanitizeInput(raw, MESSAGE_MAX_LENGTH);
   if (!sanitized.ok) {
@@ -26,9 +43,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // The condensed query is used only for embedding/retrieval below — the
+  // generation call further down still gets the visitor's original message.
+  let retrievalQuery = sanitized.value;
+  try {
+    retrievalQuery = await condenseQuery(sanitized.value, history);
+  } catch (error) {
+    console.error("POST /api/chat: condensation failed", error);
+  }
+
   let chunks;
   try {
-    chunks = await retrieveChunks(sanitized.value);
+    chunks = await retrieveChunks(retrievalQuery);
   } catch (error) {
     console.error("POST /api/chat: retrieval failed", error);
     return NextResponse.json(

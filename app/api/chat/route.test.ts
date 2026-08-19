@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { embedTextsMock, queryChunksMock, streamMock } = vi.hoisted(() => ({
+const { embedTextsMock, queryChunksMock, streamMock, createMock } = vi.hoisted(() => ({
   embedTextsMock: vi.fn(),
   queryChunksMock: vi.fn(),
   streamMock: vi.fn(),
+  createMock: vi.fn(),
 }));
 
 vi.mock("@/lib/corpus/embed", () => ({ embedTexts: embedTextsMock }));
@@ -11,7 +12,7 @@ vi.mock("@/lib/corpus/vectorStore", () => ({ queryChunks: queryChunksMock }));
 
 vi.mock("@anthropic-ai/sdk", () => ({
   default: class {
-    messages = { stream: streamMock };
+    messages = { stream: streamMock, create: createMock };
   },
 }));
 
@@ -67,6 +68,9 @@ describe("POST /api/chat", () => {
     embedTextsMock.mockReset().mockResolvedValue([[0.1, 0.2]]);
     queryChunksMock.mockReset().mockResolvedValue([projectMatch]);
     streamMock.mockReset().mockReturnValue(fakeStream(["Yes, ", "he has."]));
+    createMock.mockReset().mockResolvedValue({
+      content: [{ type: "text", text: "condensed query" }],
+    });
   });
 
   it("rejects whitespace-only input with 400 and no SSE stream", async () => {
@@ -181,5 +185,57 @@ describe("POST /api/chat", () => {
       event: "citations",
       data: { citations: [] },
     });
+  });
+
+  it("skips condensation and embeds the raw message when history is absent", async () => {
+    await POST(makeRequest({ message: "has he worked with distributed systems?" }));
+
+    expect(createMock).not.toHaveBeenCalled();
+    expect(embedTextsMock).toHaveBeenCalledWith([
+      "has he worked with distributed systems?",
+    ]);
+  });
+
+  it("condenses history into a self-contained query before embedding, but generates against the raw message", async () => {
+    createMock.mockResolvedValue({
+      content: [{ type: "text", text: "How long did he work at Acme Corp?" }],
+    });
+
+    await POST(
+      makeRequest({
+        message: "how long was he there?",
+        history: [
+          { role: "user", text: "has he worked with distributed systems?" },
+          { role: "assistant", text: "Yes, at Acme Corp." },
+        ],
+      }),
+    );
+
+    expect(createMock).toHaveBeenCalled();
+    expect(embedTextsMock).toHaveBeenCalledWith(["How long did he work at Acme Corp?"]);
+
+    const generateCall = streamMock.mock.calls[0][0];
+    expect(generateCall.messages[0].content).toContain("how long was he there?");
+  });
+
+  it("drops malformed history entries instead of erroring", async () => {
+    const response = await POST(
+      makeRequest({
+        message: "what has he built?",
+        history: [
+          { role: "user", text: "fine" },
+          { role: "bogus", text: "bad role" },
+          { role: "assistant" },
+          "not an object",
+          null,
+        ],
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(createMock).toHaveBeenCalled();
+    const condenseCall = createMock.mock.calls[0][0];
+    expect(condenseCall.messages[0].content).toContain("fine");
+    expect(condenseCall.messages[0].content).not.toContain("bad role");
   });
 });

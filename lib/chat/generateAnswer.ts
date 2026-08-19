@@ -1,15 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-
-const MODEL = "claude-haiku-4-5";
-
-let client: Anthropic | undefined;
-
-function getClient(): Anthropic {
-  if (!client) {
-    client = new Anthropic();
-  }
-  return client;
-}
+import { CHAT_MODEL, getAnthropicClient } from "./anthropicClient";
 
 const SYSTEM_PROMPT = [
   "You are the Q&A assistant embedded in Matt Chan's portfolio site.",
@@ -24,8 +13,8 @@ export async function* streamAnswer(
   message: string,
   contextText: string,
 ): AsyncGenerator<string> {
-  const stream = getClient().messages.stream({
-    model: MODEL,
+  const stream = getAnthropicClient().messages.stream({
+    model: CHAT_MODEL,
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages: [
