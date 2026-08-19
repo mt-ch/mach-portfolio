@@ -6,7 +6,7 @@ export function SiteFooter({ about }: { about: About }) {
   return (
     <div className="p-md gap-xl bg-grey-400 relative flex flex-col h-screen justify-between">
       <h2 className="type-body font-medium text-white">
-        <span className="text-transparent">{about.name}</span>
+        {about.name}
         {about.availabilityStatus ? (
           <>
             {" is "}

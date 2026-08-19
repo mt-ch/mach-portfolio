@@ -29,6 +29,7 @@ describe("SiteFooter", () => {
   it("renders availability CTA, email, resume, and social links", () => {
     render(<SiteFooter about={about} />);
 
+    expect(screen.getByText(/Matt Chan/)).toBeInTheDocument();
     expect(screen.getByText("available")).toBeInTheDocument();
     expect(
       screen.getByText(/for collaborations and full time roles/),
