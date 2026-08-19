@@ -19,6 +19,9 @@ build
 # sanity
 sanity/extract.json
 
+# agent worktrees
+.claude/worktrees/
+
 # misc
 .DS_Store
 *.pem

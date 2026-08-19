@@ -6,6 +6,7 @@ const eslintConfig = [
     ignores: [
       "node_modules/**",
       ".next/**",
+      ".claude/worktrees/**",
       "sanity.types.ts",
       "sanity/extract.json",
     ],
