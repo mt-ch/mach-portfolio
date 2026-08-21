@@ -13,15 +13,9 @@ import {
 } from "./chatSession";
 import type { ChatMessage } from "./types";
 
-const INTRO_MESSAGE: ChatMessage = {
-  id: "intro",
-  role: "assistant-intro",
-  text: "Ask me anything about Matt's projects, experience, or background.",
-};
-
 function initialMessages(): ChatMessage[] {
-  if (typeof window === "undefined") return [INTRO_MESSAGE];
-  return [INTRO_MESSAGE, ...loadStoredMessages()];
+  if (typeof window === "undefined") return [];
+  return loadStoredMessages();
 }
 
 export function useChatConversation() {
@@ -36,15 +30,11 @@ export function useChatConversation() {
       setMessages((prev) => {
         const next = updater(prev);
         messagesRef.current = next;
-        // Drop the intro (synthesized locally) and any not-yet-answered
-        // placeholder, so a reload never rehydrates a permanently blank
-        // bubble for a request that was in flight when the tab closed.
+        // Drop any not-yet-answered placeholder, so a reload never
+        // rehydrates a permanently blank bubble for a request that was
+        // in flight when the tab closed.
         saveStoredMessages(
-          next.filter(
-            (m) =>
-              m.role !== "assistant-intro" &&
-              !(m.role === "assistant" && m.text === "" && m.citations.length === 0),
-          ),
+          next.filter((m) => !(m.role === "assistant" && m.text === "" && m.citations.length === 0)),
         );
         return next;
       });
@@ -177,10 +167,12 @@ export function useChatConversation() {
     abortRef.current?.abort();
     abortRef.current = null;
     clearStoredMessages();
-    messagesRef.current = [INTRO_MESSAGE];
-    setMessages([INTRO_MESSAGE]);
+    messagesRef.current = [];
+    setMessages([]);
     setIsThinking(false);
   }, []);
 
-  return { messages, isThinking, send, reset };
+  const hasStarted = messages.some((m) => m.role === "user");
+
+  return { messages, isThinking, hasStarted, send, reset };
 }

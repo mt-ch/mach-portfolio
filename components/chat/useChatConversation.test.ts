@@ -28,13 +28,58 @@ describe("useChatConversation", () => {
     window.sessionStorage.clear();
   });
 
-  it("starts with only the intro message and not thinking", () => {
+  it("starts with no messages, not thinking, and hasStarted false", () => {
     const { result } = renderHook(() => useChatConversation());
 
-    expect(result.current.messages).toEqual([
-      { id: "intro", role: "assistant-intro", text: expect.any(String) },
-    ]);
+    expect(result.current.messages).toEqual([]);
     expect(result.current.isThinking).toBe(false);
+    expect(result.current.hasStarted).toBe(false);
+  });
+
+  it("hasStarted becomes true optimistically as soon as the user message is appended", () => {
+    const { response } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useChatConversation());
+    expect(result.current.hasStarted).toBe(false);
+
+    act(() => result.current.send("has he worked with distributed systems?"));
+
+    expect(result.current.hasStarted).toBe(true);
+  });
+
+  it("hasStarted remains true across a remount when sessionStorage holds a prior user message", async () => {
+    const { response, push, close } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const first = renderHook(() => useChatConversation());
+    act(() => first.result.current.send("what has he built?"));
+    await act(async () => {
+      push("citations", { citations: [] });
+      close();
+    });
+    await waitFor(() => expect(first.result.current.isThinking).toBe(false));
+
+    const second = renderHook(() => useChatConversation());
+    expect(second.result.current.hasStarted).toBe(true);
+  });
+
+  it("hasStarted returns to false after reset", async () => {
+    const { response, push, close } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+    await act(async () => {
+      push("citations", { citations: [] });
+      close();
+    });
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.hasStarted).toBe(true);
+
+    act(() => result.current.reset());
+
+    expect(result.current.hasStarted).toBe(false);
   });
 
   it("on send, appends a user message and an empty assistant placeholder, and sets isThinking", () => {
@@ -45,13 +90,13 @@ describe("useChatConversation", () => {
     act(() => result.current.send("has he worked with distributed systems?"));
 
     expect(result.current.isThinking).toBe(true);
-    expect(result.current.messages).toHaveLength(3);
-    expect(result.current.messages[1]).toEqual({
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[0]).toEqual({
       id: expect.any(String),
       role: "user",
       text: "has he worked with distributed systems?",
     });
-    expect(result.current.messages[2]).toMatchObject({
+    expect(result.current.messages[1]).toMatchObject({
       role: "assistant",
       text: "",
       citations: [],
@@ -66,7 +111,7 @@ describe("useChatConversation", () => {
     act(() => result.current.send("   "));
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.messages).toHaveLength(0);
   });
 
   it("accumulates delta events into the assistant message's text", async () => {
@@ -82,7 +127,7 @@ describe("useChatConversation", () => {
     });
 
     await waitFor(() =>
-      expect(result.current.messages[2]).toMatchObject({
+      expect(result.current.messages[1]).toMatchObject({
         role: "assistant",
         text: "Yes, he has.",
       }),
@@ -105,7 +150,7 @@ describe("useChatConversation", () => {
     });
 
     await waitFor(() => expect(result.current.isThinking).toBe(false));
-    expect(result.current.messages[2]).toEqual({
+    expect(result.current.messages[1]).toEqual({
       id: expect.any(String),
       role: "assistant",
       text: "Collab Canvas used distributed systems.",
@@ -126,14 +171,14 @@ describe("useChatConversation", () => {
     });
 
     await waitFor(() => expect(result.current.isThinking).toBe(false));
-    expect(result.current.messages[2]).toEqual({
+    expect(result.current.messages[1]).toEqual({
       id: expect.any(String),
       role: "assistant-refusal",
       text: "I can only answer questions about Matt's background.",
     });
   });
 
-  it("reset clears the conversation back to just the intro and clears sessionStorage", async () => {
+  it("reset clears the conversation back to empty and clears sessionStorage", async () => {
     const { response, push, close } = controllableResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
@@ -143,12 +188,11 @@ describe("useChatConversation", () => {
       push("citations", { citations: [] });
       close();
     });
-    await waitFor(() => expect(result.current.messages).toHaveLength(3));
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
 
     act(() => result.current.reset());
 
-    expect(result.current.messages).toHaveLength(1);
-    expect(result.current.messages[0].role).toBe("assistant-intro");
+    expect(result.current.messages).toHaveLength(0);
     expect(result.current.isThinking).toBe(false);
     expect(window.sessionStorage.getItem("chat:history")).toBeNull();
   });
@@ -167,12 +211,12 @@ describe("useChatConversation", () => {
     await waitFor(() => expect(first.result.current.isThinking).toBe(false));
 
     const second = renderHook(() => useChatConversation());
-    expect(second.result.current.messages).toHaveLength(3);
-    expect(second.result.current.messages[1]).toMatchObject({
+    expect(second.result.current.messages).toHaveLength(2);
+    expect(second.result.current.messages[0]).toMatchObject({
       role: "user",
       text: "what has he built?",
     });
-    expect(second.result.current.messages[2]).toMatchObject({
+    expect(second.result.current.messages[1]).toMatchObject({
       role: "assistant",
       text: "Collab Canvas.",
     });
@@ -185,14 +229,14 @@ describe("useChatConversation", () => {
     const first = renderHook(() => useChatConversation());
     act(() => first.result.current.send("what has he built?"));
 
-    expect(first.result.current.messages).toHaveLength(3);
+    expect(first.result.current.messages).toHaveLength(2);
     const stored = JSON.parse(window.sessionStorage.getItem("chat:history") ?? "[]");
     expect(stored).toHaveLength(1);
     expect(stored[0]).toMatchObject({ role: "user", text: "what has he built?" });
 
     const second = renderHook(() => useChatConversation());
-    expect(second.result.current.messages).toHaveLength(2);
-    expect(second.result.current.messages[1]).toMatchObject({ role: "user" });
+    expect(second.result.current.messages).toHaveLength(1);
+    expect(second.result.current.messages[0]).toMatchObject({ role: "user" });
   });
 
   it("sends prior turns as history but not the current message", async () => {

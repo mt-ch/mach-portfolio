@@ -24,7 +24,7 @@ interface ChatDrawerProps {
 type Phase = "closed" | "opening" | "open" | "closing";
 
 export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
-  const { messages, isThinking, send, reset } = useChatConversation();
+  const { messages, isThinking, hasStarted, send, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
 
@@ -155,27 +155,34 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
 
             <div className="p-md flex min-h-0 flex-1 flex-col justify-between gap-md">
               <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
-                {messages.map((message) => (
-                  <ChatMessageBubble key={message.id} message={message} />
-                ))}
-                {isThinking && <ChatTypingIndicator />}
-
-                <div className="flex flex-col gap-2xs border-t border-grey-200 pt-md">
-                  {SUGGESTED_QUESTIONS.map((question) => (
-                    <button
-                      key={question}
-                      type="button"
-                      onClick={() => onSuggestedQuestion(question)}
-                      disabled={isThinking}
-                      className="inline-flex items-start gap-sm rounded-sm text-left text-grey-300 disabled:opacity-40 hover:bg-brand hover:text-accent -mx-sm transition-all duration-200"
-                    >
-                      <div className="flex items-start gap-sm p-sm">
-                        <CornerDownRightIcon className="size-md shrink-0 mt-2xs" strokeWidth={1.75} />
-                        <span className="type-body">{question}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                {hasStarted ? (
+                  <>
+                    {messages.map((message) => (
+                      <ChatMessageBubble key={message.id} message={message} />
+                    ))}
+                    {isThinking && <ChatTypingIndicator />}
+                  </>
+                ) : (
+                  <div className="flex min-h-full flex-col justify-end gap-md">
+                    <p className="type-subheading font-medium text-black">Hey, ask away.</p>
+                    <div className="flex flex-col gap-2xs">
+                      {SUGGESTED_QUESTIONS.map((question) => (
+                        <button
+                          key={question}
+                          type="button"
+                          onClick={() => onSuggestedQuestion(question)}
+                          disabled={isThinking}
+                          className="inline-flex items-start gap-sm rounded-sm text-left text-grey-300 disabled:opacity-40 hover:bg-brand hover:text-accent -mx-sm transition-all duration-200"
+                        >
+                          <div className="flex items-start gap-sm p-sm">
+                            <CornerDownRightIcon className="size-md shrink-0 mt-2xs" strokeWidth={1.75} />
+                            <span className="type-body">{question}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <form onSubmit={onSubmit} className="flex items-center justify-between border border-grey-200 bg-white">
