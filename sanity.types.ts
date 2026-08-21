@@ -455,15 +455,50 @@ export type OtherProjectsQueryResult = Array<{
   order: number;
 }>;
 
+export type Color = {
+  _type: "color";
+  hex?: string;
+  alpha?: number;
+  hsl?: HslaColor;
+  hsv?: HsvaColor;
+  rgb?: RgbaColor;
+};
+
+export type HslaColor = {
+  _type: "hslaColor";
+  h?: number;
+  s?: number;
+  l?: number;
+  a?: number;
+};
+
+export type HsvaColor = {
+  _type: "hsvaColor";
+  h?: number;
+  s?: number;
+  v?: number;
+  a?: number;
+};
+
+export type RgbaColor = {
+  _type: "rgbaColor";
+  r?: number;
+  g?: number;
+  b?: number;
+  a?: number;
+};
+
 // Source: lib/sanity/queries.ts
 // Variable: projectBySlugQuery
-// Query: *[_type == "project" && slug.current == $slug][0] {    _id,    title,    slug,    summary,    heroText,    story,    coverImage,    techStack,    skills,    impact,    role,    links,    featured,    order,    dateCompleted  }
+// Query: *[_type == "project" && slug.current == $slug][0] {    _id,    title,    slug,    summary,    heroText,    headerBackgroundColor,    headerForegroundColor,    story,    coverImage,    techStack,    skills,    impact,    role,    links,    featured,    order,    dateCompleted  }
 export type ProjectBySlugQueryResult = {
   _id: string;
   title: string;
   slug: Slug;
   summary: string;
   heroText: string | null;
+  headerBackgroundColor: Color | null;
+  headerForegroundColor: Color | null;
   story: Array<
     | ({
         _key: string;
@@ -683,7 +718,7 @@ declare module "@sanity/client" {
     '\n  *[_type == "project" && featured == true] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverPrimary,\n    coverSecondary,\n    coverMobile,\n    coverLayout,\n    order\n  }\n': FeaturedProjectsQueryResult;
     '\n  *[_type == "project"] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectsQueryResult;
     '\n  *[_type == "project" && _id != $currentId] | order(order asc) [0...3] {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    order\n  }\n': OtherProjectsQueryResult;
-    '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    story,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectBySlugQueryResult;
+    '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    headerBackgroundColor,\n    headerForegroundColor,\n    story,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectBySlugQueryResult;
     '\n  *[_type == "project"] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectsForIndexQueryResult;
     '\n  *[_type == "project" && _id == $id][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectForIndexByIdQueryResult;
     '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceQueryResult;
