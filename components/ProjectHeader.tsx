@@ -10,7 +10,11 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
       <div className="flex flex-col col-start-2 justify-between gap-sm">
         <div className="flex flex-col gap-sm">
           <h1 className="type-subheading font-medium text-white">{project.title}</h1>
-          <p className="type-body font-medium text-white">{project.summary}</p>
+          {project.heroText && (
+            <p className="type-body font-medium text-white whitespace-pre-line">
+              {project.heroText}
+            </p>
+          )}
           {project.role && (
             <div>
               <p className="type-body font-medium text-white">{project.role}</p>

@@ -49,6 +49,7 @@ export const projectBySlugQuery = defineQuery(`
     title,
     slug,
     summary,
+    heroText,
     story,
     coverImage,
     techStack,

@@ -25,6 +25,13 @@ export const project = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "heroText",
+      title: "Hero text",
+      description:
+        "Plain multi-line copy shown as the subtitle on the project detail page hero, in place of the summary.",
+      type: "text",
+    }),
+    defineField({
       name: "story",
       title: "Project story",
       description:
