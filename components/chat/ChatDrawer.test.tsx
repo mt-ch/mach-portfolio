@@ -172,15 +172,14 @@ describe("ChatDrawer", () => {
     );
   });
 
-  it("closes via the launcher (toggle)", async () => {
+  it("hides the launcher pill while the drawer is open, to avoid overlapping the composer", async () => {
     const user = userEvent.setup();
     render(<Wrapper />);
 
     await user.click(screen.getByRole("button", { name: "Open chat" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Close chat" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open chat" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Close chat" })).not.toBeInTheDocument();
   });
 
   it("closes via the explicit in-drawer close control", async () => {

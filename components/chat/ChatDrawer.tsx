@@ -64,17 +64,17 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        aria-label={isOpen ? "Close chat" : "Open chat"}
-        className="fixed bottom-md right-md z-40 inline-flex items-center gap-sm rounded-full bg-black px-md py-sm shadow-lg dark:bg-white"
-      >
-        <span className="type-small font-medium text-white dark:text-black">
-          {isOpen ? "Close" : "Ask Matt LLM"}
-        </span>
-      </button>
+      {!isOpen && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          aria-label="Open chat"
+          className="fixed bottom-md right-md z-40 inline-flex items-center gap-sm rounded-full bg-black px-md py-sm shadow-lg dark:bg-white"
+        >
+          <span className="type-small font-medium text-white dark:text-black">Ask Matt LLM</span>
+        </button>
+      )}
 
       {mode === "overlay" && isOpen && (
         <div
