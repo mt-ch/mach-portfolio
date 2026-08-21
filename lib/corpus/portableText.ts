@@ -1,7 +1,27 @@
 import { toPlainText } from "@/lib/sanity/portableText";
-import type { PortableTextBlock } from "@/lib/sanity";
+import type { ImageStoryBlock, PortableTextBlock, StoryBlock } from "@/lib/sanity";
 
 export { toPlainText };
+
+function imageBlockText(block: ImageStoryBlock): string {
+  return [block.caption, block.image?.alt, block.secondImage?.alt]
+    .filter((text): text is string => !!text)
+    .join(" ");
+}
+
+// Flattens a Project Story (Text Block + Image Block array) back into a
+// single ordered Portable Text sequence, so the existing heading-split logic
+// below can run over it unchanged. Each Text Block's `content` is unwrapped
+// in place; an Image Block folds its caption/alt text in as a plain block at
+// its position, contributing nothing when both are empty.
+export function flattenStory(story: StoryBlock[] | null | undefined): PortableTextBlock[] {
+  if (!story) return [];
+  return story.flatMap((block) => {
+    if (block._type === "textBlock") return block.content;
+    const text = imageBlockText(block);
+    return text ? [{ style: "normal" as const, children: [{ text }] }] : [];
+  });
+}
 
 const HEADING_STYLES = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 

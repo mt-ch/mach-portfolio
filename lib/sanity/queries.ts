@@ -38,7 +38,7 @@ export const projectBySlugQuery = defineQuery(`
     title,
     slug,
     summary,
-    body,
+    story,
     coverImage,
     techStack,
     skills,
@@ -51,7 +51,7 @@ export const projectBySlugQuery = defineQuery(`
   }
 `);
 
-// Unlike projectsQuery (used for the listing page), this includes `body` —
+// Unlike projectsQuery (used for the listing page), this includes `story` —
 // needed by the corpus indexing pipeline but wasted weight on the listing.
 export const projectsForIndexQuery = defineQuery(`
   *[_type == "project"] {
@@ -59,7 +59,7 @@ export const projectsForIndexQuery = defineQuery(`
     title,
     slug,
     summary,
-    body,
+    story,
     techStack,
     skills,
     impact,
@@ -76,7 +76,7 @@ export const projectForIndexByIdQuery = defineQuery(`
     title,
     slug,
     summary,
-    body,
+    story,
     techStack,
     skills,
     impact,

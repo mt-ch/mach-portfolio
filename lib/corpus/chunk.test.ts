@@ -10,7 +10,7 @@ function makeProject(overrides: Partial<ProjectForIndex> = {}): ProjectForIndex 
     title: "Collab Canvas",
     slug: { current: "collab-canvas" },
     summary: "A collaborative whiteboard.",
-    body: null,
+    story: null,
     techStack: null,
     skills: null,
     impact: null,
@@ -20,13 +20,18 @@ function makeProject(overrides: Partial<ProjectForIndex> = {}): ProjectForIndex 
 }
 
 describe("chunkProject", () => {
-  it("produces exactly one chunk when the body has no headings", () => {
+  it("produces exactly one chunk when the story has no headings", () => {
     const project = makeProject({
       techStack: ["React", "Yjs"],
       skills: ["state management"],
       impact: ["reduced load time 40%"],
       dateCompleted: "2024-01-01",
-      body: [{ style: "normal", children: [{ text: "A whiteboard app." }] }],
+      story: [
+        {
+          _type: "textBlock",
+          content: [{ style: "normal", children: [{ text: "A whiteboard app." }] }],
+        },
+      ],
     });
 
     const chunks = chunkProject(project);
@@ -46,8 +51,8 @@ describe("chunkProject", () => {
     expect(chunks[0].text).toContain("A whiteboard app.");
   });
 
-  it("produces one chunk even with an empty/placeholder body", () => {
-    const chunks = chunkProject(makeProject({ body: null }));
+  it("produces one chunk even with an empty/placeholder story", () => {
+    const chunks = chunkProject(makeProject({ story: null }));
 
     expect(chunks).toHaveLength(1);
     expect(chunks[0].text).toContain("Title: Collab Canvas");
@@ -71,11 +76,16 @@ describe("chunkProject", () => {
   it("splits into one chunk per heading, repeating the structured-field header in each", () => {
     const project = makeProject({
       techStack: ["React"],
-      body: [
-        { style: "h2", children: [{ text: "Problem" }] },
-        { style: "normal", children: [{ text: "Onboarding was slow." }] },
-        { style: "h2", children: [{ text: "Solution" }] },
-        { style: "normal", children: [{ text: "We rebuilt the flow." }] },
+      story: [
+        {
+          _type: "textBlock",
+          content: [
+            { style: "h2", children: [{ text: "Problem" }] },
+            { style: "normal", children: [{ text: "Onboarding was slow." }] },
+            { style: "h2", children: [{ text: "Solution" }] },
+            { style: "normal", children: [{ text: "We rebuilt the flow." }] },
+          ],
+        },
       ],
     });
 
@@ -91,6 +101,63 @@ describe("chunkProject", () => {
     expect(chunks[0].text).toContain("Onboarding was slow.");
     expect(chunks[1].text).toContain("## Solution");
     expect(chunks[1].text).toContain("We rebuilt the flow.");
+  });
+
+  it("includes an Image Block's caption/alt text at its position in the flattened story", () => {
+    const project = makeProject({
+      story: [
+        {
+          _type: "textBlock",
+          content: [{ style: "normal", children: [{ text: "Before the image." }] }],
+        },
+        {
+          _type: "imageBlock",
+          image: { alt: "Whiteboard canvas with sticky notes" },
+          caption: "The collaborative canvas in use.",
+          layout: "full",
+        },
+        {
+          _type: "textBlock",
+          content: [{ style: "normal", children: [{ text: "After the image." }] }],
+        },
+      ],
+    });
+
+    const chunks = chunkProject(project);
+
+    expect(chunks).toHaveLength(1);
+    const beforeIndex = chunks[0].text.indexOf("Before the image.");
+    const captionIndex = chunks[0].text.indexOf("The collaborative canvas in use.");
+    const altIndex = chunks[0].text.indexOf("Whiteboard canvas with sticky notes");
+    const afterIndex = chunks[0].text.indexOf("After the image.");
+
+    expect(beforeIndex).toBeGreaterThanOrEqual(0);
+    expect(captionIndex).toBeGreaterThan(beforeIndex);
+    expect(altIndex).toBeGreaterThan(beforeIndex);
+    expect(afterIndex).toBeGreaterThan(captionIndex);
+    expect(afterIndex).toBeGreaterThan(altIndex);
+  });
+
+  it("contributes nothing for an Image Block with no caption or alt text", () => {
+    const withoutText = makeProject({
+      story: [
+        {
+          _type: "textBlock",
+          content: [{ style: "normal", children: [{ text: "Only text." }] }],
+        },
+        { _type: "imageBlock", layout: "full" },
+      ],
+    });
+    const withoutImage = makeProject({
+      story: [
+        {
+          _type: "textBlock",
+          content: [{ style: "normal", children: [{ text: "Only text." }] }],
+        },
+      ],
+    });
+
+    expect(chunkProject(withoutText)[0].text).toBe(chunkProject(withoutImage)[0].text);
   });
 });
 

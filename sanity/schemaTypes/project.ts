@@ -25,10 +25,12 @@ export const project = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: "body",
-      title: "Body",
+      name: "story",
+      title: "Project story",
+      description:
+        "Reorderable case-study narrative, composed of Text and Image blocks.",
       type: "array",
-      of: [{ type: "block" }],
+      of: [{ type: "textBlock" }, { type: "imageBlock" }],
     }),
     defineField({
       name: "coverImage",
