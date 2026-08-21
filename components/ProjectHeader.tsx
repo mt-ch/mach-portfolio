@@ -4,7 +4,11 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
   return (
     <header className="gap-md flex flex-col">
       <h1 className="type-heading font-medium text-black">{project.title}</h1>
-      <p className="type-subheading text-grey-300">{project.summary}</p>
+      {project.heroText && (
+        <p className="type-subheading text-grey-300 whitespace-pre-line">
+          {project.heroText}
+        </p>
+      )}
 
       {(project.role || (project.techStack && project.techStack.length > 0)) && (
         <dl className="gap-x-2xl gap-y-sm mt-sm flex flex-wrap">
