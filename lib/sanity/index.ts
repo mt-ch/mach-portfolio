@@ -12,8 +12,11 @@ export type {
   About,
   ExperienceEntry,
   FeaturedProjectListItem,
+  ImageStoryBlock,
   PortableTextBlock,
   ProjectDetail,
   ProjectForIndex,
   ProjectListItem,
+  StoryBlock,
+  TextStoryBlock,
 } from "./types";

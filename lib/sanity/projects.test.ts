@@ -70,28 +70,28 @@ describe("getProject", () => {
 });
 
 describe("getProjectsForIndex", () => {
-  it("fetches all projects including body, for corpus indexing", async () => {
+  it("fetches all projects including story, for corpus indexing", async () => {
     const projects = [
-      { _id: "1", title: "A", slug: { current: "a" }, body: [] },
+      { _id: "1", title: "A", slug: { current: "a" }, story: [] },
     ];
     fetchMock.mockResolvedValueOnce(projects);
 
     const result = await getProjectsForIndex();
 
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("body"));
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("story"));
     expect(result).toEqual(projects);
   });
 });
 
 describe("getProjectForIndexById", () => {
-  it("fetches a single project by id via the non-CDN client, including body, for reindexing", async () => {
-    const project = { _id: "1", title: "A", slug: { current: "a" }, body: [] };
+  it("fetches a single project by id via the non-CDN client, including story, for reindexing", async () => {
+    const project = { _id: "1", title: "A", slug: { current: "a" }, story: [] };
     freshFetchMock.mockResolvedValueOnce(project);
 
     const result = await getProjectForIndexById("1");
 
     expect(freshFetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("body"),
+      expect.stringContaining("story"),
       { id: "1" },
     );
     expect(result).toEqual(project);

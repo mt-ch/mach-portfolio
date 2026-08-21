@@ -1,8 +1,10 @@
 import { PortableText } from "@portabletext/react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import { getProject, getProjects } from "@/lib/sanity";
+import { urlFor } from "@/lib/sanity/image";
 
 export async function generateStaticParams() {
   const projects = await getProjects();
@@ -73,9 +75,33 @@ export default async function ProjectPage({ params }: Props) {
         </ul>
       )}
 
-      {project.body && (
+      {project.story && project.story.length > 0 && (
         <div className="prose mt-10 dark:prose-invert">
-          <PortableText value={project.body} />
+          {project.story.map((block) =>
+            block._type === "textBlock" ? (
+              <PortableText key={block._key} value={block.content} />
+            ) : (
+              <figure key={block._key}>
+                {block.image?.asset && (
+                  <Image
+                    src={urlFor(block.image).width(1200).url()}
+                    alt={block.image.alt}
+                    width={1200}
+                    height={800}
+                  />
+                )}
+                {block.secondImage?.asset && (
+                  <Image
+                    src={urlFor(block.secondImage).width(1200).url()}
+                    alt={block.secondImage.alt}
+                    width={1200}
+                    height={800}
+                  />
+                )}
+                {block.caption && <figcaption>{block.caption}</figcaption>}
+              </figure>
+            ),
+          )}
         </div>
       )}
     </main>

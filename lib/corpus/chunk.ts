@@ -1,6 +1,6 @@
 import type { About, ExperienceEntry, PortableTextBlock, ProjectForIndex } from "@/lib/sanity";
 
-import { splitAtHeadings } from "./portableText";
+import { flattenStory, splitAtHeadings } from "./portableText";
 import {
   templateAboutHeader,
   templateExperienceHeader,
@@ -46,7 +46,7 @@ export function chunkProject(project: ProjectForIndex): CorpusChunk[] {
     project._id,
     "project",
     templateProjectHeader(project),
-    project.body,
+    flattenStory(project.story),
     metadata,
   );
 }
