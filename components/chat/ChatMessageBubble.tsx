@@ -14,7 +14,7 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="bg-white p-sm type-body border border-grey-200 text-black">{message.text}</div>
+        <div className="bg-white p-sm type-small border border-grey-200 text-black">{message.text}</div>
       </div>
     );
   }

@@ -86,9 +86,9 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
           onClick={onToggle}
           aria-expanded={isOpen}
           aria-label="Open chat"
-          className="fixed bottom-md right-md z-40 inline-flex items-center gap-sm rounded-full bg-black px-md py-sm shadow-lg"
+          className="fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white px-sm py-xs mix-blend-difference"
         >
-          <span className="type-small font-medium text-white">Ask Matt LLM</span>
+          <span className="type-small font-medium text-black">Ask me</span>
         </button>
       )}
 
@@ -105,7 +105,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
         <div
           className={
             mode === "push"
-              ? `relative z-20 h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${isVisible ? "w-124" : "w-0"}`
+              ? `relative z-20 h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${isVisible ? "w-102" : "w-0"}`
               : undefined
           }
         >
@@ -120,15 +120,15 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                 ? `fixed inset-x-0 bottom-0 top-16 z-30 flex w-full flex-col bg-grey-100 transition-transform duration-300 ease-out ${
                     isVisible ? "translate-x-0" : "translate-x-full"
                   }`
-                : `ml-auto flex h-full w-124 flex-col border-l border-grey-200 bg-grey-100`
+                : `ml-auto flex h-full w-102 flex-col border-l border-grey-200 bg-grey-100`
             }
           >
             <div role="status" aria-live="polite" className="sr-only">
               {isThinking && "Thinking…"}
             </div>
 
-            <div className="p-md border-b border-grey-200 flex items-center justify-between gap-sm">
-              <p className="type-body font-medium text-black">Matt LLM</p>
+            <div className="px-md py-sm border-b border-grey-200 flex items-center justify-between gap-sm">
+              <p className="type-smal font-medium text-black">Matt LLM</p>
               <div className="flex items-center gap-xs">
                 <button
                   type="button"
@@ -160,18 +160,18 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                   </>
                 ) : (
                   <div className="flex min-h-full flex-col justify-end gap-md">
-                    <p className="type-subheading font-medium text-black">Hey, ask away.</p>
-                    <div className="flex flex-col gap-sm">
+                    <p className="type-body font-medium text-black">Hey, ask away.</p>
+                    <div className="flex flex-col gap-md">
                       {SUGGESTED_QUESTIONS.map((question) => (
                         <button
                           key={question}
                           type="button"
                           onClick={() => onSuggestedQuestion(question)}
                           disabled={isThinking}
-                          className="inline-flex items-start gap-sm text-left text-grey-300 disabled:opacity-40 hover:text-brand transition-all duration-200"
+                          className="inline-flex items-start gap-xs text-left text-grey-300 disabled:opacity-40 hover:text-brand transition-all duration-200"
                         >
-                          <CornerDownRightIcon className="size-md shrink-0 mt-2xs" strokeWidth={1.75} />
-                          <span className="type-body">{question}</span>
+                          <CornerDownRightIcon className="size-sm shrink-0 mt-0.5" strokeWidth={1.75} />
+                          <span className="type-small">{question}</span>
                         </button>
                       ))}
                     </div>
@@ -179,7 +179,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                 )}
               </div>
 
-              <form onSubmit={onSubmit} className="flex items-center justify-between border border-grey-200 bg-white">
+              <form onSubmit={onSubmit} className="relative flex items-center justify-between border border-grey-200 bg-white">
                 <label htmlFor="chat-drawer-input" className="sr-only">
                   Hey, ask away.
                 </label>
@@ -193,16 +193,16 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                     event.currentTarget.form?.requestSubmit();
                   }}
                   placeholder="Ask about Matt..."
-                  className="type-body w-full p-sm text-black placeholder:text-grey-300 auto-grow-textarea focus:outline-none"
+                  className="type-small w-full p-sm text-black placeholder:text-grey-300 auto-grow-textarea focus:outline-none"
                   autoComplete="off"
                   rows={1}
                 />
-                <div className="p-sm flex items-start justify-start h-full">
+                <div className="pr-xs py-xs flex justify-start h-full">
                   <button
                     type="submit"
                     disabled={!draft.trim() || isThinking}
                     aria-label="Send"
-                    className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-lg p-xs rounded-full text-accent transition-all duration-200 disabled:opacity-40"
+                    className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-lg p-xs text-accent transition-all duration-200 disabled:opacity-40"
                   >
                     <ArrowUpIcon strokeWidth={1.75} />
                   </button>

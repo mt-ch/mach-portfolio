@@ -22,7 +22,7 @@ export function SiteFooter({ about }: { about: About }) {
           </Fragment>
         ))}
         <br />
-        <a href={`mailto:${about.email}`} className="underline">
+        <a href={`mailto:${about.email}`} className="">
           Email me
         </a>
       </h2>

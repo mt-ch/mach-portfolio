@@ -13,7 +13,7 @@ export function OtherProjects({
       <h2 className="type-subheading font-medium text-black">
         Other Projects
       </h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-md lg:gap-sm">
         {projects.map((project) => (
           <Link
             key={project._id}

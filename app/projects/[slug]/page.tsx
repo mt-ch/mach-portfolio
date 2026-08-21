@@ -42,7 +42,7 @@ export default async function ProjectPage({ params }: Props) {
     <main className="relative">
       <SiteNav about={about} />
       <ProjectHeader project={project} />
-      <div className="flex flex-col gap-xl py-md">
+      <div className="flex flex-col gap-xl pt-md pb-xl bg-white">
         <ProjectStory blocks={project.story} />
         <OtherProjects projects={otherProjects} />
       </div>

@@ -33,7 +33,7 @@ export const projectsQuery = defineQuery(`
 `);
 
 export const otherProjectsQuery = defineQuery(`
-  *[_type == "project" && _id != $currentId] | order(order asc) [0...3] {
+  *[_type == "project" && _id != $currentId] | order(order asc) [0...2] {
     _id,
     title,
     slug,

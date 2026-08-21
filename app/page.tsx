@@ -20,7 +20,7 @@ export default async function Home() {
       <SiteNav about={about} />
       <HeroSection about={about} />
       {projects.length > 0 && (
-        <div className="p-md gap-md relative flex flex-col">
+        <div className="p-md gap-md relative flex flex-col bg-white">
           {projects.map((project) => (
             <FeaturedProjectRow key={project._id} project={project} />
           ))}
