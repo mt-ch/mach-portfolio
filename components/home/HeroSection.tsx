@@ -22,13 +22,13 @@ export function HeroSection({ about }: { about: About }) {
             {line}
           </Fragment>
         ))}
-        {/* {about.bio && about.bio.length > 0 && (
+        {about.bio && about.bio.length > 0 && (
           <>
             <br />
             <br />
             <PortableText value={about.bio} />
           </>
-        )} */}
+        )}
       </h1>
 
       {about.logo && (

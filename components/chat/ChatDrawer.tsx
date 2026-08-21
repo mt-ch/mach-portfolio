@@ -186,6 +186,11 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                   id="chat-drawer-input"
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }}
                   placeholder="Ask about Matt..."
                   className="type-body w-full p-sm text-black placeholder:text-grey-300 auto-grow-textarea focus:outline-none"
                   autoComplete="off"

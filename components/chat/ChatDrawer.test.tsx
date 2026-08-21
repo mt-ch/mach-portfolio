@@ -50,7 +50,7 @@ function makeStreamResponse() {
 
 async function openAndSend(user: ReturnType<typeof userEvent.setup>, text: string) {
   await user.click(screen.getByRole("button", { name: "Open chat" }));
-  const input = screen.getByLabelText(/ask about matt's projects, experience, or background/i);
+  const input = screen.getByLabelText(/hey, ask away/i);
   await user.type(input, text);
   await user.keyboard("{Enter}");
 }
@@ -80,7 +80,7 @@ describe("ChatDrawer", () => {
 
     expect(screen.getByRole("dialog", { name: /chat with matt/i })).toBeInTheDocument();
     expect(
-      screen.getByLabelText(/ask about matt's projects, experience, or background/i),
+      screen.getByLabelText(/hey, ask away/i),
     ).toBeInTheDocument();
     expect(screen.getByText("What's your favourite project and why?")).toBeInTheDocument();
   });
