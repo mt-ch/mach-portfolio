@@ -129,8 +129,7 @@ export const aboutQuery = defineQuery(`
     headline,
     bio,
     logo,
-    availabilityStatus,
-    footerMessage,
+    footerText,
     "resumeUrl": resumeFile.asset->url,
     email,
     socialLinks

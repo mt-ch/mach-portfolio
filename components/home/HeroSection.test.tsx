@@ -25,20 +25,24 @@ const about: About = {
     },
   ],
   logo: null,
-  availabilityStatus: null,
-  footerMessage: null,
+  footerText: null,
   resumeUrl: null,
   email: "matt@example.com",
   socialLinks: null,
 };
 
 describe("HeroSection", () => {
-  it("renders headline and bio from About", () => {
+  it("renders the headline from About", () => {
     render(<HeroSection about={about} />);
 
     expect(
       screen.getByText(/is a product designer based in San Diego\./),
     ).toBeInTheDocument();
-    expect(screen.getByText("Specialising in UX/UI design.")).toBeInTheDocument();
+  });
+
+  it("does not render the bio even when present", () => {
+    render(<HeroSection about={about} />);
+
+    expect(screen.queryByText("Specialising in UX/UI design.")).not.toBeInTheDocument();
   });
 });

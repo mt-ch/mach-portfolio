@@ -25,17 +25,11 @@ export const about = defineType({
       type: "image",
     }),
     defineField({
-      name: "availabilityStatus",
-      title: "Availability status",
-      description: "Highlighted word in the footer CTA, e.g. “available”.",
-      type: "string",
-    }),
-    defineField({
-      name: "footerMessage",
-      title: "Footer message",
-      description:
-        "Text after the availability status in the footer, e.g. “for collaborations and full time roles”.",
-      type: "string",
+      name: "footerText",
+      title: "Footer text",
+      description: "Generic message shown in the site footer.",
+      type: "text",
+      rows: 3,
     }),
     defineField({
       name: "bio",
