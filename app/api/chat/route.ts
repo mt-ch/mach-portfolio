@@ -130,6 +130,7 @@ export async function POST(request: Request) {
     async start(controller) {
       const encoder = new TextEncoder();
       const deltas: string[] = [];
+      let generationFailed = false;
 
       try {
         for await (const delta of streamAnswer(sanitized.value, contextText)) {
@@ -137,15 +138,25 @@ export async function POST(request: Request) {
         }
       } catch (error) {
         console.error("POST /api/chat: generation call failed", error);
+        generationFailed = true;
       }
 
       const answerText = deltas.join("");
+      // A total failure (nothing generated before the call threw) has no
+      // grounded/ungrounded answer to fall back to — it's a real error, not
+      // a refusal. A failure that still yielded some grounded partial text
+      // is left alone below; that's not a client-visible failure.
+      const noAnswerFromFailure = generationFailed && deltas.length === 0;
       const grounded = answerText.trim() === "" || isAnswerGrounded(answerText, contextText);
 
       // Guards enqueue/close the same way: if the client has already
       // disconnected, the controller may throw.
       try {
-        if (grounded) {
+        if (noAnswerFromFailure) {
+          controller.enqueue(
+            encoder.encode(sseEvent("error", { message: "Unable to generate a response" })),
+          );
+        } else if (grounded) {
           for (const delta of deltas) {
             controller.enqueue(encoder.encode(sseEvent("delta", { text: delta })));
           }

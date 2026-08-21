@@ -24,7 +24,7 @@ interface ChatDrawerProps {
 type Phase = "closed" | "opening" | "open" | "closing";
 
 export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
-  const { messages, isThinking, hasStarted, send, reset } = useChatConversation();
+  const { messages, isThinking, hasStarted, send, retry, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
 
@@ -154,7 +154,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                 {hasStarted ? (
                   <>
                     {messages.map((message) => (
-                      <ChatMessageBubble key={message.id} message={message} />
+                      <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
                     ))}
                     {isThinking && <ChatTypingIndicator />}
                   </>

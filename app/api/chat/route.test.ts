@@ -245,6 +245,24 @@ describe("POST /api/chat", () => {
     errorSpy.mockRestore();
   });
 
+  it("emits an error event when the generation call fails outright, instead of a blank success", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    streamMock.mockReturnValue({
+      [Symbol.asyncIterator]: async function* () {
+        throw new Error("generation upstream unavailable");
+      },
+    });
+
+    const response = await POST(makeRequest({ message: "what has he built?" }));
+
+    expect(response.status).toBe(200);
+    const events = await readEvents(response);
+    expect(events).toEqual([
+      { event: "error", data: { message: expect.any(String) } },
+    ]);
+    errorSpy.mockRestore();
+  });
+
   it("returns a 502 without streaming when retrieval fails", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     embedTextsMock.mockRejectedValue(new Error("Voyage upstream unavailable"));
