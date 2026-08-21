@@ -24,7 +24,7 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
       <div className="flex justify-start">
         <div
           role="status"
-          className="flex max-w-[85%] items-start gap-2 rounded-md border border-refusal-border bg-refusal-background px-3 py-2 text-sm text-refusal-foreground"
+          className="flex max-w-[85%] bg-white p-sm type-body border border-grey-200 text-black items-start gap-2 rounded-md border border-refusal-border bg-refusal-background px-3 py-2 text-sm text-refusal-foreground"
         >
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 size-4 shrink-0">
             <path
@@ -44,10 +44,10 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
       <div className="flex justify-start">
         <div
           role="alert"
-          className="flex max-w-[85%] flex-col items-start gap-xs rounded-md border border-error-border bg-error-background px-3 py-2 text-sm text-error-foreground"
+          className="flex flex-col items-start gap-sm border border-error-border bg-error-background p-sm text-body text-error-foreground"
         >
-          <div className="flex items-start gap-2">
-            <AlertTriangleIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <div className="flex items-start gap-sm">
+            <AlertTriangleIcon aria-hidden="true" className="mt-0.5 size-md shrink-0" strokeWidth={1.75} />
             <span>{message.text}</span>
           </div>
           {onRetry && (
@@ -55,9 +55,8 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
               type="button"
               onClick={() => onRetry(message.id)}
               disabled={retryDisabled}
-              className="inline-flex items-center gap-1 self-start font-medium underline decoration-error-foreground/40 underline-offset-2 hover:decoration-error-foreground disabled:opacity-40"
+              className="inline-flex items-center gap-1 self-start font-medium decoration-error-foreground/40 underline-offset-2 hover:decoration-error-foreground disabled:opacity-40"
             >
-              <RotateCwIcon aria-hidden="true" className="size-3" strokeWidth={2} />
               Retry
             </button>
           )}
