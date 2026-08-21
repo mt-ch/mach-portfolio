@@ -32,6 +32,17 @@ export const projectsQuery = defineQuery(`
   }
 `);
 
+export const otherProjectsQuery = defineQuery(`
+  *[_type == "project" && _id != $currentId] | order(order asc) [0...3] {
+    _id,
+    title,
+    slug,
+    summary,
+    coverImage,
+    order
+  }
+`);
+
 export const projectBySlugQuery = defineQuery(`
   *[_type == "project" && slug.current == $slug][0] {
     _id,

@@ -1,48 +1,40 @@
+import Link from "next/link";
+
+import { CornerDownRightIcon } from "lucide-react";
+
 import type { ProjectDetail } from "@/lib/sanity";
 
 export function ProjectHeader({ project }: { project: ProjectDetail }) {
   return (
-    <header className="gap-md flex flex-col">
-      <h1 className="type-heading font-medium text-black">{project.title}</h1>
-      {project.heroText && (
-        <p className="type-subheading text-grey-300 whitespace-pre-line">
-          {project.heroText}
-        </p>
-      )}
-
-      {(project.role || (project.techStack && project.techStack.length > 0)) && (
-        <dl className="gap-x-2xl gap-y-sm mt-sm flex flex-wrap">
+    <header className="p-md bg-grey-400 relative h-124 grid lg:grid-cols-2 w-full">
+      <div className="flex flex-col col-start-2 justify-between gap-sm">
+        <div className="flex flex-col gap-sm">
+          <h1 className="type-subheading font-medium text-white">{project.title}</h1>
+          {project.heroText && (
+            <p className="type-body font-medium text-white whitespace-pre-line">
+              {project.heroText}
+            </p>
+          )}
           {project.role && (
             <div>
-              <dt className="type-caption text-grey-300 uppercase">Role</dt>
-              <dd className="type-body text-black">{project.role}</dd>
+              <p className="type-body font-medium text-white">{project.role}</p>
             </div>
           )}
-          {project.techStack && project.techStack.length > 0 && (
-            <div>
-              <dt className="type-caption text-grey-300 uppercase">Tech stack</dt>
-              <dd className="type-body text-black">{project.techStack.join(", ")}</dd>
-            </div>
-          )}
-        </dl>
-      )}
+        </div>
 
-      {project.links && project.links.length > 0 && (
-        <ul className="gap-md mt-sm flex flex-wrap">
-          {project.links.map((link) => (
-            <li key={link._key}>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="type-small text-black underline"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+        {project.links && project.links.length > 0 && (
+          <ul className="gap-md flex flex-wrap">
+            {project.links.map((link) => (
+              <li key={link._key}>
+                <Link href={link.url} target="_blank" rel="noreferrer" className="type-body text-white font-medium flex items-center gap-xs">
+                  <CornerDownRightIcon className="size-md" strokeWidth={1.75} />
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </header>
   );
 }
