@@ -19,20 +19,20 @@ export function FeaturedProjectRow({
       className="inline-flex flex-col gap-md"
       aria-label={`${project.title}: ${project.summary}`}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-sm aspect-3/2 h-124">
-        <div className="relative h-full w-full overflow-hidden md:hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-3/2 h-124">
+        <div className="relative h-full w-full overflow-hidden lg:hidden">
           <CoverImage image={project.coverMobile} alt="" sizes="100vw" />
         </div>
         {isRightDominant ? (
           <>
-            <div className="relative col-span-2 hidden h-full w-full overflow-hidden md:block">
+            <div className="relative col-span-2 hidden h-full w-full overflow-hidden lg:block">
               <CoverImage
                 image={project.coverSecondary}
                 alt=""
                 sizes="(max-width: 768px) 0vw, 66vw"
               />
             </div>
-            <div className="relative hidden h-full w-full overflow-hidden md:block">
+            <div className="relative hidden h-full w-full overflow-hidden lg:block">
               <CoverImage
                 image={project.coverPrimary}
                 alt=""
@@ -42,14 +42,14 @@ export function FeaturedProjectRow({
           </>
         ) : (
           <>
-            <div className="relative hidden h-full w-full overflow-hidden md:block">
+            <div className="relative hidden h-full w-full overflow-hidden lg:block">
               <CoverImage
                 image={project.coverPrimary}
                 alt=""
                 sizes="(max-width: 768px) 0vw, 33vw"
               />
             </div>
-            <div className="relative col-span-2 hidden h-full w-full overflow-hidden md:block">
+            <div className="relative col-span-2 hidden h-full w-full overflow-hidden lg:block">
               <CoverImage
                 image={project.coverSecondary}
                 alt=""

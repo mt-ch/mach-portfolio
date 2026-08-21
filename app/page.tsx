@@ -5,10 +5,7 @@ import { SiteFooter } from "@/components/home/SiteFooter";
 import { SiteNav } from "@/components/home/SiteNav";
 
 export default async function Home() {
-  const [about, projects] = await Promise.all([
-    getAbout(),
-    getFeaturedProjects(),
-  ]);
+  const [about, projects] = await Promise.all([getAbout(), getFeaturedProjects()]);
 
   if (!about) {
     return (
