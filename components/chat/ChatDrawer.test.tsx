@@ -189,7 +189,9 @@ describe("ChatDrawer", () => {
     await user.click(screen.getByRole("button", { name: "Open chat" }));
     await user.click(screen.getByRole("button", { name: "Close chat panel" }));
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // The panel now stays mounted through its CSS slide-out transition
+    // before unmounting, so its removal is asserted asynchronously.
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("closes on Escape", async () => {
@@ -199,7 +201,7 @@ describe("ChatDrawer", () => {
     await user.click(screen.getByRole("button", { name: "Open chat" }));
     await user.keyboard("{Escape}");
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("closes via the backdrop on mobile (overlay mode)", async () => {
@@ -213,7 +215,7 @@ describe("ChatDrawer", () => {
     const backdrop = screen.getByTestId("chat-drawer-backdrop");
     await user.click(backdrop);
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("does not render a backdrop on desktop (push mode)", async () => {
