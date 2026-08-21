@@ -6,9 +6,7 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-md bg-black px-3 py-2 text-sm text-white dark:bg-white dark:text-black">
-          {message.text}
-        </div>
+        <div className="bg-white p-sm type-body border border-grey-200 text-black">{message.text}</div>
       </div>
     );
   }
@@ -37,22 +35,14 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
 
   return (
     <div className="flex justify-start">
-      <div className="max-w-[85%] space-y-2">
-        <div
-          className={`rounded-md bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800 ${
-            message.role === "assistant-intro" ? "text-gray-500 dark:text-gray-400" : ""
-          }`}
-        >
+      <div className="space-y-2">
+        <div className={`bg-white p-sm type-body border border-grey-200 text-black ${message.role === "assistant-intro" ? "text-grey-400" : ""}`}>
           {message.text}
         </div>
         {citations.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pl-1">
             {citations.map((citation) => (
-              <a
-                key={citation.href}
-                href={citation.href}
-                className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500 hover:bg-gray-100 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800"
-              >
+              <a key={citation.href} href={citation.href} className="border border-grey-200 p-xs type-small text-grey-400 hover:bg-grey-100">
                 {citation.label}
               </a>
             ))}
@@ -66,11 +56,11 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
 export function ChatTypingIndicator() {
   return (
     <div className="flex justify-start" role="status" aria-label="Assistant is typing">
-      <div className="flex items-center gap-1 rounded-md bg-gray-100 px-3 py-2.5 dark:bg-gray-800">
+      <div className="flex items-center gap-xs">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="size-1.5 animate-bounce rounded-full bg-gray-400 motion-reduce:animate-none dark:bg-gray-500"
+            className="size-1.75 animate-bounce rounded-full bg-brand motion-reduce:animate-none"
             style={{ animationDelay: `${i * 120}ms` }}
           />
         ))}

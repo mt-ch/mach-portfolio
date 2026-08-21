@@ -14,3 +14,12 @@ html,
 body {
   overscroll-behavior: none;
 }
+
+.auto-grow-textarea {
+  resize: none;
+  field-sizing: content;
+  // min-height: 24px;
+  // max-height: 120px;
+  overflow-y: auto;
+  height: auto !important;
+}
