@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
 import type { Metadata } from "next";
-import { ChatWidget } from "@/components/chat/ChatWidget";
+import { ChatShell } from "@/components/chat/ChatShell";
 import "./globals.scss";
 
 const geistSans = Geist({
@@ -30,9 +30,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body>
-        {children}
-        <ChatWidget />
+      <body className="h-full">
+        <ChatShell>{children}</ChatShell>
       </body>
     </html>
   );
