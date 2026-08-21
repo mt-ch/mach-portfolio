@@ -14,7 +14,8 @@ export const about = defineType({
     defineField({
       name: "headline",
       title: "Headline",
-      type: "string",
+      type: "text",
+      rows: 3,
       validation: (rule) => rule.required(),
     }),
     defineField({
