@@ -69,6 +69,14 @@
 
   --card-background: var(--white);
   --card-foreground: var(--black);
+
+  --error-border: rgba(248, 113, 113, 0.4);
+  --error-background: #fef2f2;
+  --error-foreground: #7f1d1d;
+
+  --refusal-border: rgba(251, 191, 36, 0.4);
+  --refusal-background: #fffbeb;
+  --refusal-foreground: #78350f;
 }
 
 .dark {
@@ -78,6 +86,22 @@
 
   --card-background: var(--grey-400);
   --card-foreground: var(--white);
+}
+
+// The rest of the site's dark-mode tokens flip via the .dark class above,
+// but nothing currently toggles that class, so the chat's error/refusal
+// states — the only components with a live dark-mode need today — key off
+// prefers-color-scheme directly to actually respond to the visitor's theme.
+@media (prefers-color-scheme: dark) {
+  :root {
+    --error-border: rgba(239, 68, 68, 0.3);
+    --error-background: rgba(239, 68, 68, 0.1);
+    --error-foreground: #fecaca;
+
+    --refusal-border: rgba(245, 158, 11, 0.3);
+    --refusal-background: rgba(245, 158, 11, 0.1);
+    --refusal-foreground: #fde68a;
+  }
 }
 
 @theme {
@@ -99,6 +123,14 @@
 
   --color-card-background: var(--card-background);
   --color-card-foreground: var(--card-foreground);
+
+  --color-error-border: var(--error-border);
+  --color-error-background: var(--error-background);
+  --color-error-foreground: var(--error-foreground);
+
+  --color-refusal-border: var(--refusal-border);
+  --color-refusal-background: var(--refusal-background);
+  --color-refusal-foreground: var(--refusal-foreground);
 
   /* Typography */
   --font-sans: var(--font-geist-sans);

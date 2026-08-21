@@ -24,7 +24,7 @@ interface ChatDrawerProps {
 type Phase = "closed" | "opening" | "open" | "closing";
 
 export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
-  const { messages, isThinking, send, reset } = useChatConversation();
+  const { messages, isThinking, send, retry, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
 
@@ -156,7 +156,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
             <div className="p-md flex min-h-0 flex-1 flex-col justify-between gap-md">
               <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
                 {messages.map((message) => (
-                  <ChatMessageBubble key={message.id} message={message} />
+                  <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
                 ))}
                 {isThinking && <ChatTypingIndicator />}
 

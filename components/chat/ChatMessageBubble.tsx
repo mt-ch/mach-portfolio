@@ -1,8 +1,16 @@
 "use client";
 
+import { AlertTriangleIcon, RotateCwIcon } from "lucide-react";
+
 import type { ChatMessage } from "./types";
 
-export function ChatMessageBubble({ message }: { message: ChatMessage }) {
+interface ChatMessageBubbleProps {
+  message: ChatMessage;
+  onRetry?: (id: string) => void;
+  retryDisabled?: boolean;
+}
+
+export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessageBubbleProps) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
@@ -16,7 +24,7 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
       <div className="flex justify-start">
         <div
           role="status"
-          className="flex max-w-[85%] items-start gap-2 rounded-md border border-amber-400/40 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+          className="flex max-w-[85%] items-start gap-2 rounded-md border border-refusal-border bg-refusal-background px-3 py-2 text-sm text-refusal-foreground"
         >
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 size-4 shrink-0">
             <path
@@ -26,6 +34,33 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
             />
           </svg>
           <span>{message.text}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (message.role === "assistant-error") {
+    return (
+      <div className="flex justify-start">
+        <div
+          role="alert"
+          className="flex max-w-[85%] flex-col items-start gap-xs rounded-md border border-error-border bg-error-background px-3 py-2 text-sm text-error-foreground"
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangleIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{message.text}</span>
+          </div>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={() => onRetry(message.id)}
+              disabled={retryDisabled}
+              className="inline-flex items-center gap-1 self-start font-medium underline decoration-error-foreground/40 underline-offset-2 hover:decoration-error-foreground disabled:opacity-40"
+            >
+              <RotateCwIcon aria-hidden="true" className="size-3" strokeWidth={2} />
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );

@@ -133,6 +133,125 @@ describe("useChatConversation", () => {
     });
   });
 
+  it("on a non-ok response, replaces the placeholder with a server-error message carrying retry info", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 500 })));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.messages[2]).toMatchObject({
+      role: "assistant-error",
+      cause: "server",
+      retryText: "what has he built?",
+      attempts: 1,
+    });
+  });
+
+  it("on a 429 response, uses the rate-limit cause", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 429 })));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.messages[2]).toMatchObject({ role: "assistant-error", cause: "rate-limit" });
+  });
+
+  it("on a network-level fetch failure, uses the network cause", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.messages[2]).toMatchObject({ role: "assistant-error", cause: "network" });
+  });
+
+  it("on an in-stream error event, replaces the placeholder with a server-error message", async () => {
+    const { response, push, close } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+
+    await act(async () => {
+      push("error", { message: "Unable to generate a response" });
+      close();
+    });
+
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.messages[2]).toMatchObject({ role: "assistant-error", cause: "server" });
+  });
+
+  it("does not show an error when reset aborts an in-flight request", async () => {
+    const { response } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+    await waitFor(() => expect(result.current.isThinking).toBe(true));
+
+    act(() => result.current.reset());
+
+    await waitFor(() => expect(result.current.messages).toHaveLength(1));
+    expect(result.current.messages[0].role).toBe("assistant-intro");
+  });
+
+  it("retry re-sends the failed message and, on success, replaces the error bubble with the answer", async () => {
+    const failed = new Response(null, { status: 500 });
+    const retryStream = controllableResponse();
+    const fetchMock = vi.fn().mockResolvedValueOnce(failed).mockResolvedValueOnce(retryStream.response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+    await waitFor(() =>
+      expect(result.current.messages[2]).toMatchObject({ role: "assistant-error", attempts: 1 }),
+    );
+
+    const errorId = result.current.messages[2].id;
+    act(() => result.current.retry(errorId));
+
+    expect(result.current.isThinking).toBe(true);
+    const [, secondInit] = fetchMock.mock.calls[1];
+    expect(JSON.parse(secondInit.body as string).message).toBe("what has he built?");
+
+    await act(async () => {
+      retryStream.push("delta", { text: "Collab Canvas." });
+      retryStream.push("citations", { citations: [] });
+      retryStream.close();
+    });
+
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.messages[2]).toEqual({
+      id: errorId,
+      role: "assistant",
+      text: "Collab Canvas.",
+      citations: [],
+    });
+  });
+
+  it("escalates the error message after repeated retry failures on the same message", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("what has he built?"));
+    await waitFor(() =>
+      expect(result.current.messages[2]).toMatchObject({ attempts: 1 }),
+    );
+
+    const errorId = result.current.messages[2].id;
+    act(() => result.current.retry(errorId));
+    await waitFor(() => expect(result.current.messages[2]).toMatchObject({ attempts: 2 }));
+
+    act(() => result.current.retry(errorId));
+    await waitFor(() => expect(result.current.messages[2]).toMatchObject({ attempts: 3 }));
+
+    expect((result.current.messages[2] as { text: string }).text).toMatch(/still having trouble/i);
+  });
+
   it("reset clears the conversation back to just the intro and clears sessionStorage", async () => {
     const { response, push, close } = controllableResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
