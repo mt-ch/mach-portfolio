@@ -1,6 +1,7 @@
 import { client, freshClient } from "./client";
 import {
   featuredProjectsQuery,
+  otherProjectsQuery,
   projectBySlugQuery,
   projectForIndexByIdQuery,
   projectsForIndexQuery,
@@ -8,6 +9,7 @@ import {
 } from "./queries";
 import type {
   FeaturedProjectListItem,
+  OtherProjectListItem,
   ProjectDetail,
   ProjectForIndex,
   ProjectListItem,
@@ -25,6 +27,12 @@ export async function getProject(
   slug: string,
 ): Promise<ProjectDetail | null> {
   return client.fetch(projectBySlugQuery, { slug });
+}
+
+export async function getOtherProjects(
+  currentId: string,
+): Promise<OtherProjectListItem[]> {
+  return client.fetch(otherProjectsQuery, { currentId });
 }
 
 export async function getProjectsForIndex(): Promise<ProjectForIndex[]> {
