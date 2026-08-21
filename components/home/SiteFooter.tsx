@@ -1,21 +1,26 @@
+import { Fragment } from "react";
+
 import type { About } from "@/lib/sanity";
 
 export function SiteFooter({ about }: { about: About }) {
   const year = new Date().getFullYear();
+  const footerTextLines = about.footerText
+    ? about.footerText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+    : [];
 
   return (
     <div className="p-md gap-xl bg-grey-400 relative flex flex-col h-screen justify-between">
       <h2 className="type-body font-medium text-white">
         <span className="text-transparent">{about.name} </span>
-        {about.availabilityStatus ? (
-          <>
-            {" is "}
-            <span className="text-accent">{about.availabilityStatus}</span>
-            {about.footerMessage ? ` ${about.footerMessage}` : null}
-          </>
-        ) : (
-          about.footerMessage
-        )}
+        {footerTextLines.map((line, index) => (
+          <Fragment key={index}>
+            {index > 0 && <br />}
+            {line}
+          </Fragment>
+        ))}
         <br />
         <a href={`mailto:${about.email}`} className="underline">
           Email me

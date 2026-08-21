@@ -11,8 +11,7 @@ const about: About = {
   headline: "Designer",
   bio: null,
   logo: null,
-  availabilityStatus: "available",
-  footerMessage: "for collaborations and full time roles",
+  footerText: "for collaborations and full time roles",
   resumeUrl: "https://cdn.sanity.io/resume.pdf",
   email: "matt@example.com",
   socialLinks: [
@@ -26,11 +25,10 @@ const about: About = {
 };
 
 describe("SiteFooter", () => {
-  it("renders availability CTA, email, resume, and social links", () => {
+  it("renders footer text, email, resume, and social links", () => {
     render(<SiteFooter about={about} />);
 
     expect(screen.getByText(/Matt Chan/)).toBeInTheDocument();
-    expect(screen.getByText("available")).toBeInTheDocument();
     expect(
       screen.getByText(/for collaborations and full time roles/),
     ).toBeInTheDocument();
@@ -46,5 +44,21 @@ describe("SiteFooter", () => {
       "href",
       "https://linkedin.com/in/matt",
     );
+  });
+
+  it("renders nothing extra when footerText is empty", () => {
+    render(<SiteFooter about={{ ...about, footerText: null }} />);
+
+    expect(screen.getByRole("link", { name: "Email me" })).toBeInTheDocument();
+  });
+
+  it("preserves line breaks in multi-line footerText", () => {
+    const { container } = render(
+      <SiteFooter about={{ ...about, footerText: "Open to full-time roles\nBased in San Diego" }} />,
+    );
+
+    expect(screen.getByText(/Open to full-time roles/)).toBeInTheDocument();
+    expect(screen.getByText(/Based in San Diego/)).toBeInTheDocument();
+    expect(container.querySelectorAll("br").length).toBeGreaterThanOrEqual(2);
   });
 });

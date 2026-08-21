@@ -88,8 +88,7 @@ export type About = {
     crop?: SanityImageCrop;
     _type: "image";
   };
-  availabilityStatus?: string;
-  footerMessage?: string;
+  footerText?: string;
   bio?: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -636,7 +635,7 @@ export type ExperienceEntryByIdQueryResult = {
 
 // Source: lib/sanity/queries.ts
 // Variable: aboutQuery
-// Query: *[_type == "about"][0] {    _id,    name,    headline,    bio,    logo,    availabilityStatus,    footerMessage,    "resumeUrl": resumeFile.asset->url,    email,    socialLinks  }
+// Query: *[_type == "about"][0] {    _id,    name,    headline,    bio,    logo,    footerText,    "resumeUrl": resumeFile.asset->url,    email,    socialLinks  }
 export type AboutQueryResult = {
   _id: string;
   name: string;
@@ -666,8 +665,7 @@ export type AboutQueryResult = {
     crop?: SanityImageCrop;
     _type: "image";
   } | null;
-  availabilityStatus: string | null;
-  footerMessage: string | null;
+  footerText: string | null;
   resumeUrl: string | null;
   email: string;
   socialLinks: Array<{
@@ -690,6 +688,6 @@ declare module "@sanity/client" {
     '\n  *[_type == "project" && _id == $id][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectForIndexByIdQueryResult;
     '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceQueryResult;
     '\n  *[_type == "experience" && _id == $id][0] {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceEntryByIdQueryResult;
-    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    logo,\n    availabilityStatus,\n    footerMessage,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks\n  }\n': AboutQueryResult;
+    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    logo,\n    footerText,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks\n  }\n': AboutQueryResult;
   }
 }
