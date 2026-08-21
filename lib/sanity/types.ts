@@ -1,3 +1,5 @@
+import type { Image as SanityImage } from "sanity";
+
 import type {
   AboutQueryResult,
   ExperienceQueryResult,
@@ -9,6 +11,17 @@ import type {
 export type ProjectListItem = ProjectsQueryResult[number];
 export type FeaturedProjectListItem = FeaturedProjectsQueryResult[number];
 export type ProjectDetail = NonNullable<ProjectBySlugQueryResult>;
+
+// Hand-typed (rather than via sanity.types.ts) since typegen requires a live
+// Sanity project connection this repo's local/CI environments don't have.
+export interface OtherProjectListItem {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  summary: string;
+  coverImage: SanityImage | null;
+  order: number | null;
+}
 
 export type ExperienceEntry = ExperienceQueryResult[number] & {
   isCurrent: boolean;

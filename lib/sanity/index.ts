@@ -3,6 +3,7 @@ export { getExperience, getExperienceEntryById } from "./experience";
 export { toPlainText } from "./portableText";
 export {
   getFeaturedProjects,
+  getOtherProjects,
   getProject,
   getProjectForIndexById,
   getProjects,
@@ -13,6 +14,7 @@ export type {
   ExperienceEntry,
   FeaturedProjectListItem,
   ImageStoryBlock,
+  OtherProjectListItem,
   PortableTextBlock,
   ProjectDetail,
   ProjectForIndex,
