@@ -50,6 +50,8 @@ export const projectBySlugQuery = defineQuery(`
     slug,
     summary,
     heroText,
+    headerBackgroundColor,
+    headerForegroundColor,
     story,
     coverImage,
     techStack,

@@ -32,6 +32,20 @@ export const project = defineType({
       type: "text",
     }),
     defineField({
+      name: "headerBackgroundColor",
+      title: "Project Header — background colour",
+      description:
+        "Custom background colour for the Project Header. Leave unset (along with the foreground colour) to use the site default.",
+      type: "color",
+    }),
+    defineField({
+      name: "headerForegroundColor",
+      title: "Project Header — foreground colour",
+      description:
+        "Custom text/UI colour for the Project Header. Leave unset (along with the background colour) to use the site default.",
+      type: "color",
+    }),
+    defineField({
       name: "story",
       title: "Project story",
       description:
