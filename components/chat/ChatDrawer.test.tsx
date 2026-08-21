@@ -143,7 +143,39 @@ describe("ChatDrawer", () => {
     );
     const refusalContainer = refusal.closest('[role="status"]');
     expect(refusalContainer).not.toBeNull();
-    expect(refusalContainer).toHaveClass("border-amber-400/40");
+    expect(refusalContainer).toHaveClass("border-refusal-border");
+  });
+
+  it("shows an error bubble with a retry button on a failed request, and retrying resends the message", async () => {
+    const user = userEvent.setup();
+    const failedResponse = new Response(null, { status: 500 });
+    const retryStream = makeStreamResponse();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(failedResponse)
+      .mockResolvedValueOnce(retryStream.response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<Wrapper />);
+    await openAndSend(user, "what has he built?");
+
+    const retryButton = await screen.findByRole("button", { name: /retry/i });
+    expect(screen.getByRole("alert")).toHaveTextContent(/something went wrong/i);
+
+    await user.click(retryButton);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const secondCallBody = JSON.parse(String(fetchMock.mock.calls[1][1].body));
+    expect(secondCallBody.message).toBe("what has he built?");
+
+    await act(async () => {
+      retryStream.push("delta", { text: "Collab Canvas." });
+      retryStream.push("citations", { citations: [] });
+      retryStream.close();
+    });
+
+    await waitFor(() => expect(screen.getByText("Collab Canvas.")).toBeInTheDocument());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("hides the empty-state greeting and suggested questions once the first message is sent", async () => {

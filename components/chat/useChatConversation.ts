@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 
 import type { ChatCitation } from "@/lib/chat/types";
 
+import { errorMessageFor, type ChatErrorCause } from "./chatErrors";
 import {
   clearStoredMessages,
   getOrCreateSessionId,
@@ -12,6 +13,9 @@ import {
   toHistoryTurns,
 } from "./chatSession";
 import type { ChatMessage } from "./types";
+
+// No request should hang the typing indicator forever with no way out.
+const REQUEST_TIMEOUT_MS = 25_000;
 
 function initialMessages(): ChatMessage[] {
   if (typeof window === "undefined") return [];
@@ -30,11 +34,13 @@ export function useChatConversation() {
       setMessages((prev) => {
         const next = updater(prev);
         messagesRef.current = next;
-        // Drop any not-yet-answered placeholder, so a reload never
-        // rehydrates a permanently blank bubble for a request that was
-        // in flight when the tab closed.
+        // Drop any not-yet-answered placeholder and any error bubble, so a
+        // reload never rehydrates a permanently blank or broken bubble left
+        // over from an in-flight or failed request when the tab closed.
         saveStoredMessages(
-          next.filter((m) => !(m.role === "assistant" && m.text === "" && m.citations.length === 0)),
+          next.filter(
+            (m) => m.role !== "assistant-error" && !(m.role === "assistant" && m.text === "" && m.citations.length === 0),
+          ),
         );
         return next;
       });
@@ -69,39 +75,34 @@ export function useChatConversation() {
     [applyUpdate],
   );
 
-  const removeMessage = useCallback(
-    (id: string) => {
-      applyUpdate((prev) => prev.filter((m) => m.id !== id));
+  const showError = useCallback(
+    (assistantId: string, cause: ChatErrorCause, retryText: string, attempts: number) => {
+      applyUpdate((prev) =>
+        prev.map((m): ChatMessage =>
+          m.id === assistantId
+            ? { id: assistantId, role: "assistant-error", text: errorMessageFor(cause, attempts), cause, retryText, attempts }
+            : m,
+        ),
+      );
+      setIsThinking(false);
     },
     [applyUpdate],
   );
 
-  const send = useCallback(
-    (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed || isThinking) return;
-
+  const performRequest = useCallback(
+    (trimmed: string, assistantId: string, attempt: number, historyTurns: ReturnType<typeof toHistoryTurns>) => {
       if (sessionIdRef.current === null) {
         sessionIdRef.current = getOrCreateSessionId();
       }
       const sessionId = sessionIdRef.current;
 
-      const historyTurns = toHistoryTurns(messagesRef.current);
-
-      const userId = `${Date.now()}-user`;
-      const assistantId = `${Date.now()}-assistant`;
-
-      applyUpdate((prev) => [
-        ...prev,
-        { id: userId, role: "user", text: trimmed },
-        { id: assistantId, role: "assistant", text: "", citations: [] },
-      ]);
-      setIsThinking(true);
-
       const controller = new AbortController();
       abortRef.current = controller;
+      const timeoutId = setTimeout(() => {
+        controller.abort(new DOMException("Request timed out", "TimeoutError"));
+      }, REQUEST_TIMEOUT_MS);
 
-      void (async () => {
+      return (async () => {
         try {
           const response = await fetch("/api/chat", {
             method: "POST",
@@ -109,10 +110,10 @@ export function useChatConversation() {
             body: JSON.stringify({ message: trimmed, history: historyTurns, sessionId }),
             signal: controller.signal,
           });
+          clearTimeout(timeoutId);
 
           if (!response.ok || !response.body) {
-            setIsThinking(false);
-            removeMessage(assistantId);
+            showError(assistantId, response.status === 429 ? "rate-limit" : "server", trimmed, attempt);
             return;
           }
 
@@ -147,6 +148,9 @@ export function useChatConversation() {
                 } else if (eventName === "refusal") {
                   replaceWithRefusal(assistantId, data.message as string);
                   setIsThinking(false);
+                } else if (eventName === "error") {
+                  showError(assistantId, "server", trimmed, attempt);
+                  return;
                 }
               }
 
@@ -154,13 +158,66 @@ export function useChatConversation() {
             }
           }
         } catch {
-          if (controller.signal.aborted) return;
-          setIsThinking(false);
-          removeMessage(assistantId);
+          clearTimeout(timeoutId);
+          if (controller.signal.aborted) {
+            const reason = controller.signal.reason;
+            if (reason instanceof DOMException && reason.name === "TimeoutError") {
+              showError(assistantId, "timeout", trimmed, attempt);
+            }
+            // Otherwise this is reset()'s deliberate abort — stop silently.
+            return;
+          }
+          showError(assistantId, "network", trimmed, attempt);
         }
       })();
     },
-    [isThinking, applyUpdate, appendDelta, setDeltaCitations, replaceWithRefusal, removeMessage],
+    [appendDelta, setDeltaCitations, replaceWithRefusal, showError],
+  );
+
+  const send = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || isThinking) return;
+
+      // Computed before this turn's messages are pushed, so the current
+      // message never leaks into its own history.
+      const historyTurns = toHistoryTurns(messagesRef.current);
+
+      const userId = `${Date.now()}-user`;
+      const assistantId = `${Date.now()}-assistant`;
+
+      applyUpdate((prev) => [
+        ...prev,
+        { id: userId, role: "user", text: trimmed },
+        { id: assistantId, role: "assistant", text: "", citations: [] },
+      ]);
+      setIsThinking(true);
+
+      void performRequest(trimmed, assistantId, 1, historyTurns);
+    },
+    [isThinking, applyUpdate, performRequest],
+  );
+
+  const retry = useCallback(
+    (id: string) => {
+      if (isThinking) return;
+      const index = messagesRef.current.findIndex((m) => m.id === id);
+      const message = messagesRef.current[index];
+      if (!message || message.role !== "assistant-error") return;
+
+      const nextAttempt = message.attempts + 1;
+      const retryText = message.retryText;
+      // Excludes this turn's own (failed) user message, same as send().
+      const historyTurns = toHistoryTurns(messagesRef.current.slice(0, index));
+
+      applyUpdate((prev) =>
+        prev.map((m): ChatMessage => (m.id === id ? { id, role: "assistant", text: "", citations: [] } : m)),
+      );
+      setIsThinking(true);
+
+      void performRequest(retryText, id, nextAttempt, historyTurns);
+    },
+    [isThinking, applyUpdate, performRequest],
   );
 
   const reset = useCallback(() => {
@@ -174,5 +231,5 @@ export function useChatConversation() {
 
   const hasStarted = messages.some((m) => m.role === "user");
 
-  return { messages, isThinking, hasStarted, send, reset };
+  return { messages, isThinking, hasStarted, send, retry, reset };
 }
