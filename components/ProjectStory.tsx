@@ -12,30 +12,14 @@ type Layout = ImageStoryBlock["layout"];
 
 const portableTextComponents: PortableTextComponents = {
   block: {
-    h1: ({ children }) => (
-      <h2 className="type-heading font-medium text-foreground">{children}</h2>
-    ),
-    h2: ({ children }) => (
-      <h3 className="type-subheading font-medium text-foreground">{children}</h3>
-    ),
-    h3: ({ children }) => (
-      <h4 className="type-subheading text-foreground">{children}</h4>
-    ),
-    h4: ({ children }) => (
-      <h5 className="type-body font-medium text-foreground">{children}</h5>
-    ),
-    h5: ({ children }) => (
-      <h6 className="type-body font-medium text-foreground">{children}</h6>
-    ),
-    h6: ({ children }) => (
-      <p className="type-small font-medium text-foreground">{children}</p>
-    ),
+    h1: ({ children }) => <h2 className="type-heading font-medium text-foreground">{children}</h2>,
+    h2: ({ children }) => <h3 className="type-subheading font-medium text-foreground">{children}</h3>,
+    h3: ({ children }) => <h4 className="type-subheading text-foreground">{children}</h4>,
+    h4: ({ children }) => <h5 className="type-body font-medium text-foreground">{children}</h5>,
+    h5: ({ children }) => <h6 className="type-body font-medium text-foreground">{children}</h6>,
+    h6: ({ children }) => <p className="type-small font-medium text-foreground">{children}</p>,
     normal: ({ children }) => <p className="type-body text-foreground">{children}</p>,
-    blockquote: ({ children }) => (
-      <blockquote className="type-body pl-md border-l-2 border-grey-200 text-grey-300 italic">
-        {children}
-      </blockquote>
-    ),
+    blockquote: ({ children }) => <blockquote className="type-body pl-md border-l-2 border-grey-200 text-grey-300 italic">{children}</blockquote>,
   },
   marks: {
     strong: ({ children }) => <strong className="font-medium">{children}</strong>,
@@ -75,26 +59,14 @@ const LAYOUT_SIZES: Record<Layout, string> = {
   pair: "(max-width: 640px) 100vw, 50vw",
 };
 
-function StoryImage({
-  image,
-  layout,
-}: {
-  image: ImageStoryBlock["image"] | ImageStoryBlock["secondImage"];
-  layout: Layout;
-}) {
+function StoryImage({ image, layout }: { image: ImageStoryBlock["image"] | ImageStoryBlock["secondImage"]; layout: Layout }) {
   if (!image?.asset) return null;
 
   const src = urlFor(image).width(1600).height(1000).fit("crop").url();
 
   return (
     <div className={`relative overflow-hidden ${LAYOUT_ASPECT_CLASS[layout]}`}>
-      <Image
-        src={src}
-        alt={image.alt}
-        fill
-        sizes={LAYOUT_SIZES[layout]}
-        className="object-cover"
-      />
+      <Image src={src} alt={image.alt} fill sizes={LAYOUT_SIZES[layout]} className="object-cover" />
     </div>
   );
 }
@@ -109,9 +81,7 @@ function ImageBlockView({ block }: { block: ImageStoryBlock }) {
     <figure className={LAYOUT_CONTAINER_CLASS[layout]}>
       <StoryImage image={image} layout={layout} />
       {showPair && <StoryImage image={secondImage} layout={layout} />}
-      {caption && (
-        <figcaption className="type-caption text-grey-300 mt-xs">{caption}</figcaption>
-      )}
+      {caption && <figcaption className="type-caption text-grey-300 mt-xs">{caption}</figcaption>}
     </figure>
   );
 }
@@ -120,13 +90,9 @@ export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefine
   if (!blocks || blocks.length === 0) return null;
 
   return (
-    <div className="gap-lg mt-2xl flex flex-col">
+    <div className="gap-sm px-md flex flex-col">
       {blocks.map((block) =>
-        block._type === "textBlock" ? (
-          <TextBlockView key={block._key} block={block} />
-        ) : (
-          <ImageBlockView key={block._key} block={block} />
-        ),
+        block._type === "textBlock" ? <TextBlockView key={block._key} block={block} /> : <ImageBlockView key={block._key} block={block} />
       )}
     </div>
   );
