@@ -24,7 +24,7 @@ describe("SiteNav", () => {
 
     expect(screen.getByRole("link", { name: "Matt Chan" })).toHaveAttribute(
       "href",
-      "#",
+      "/",
     );
   });
 });
