@@ -36,9 +36,7 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div className="flex justify-start">
       <div className="space-y-2">
-        <div className={`bg-white p-sm type-body border border-grey-200 text-black ${message.role === "assistant-intro" ? "text-grey-400" : ""}`}>
-          {message.text}
-        </div>
+        <div className="bg-white p-sm type-body border border-grey-200 text-black">{message.text}</div>
         {citations.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pl-1">
             {citations.map((citation) => (

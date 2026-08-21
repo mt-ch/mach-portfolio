@@ -50,9 +50,15 @@ function makeStreamResponse() {
 
 async function openAndSend(user: ReturnType<typeof userEvent.setup>, text: string) {
   await user.click(screen.getByRole("button", { name: "Open chat" }));
-  const input = screen.getByLabelText(/hey, ask away/i);
+  const input = screen.getByPlaceholderText(/ask about matt/i);
   await user.type(input, text);
   await user.keyboard("{Enter}");
+}
+
+// The empty-state greeting shares its copy with the composer's sr-only
+// <label>, so queries must target the visible paragraph specifically.
+function queryGreeting() {
+  return screen.queryByText("Hey, ask away.", { selector: "p" });
 }
 
 describe("ChatDrawer", () => {
@@ -72,16 +78,14 @@ describe("ChatDrawer", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("opens to reveal the message panel, input, and suggested questions", async () => {
+  it("opens to reveal the message panel, empty-state greeting, and suggested questions", async () => {
     const user = userEvent.setup();
     render(<Wrapper />);
 
     await user.click(screen.getByRole("button", { name: "Open chat" }));
 
     expect(screen.getByRole("dialog", { name: /chat with matt/i })).toBeInTheDocument();
-    expect(
-      screen.getByLabelText(/hey, ask away/i),
-    ).toBeInTheDocument();
+    expect(queryGreeting()).toBeInTheDocument();
     expect(screen.getByText("What's your favourite project and why?")).toBeInTheDocument();
   });
 
@@ -142,34 +146,29 @@ describe("ChatDrawer", () => {
     expect(refusalContainer).toHaveClass("border-amber-400/40");
   });
 
-  it("keeps suggested questions visible and clickable after messages exist", async () => {
+  it("hides the empty-state greeting and suggested questions once the first message is sent", async () => {
     const user = userEvent.setup();
-    const first = makeStreamResponse();
-    const second = makeStreamResponse();
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(first.response)
-      .mockResolvedValueOnce(second.response);
-    vi.stubGlobal("fetch", fetchMock);
+    const { response } = makeStreamResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
     render(<Wrapper />);
     await openAndSend(user, "what has he built?");
 
-    await act(async () => {
-      first.push("citations", { citations: [] });
-      first.close();
-    });
+    expect(queryGreeting()).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "What's your favourite project and why?" }),
+    ).not.toBeInTheDocument();
+  });
 
-    const suggestion = await screen.findByRole("button", {
-      name: "What was your most recent role, and what did you work on there?",
-    });
-    await user.click(suggestion);
+  it("does not render assistant-intro styling anywhere", async () => {
+    const user = userEvent.setup();
+    render(<Wrapper />);
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    const secondCallBody = JSON.parse(String(fetchMock.mock.calls[1][1].body));
-    expect(secondCallBody.message).toBe(
-      "What was your most recent role, and what did you work on there?",
-    );
+    await user.click(screen.getByRole("button", { name: "Open chat" }));
+
+    expect(
+      screen.queryByText("Ask me anything about Matt's projects, experience, or background."),
+    ).not.toBeInTheDocument();
   });
 
   it("hides the launcher pill while the drawer is open, to avoid overlapping the composer", async () => {

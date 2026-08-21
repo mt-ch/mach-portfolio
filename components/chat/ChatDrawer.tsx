@@ -24,7 +24,7 @@ interface ChatDrawerProps {
 type Phase = "closed" | "opening" | "open" | "closing";
 
 export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
-  const { messages, isThinking, send, reset } = useChatConversation();
+  const { messages, isThinking, hasStarted, send, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
 
@@ -97,9 +97,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
           aria-hidden="true"
           data-testid="chat-drawer-backdrop"
           onClick={onClose}
-          className={`fixed inset-0 z-20 bg-black/40 transition-opacity duration-300 ease-out ${
-            isVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className={`fixed inset-0 z-20 bg-black/40 transition-opacity duration-300 ease-out ${isVisible ? "opacity-100" : "opacity-0"}`}
         />
       )}
 
@@ -107,9 +105,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
         <div
           className={
             mode === "push"
-              ? `relative z-20 h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${
-                  isVisible ? "w-124" : "w-0"
-                }`
+              ? `relative z-20 h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-out ${isVisible ? "w-124" : "w-0"}`
               : undefined
           }
         >
@@ -155,27 +151,32 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
 
             <div className="p-md flex min-h-0 flex-1 flex-col justify-between gap-md">
               <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
-                {messages.map((message) => (
-                  <ChatMessageBubble key={message.id} message={message} />
-                ))}
-                {isThinking && <ChatTypingIndicator />}
-
-                <div className="flex flex-col gap-2xs border-t border-grey-200 pt-md">
-                  {SUGGESTED_QUESTIONS.map((question) => (
-                    <button
-                      key={question}
-                      type="button"
-                      onClick={() => onSuggestedQuestion(question)}
-                      disabled={isThinking}
-                      className="inline-flex items-start gap-sm rounded-sm text-left text-grey-300 disabled:opacity-40 hover:bg-brand hover:text-accent -mx-sm transition-all duration-200"
-                    >
-                      <div className="flex items-start gap-sm p-sm">
-                        <CornerDownRightIcon className="size-md shrink-0 mt-2xs" strokeWidth={1.75} />
-                        <span className="type-body">{question}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                {hasStarted ? (
+                  <>
+                    {messages.map((message) => (
+                      <ChatMessageBubble key={message.id} message={message} />
+                    ))}
+                    {isThinking && <ChatTypingIndicator />}
+                  </>
+                ) : (
+                  <div className="flex min-h-full flex-col justify-end gap-md">
+                    <p className="type-subheading font-medium text-black">Hey, ask away.</p>
+                    <div className="flex flex-col gap-sm">
+                      {SUGGESTED_QUESTIONS.map((question) => (
+                        <button
+                          key={question}
+                          type="button"
+                          onClick={() => onSuggestedQuestion(question)}
+                          disabled={isThinking}
+                          className="inline-flex items-start gap-sm text-left text-grey-300 disabled:opacity-40 hover:text-brand transition-all duration-200"
+                        >
+                          <CornerDownRightIcon className="size-md shrink-0 mt-2xs" strokeWidth={1.75} />
+                          <span className="type-body">{question}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <form onSubmit={onSubmit} className="flex items-center justify-between border border-grey-200 bg-white">
