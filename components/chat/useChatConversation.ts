@@ -12,7 +12,7 @@ import {
   saveStoredMessages,
   toHistoryTurns,
 } from "./chatSession";
-import type { ChatMessage } from "./types";
+import { isEmptyAssistantMessage, type ChatMessage } from "./types";
 
 // No request should hang the typing indicator forever with no way out.
 const REQUEST_TIMEOUT_MS = 25_000;
@@ -38,9 +38,7 @@ export function useChatConversation() {
         // reload never rehydrates a permanently blank or broken bubble left
         // over from an in-flight or failed request when the tab closed.
         saveStoredMessages(
-          next.filter(
-            (m) => m.role !== "assistant-error" && !(m.role === "assistant" && m.text === "" && m.citations.length === 0),
-          ),
+          next.filter((m) => m.role !== "assistant-error" && !isEmptyAssistantMessage(m)),
         );
         return next;
       });

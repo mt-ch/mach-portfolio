@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, CornerDownRightIcon, RotateCwIcon, XIcon } from "lucide-react";
 
-import { ChatMessageBubble, ChatTypingIndicator } from "./ChatMessageBubble";
+import { CHAT_LOADING_VARIANTS, type ChatLoadingVariant } from "./ChatLoadingIndicator";
+import { ChatMessageBubble } from "./ChatMessageBubble";
 import { SUGGESTED_QUESTIONS } from "./suggestedQuestions";
+import { isEmptyAssistantMessage } from "./types";
 import { useChatConversation } from "./useChatConversation";
 import type { DrawerMode } from "./useDrawerVisibility";
 
@@ -23,10 +25,16 @@ interface ChatDrawerProps {
 
 type Phase = "closed" | "opening" | "open" | "closing";
 
+// Dev-only comparison tooling for the three candidate loading indicators —
+// stripped from production builds entirely, never a shipped feature.
+const SHOW_LOADING_VARIANT_SWITCHER = process.env.NODE_ENV !== "production";
+
 export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
   const { messages, isThinking, hasStarted, send, retry, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
+  const [loadingVariant, setLoadingVariant] = useState<ChatLoadingVariant>("pulse");
   const messagesRef = useRef<HTMLDivElement>(null);
+  const LoadingIndicator = CHAT_LOADING_VARIANTS[loadingVariant];
 
   // Mount immediately on open (so the entrance transition has something to
   // animate from), then flip to "open" a frame later to trigger it. On
@@ -130,6 +138,25 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
             <div className="px-md py-sm border-b border-grey-200 flex items-center justify-between gap-sm">
               <p className="type-smal font-medium text-black">Matt LLM</p>
               <div className="flex items-center gap-xs">
+                {SHOW_LOADING_VARIANT_SWITCHER && (
+                  <div className="flex items-center gap-2xs" aria-label="Loading indicator preview (dev only)">
+                    {(Object.keys(CHAT_LOADING_VARIANTS) as ChatLoadingVariant[]).map((variant) => (
+                      <button
+                        key={variant}
+                        type="button"
+                        onClick={() => setLoadingVariant(variant)}
+                        aria-pressed={loadingVariant === variant}
+                        className={`type-caption px-xs py-2xs border ${
+                          loadingVariant === variant
+                            ? "border-brand text-brand"
+                            : "border-grey-200 text-grey-300 hover:text-grey-400"
+                        }`}
+                      >
+                        {variant}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={onReset}
@@ -153,10 +180,19 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
               <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
                 {hasStarted ? (
                   <>
-                    {messages.map((message) => (
-                      <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
-                    ))}
-                    {isThinking && <ChatTypingIndicator />}
+                    {messages
+                      // Hide only the in-flight placeholder — a message that
+                      // finished with genuinely empty content (no delta, no
+                      // citations) still renders once isThinking clears, so
+                      // it never just vanishes with no feedback.
+                      .filter(
+                        (message, index) =>
+                          !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)),
+                      )
+                      .map((message) => (
+                        <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
+                      ))}
+                    {isThinking && <LoadingIndicator />}
                   </>
                 ) : (
                   <div className="flex min-h-full flex-col justify-end gap-md">
