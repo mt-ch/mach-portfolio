@@ -23,7 +23,7 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-label="Open chat"
-      className={`fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white h-10 px-sm mix-blend-difference transition-transform duration-300 ease-out ${
+      className={`fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-[#00c9b1] h-10 px-sm mix-blend-difference transition-transform duration-300 ease-out ${
         mode === "push" && isOpen ? "-translate-x-102" : "translate-x-0"
       }`}
     >
