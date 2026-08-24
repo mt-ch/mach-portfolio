@@ -9,6 +9,7 @@ type StoryBlock = StoryBlocks[number];
 type TextStoryBlock = Extract<StoryBlock, { _type: "textBlock" }>;
 type ImageStoryBlock = Extract<StoryBlock, { _type: "imageBlock" }>;
 type Layout = ImageStoryBlock["layout"];
+type TextLayout = NonNullable<TextStoryBlock["layout"]>;
 
 const portableTextComponents: PortableTextComponents = {
   block: {
@@ -32,11 +33,51 @@ const portableTextComponents: PortableTextComponents = {
   },
 };
 
+const TEXT_CONTAINER_CLASS: Record<TextLayout, string> = {
+  "one-column": "flex flex-col gap-sm",
+  "two-column-split": "grid grid-cols-1 gap-sm sm:grid-cols-2",
+  "two-column-left": "grid grid-cols-1 gap-sm sm:grid-cols-2",
+  "two-column-right": "grid grid-cols-1 gap-sm sm:grid-cols-2",
+};
+
 function TextBlockView({ block }: { block: TextStoryBlock }) {
   if (!block.content || block.content.length === 0) return null;
-  return (
+
+  const layout: TextLayout = block.layout ?? "one-column";
+  const heading = block.heading ? (
+    <h2 className="type-subheading font-medium text-foreground">{block.heading}</h2>
+  ) : null;
+  const body = (
     <div className="gap-sm flex flex-col type-body font-medium text-black">
       <PortableText value={block.content} components={portableTextComponents} />
+    </div>
+  );
+
+  if (layout === "two-column-split") {
+    return (
+      <div className={TEXT_CONTAINER_CLASS[layout]}>
+        <div className="sm:col-start-1">{heading}</div>
+        <div className="sm:col-start-2">{body}</div>
+      </div>
+    );
+  }
+
+  if (layout === "two-column-left" || layout === "two-column-right") {
+    const placement = layout === "two-column-left" ? "sm:col-start-1" : "sm:col-start-2";
+    return (
+      <div className={TEXT_CONTAINER_CLASS[layout]}>
+        <div className={`flex flex-col gap-sm ${placement}`}>
+          {heading}
+          {body}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={TEXT_CONTAINER_CLASS[layout]}>
+      {heading}
+      {body}
     </div>
   );
 }
@@ -86,14 +127,30 @@ function ImageBlockView({ block }: { block: ImageStoryBlock }) {
   );
 }
 
+function hasRenderableContent(block: StoryBlock): boolean {
+  if (block._type === "textBlock") return !!block.content && block.content.length > 0;
+  return !!(block.image?.asset || block.secondImage?.asset);
+}
+
+function gapClassBetween(previous: StoryBlock["_type"], current: StoryBlock["_type"]): string {
+  return previous === "textBlock" || current === "textBlock" ? "mt-xl" : "mt-sm";
+}
+
 export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefined }) {
-  if (!blocks || blocks.length === 0) return null;
+  const renderableBlocks = blocks?.filter(hasRenderableContent) ?? [];
+  if (renderableBlocks.length === 0) return null;
 
   return (
-    <div className="gap-sm px-md flex flex-col">
-      {blocks.map((block) =>
-        block._type === "textBlock" ? <TextBlockView key={block._key} block={block} /> : <ImageBlockView key={block._key} block={block} />
-      )}
+    <div className="px-md flex flex-col">
+      {renderableBlocks.map((block, index) => {
+        const previous = renderableBlocks[index - 1];
+        const gapClass = previous ? gapClassBetween(previous._type, block._type) : "";
+        return (
+          <div key={block._key} className={gapClass}>
+            {block._type === "textBlock" ? <TextBlockView block={block} /> : <ImageBlockView block={block} />}
+          </div>
+        );
+      })}
     </div>
   );
 }

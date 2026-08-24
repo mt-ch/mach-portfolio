@@ -43,7 +43,9 @@ export interface PortableTextBlock {
 // an optional caption). See sanity/schemaTypes/blocks.
 export interface TextStoryBlock {
   _type: "textBlock";
+  heading?: string;
   content: PortableTextBlock[];
+  layout?: "one-column" | "two-column-split" | "two-column-left" | "two-column-right";
 }
 
 export interface ImageStoryBlock {
