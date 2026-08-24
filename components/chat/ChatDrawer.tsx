@@ -82,17 +82,15 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
 
   return (
     <>
-      {!isMounted && (
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={isOpen}
-          aria-label="Open chat"
-          className="fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white px-sm py-xs mix-blend-difference"
-        >
-          <span className="type-small font-medium text-black">Ask me</span>
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-label="Open chat"
+        className="fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white px-sm py-xs mix-blend-difference"
+      >
+        <span className="type-small font-medium text-black">{isOpen ? "..." : "Ask"}</span>
+      </button>
 
       {mode === "overlay" && isMounted && (
         <div
@@ -130,7 +128,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
             </div>
 
             <div className="px-md py-sm border-b border-grey-200 flex items-center justify-between gap-sm">
-              <p className="type-smal font-medium text-black">Matt LLM</p>
+              <p className="type-small font-medium text-black">Ask</p>
               <div className="flex items-center gap-xs">
                 <button
                   type="button"
@@ -151,8 +149,8 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
               </div>
             </div>
 
-            <div className="p-md flex min-h-0 flex-1 flex-col justify-between gap-md">
-              <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col justify-between">
+              <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto p-md">
                 {hasStarted ? (
                   <>
                     {messages
@@ -160,10 +158,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                       // finished with genuinely empty content (no delta, no
                       // citations) still renders once isThinking clears, so
                       // it never just vanishes with no feedback.
-                      .filter(
-                        (message, index) =>
-                          !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)),
-                      )
+                      .filter((message, index) => !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)))
                       .map((message) => (
                         <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
                       ))}
@@ -181,7 +176,6 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                           disabled={isThinking}
                           className="inline-flex items-start gap-xs text-left text-grey-300 disabled:opacity-40 hover:text-brand transition-all duration-200"
                         >
-                          <CornerDownRightIcon className="size-md shrink-0 mt-0.5" strokeWidth={1.75} />
                           <span className="type-small">{question}</span>
                         </button>
                       ))}
@@ -190,35 +184,37 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                 )}
               </div>
 
-              <form onSubmit={onSubmit} className="relative flex items-center justify-between border border-grey-200 bg-white">
-                <label htmlFor="chat-drawer-input" className="sr-only">
-                  Hey, ask away.
-                </label>
-                <textarea
-                  id="chat-drawer-input"
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
-                    event.preventDefault();
-                    event.currentTarget.form?.requestSubmit();
-                  }}
-                  placeholder="Ask about Matt..."
-                  className="type-small w-full p-sm text-black placeholder:text-grey-300 auto-grow-textarea focus:outline-none"
-                  autoComplete="off"
-                  rows={1}
-                />
-                <div className="pr-xs py-xs flex justify-start h-full">
-                  <button
-                    type="submit"
-                    disabled={!draft.trim() || isThinking}
-                    aria-label="Send"
-                    className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-lg p-xs text-accent transition-all duration-200 disabled:opacity-40"
-                  >
-                    <ArrowUpIcon strokeWidth={1.75} />
-                  </button>
-                </div>
-              </form>
+              <div className="px-md pb-md">
+                <form onSubmit={onSubmit} className="relative flex items-center justify-between border border-grey-200 bg-white">
+                  <label htmlFor="chat-drawer-input" className="sr-only">
+                    Hey, ask away.
+                  </label>
+                  <textarea
+                    id="chat-drawer-input"
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+                      event.preventDefault();
+                      event.currentTarget.form?.requestSubmit();
+                    }}
+                    placeholder="Ask about Matt..."
+                    className="type-small w-full p-sm text-black placeholder:text-grey-300 auto-grow-textarea focus:outline-none"
+                    autoComplete="off"
+                    rows={1}
+                  />
+                  <div className="pr-xs py-xs flex justify-start h-full">
+                    <button
+                      type="submit"
+                      disabled={!draft.trim() || isThinking}
+                      aria-label="Send"
+                      className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-lg p-xs text-accent transition-all duration-200 disabled:opacity-40"
+                    >
+                      <ArrowUpIcon strokeWidth={1.75} />
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </aside>
         </div>

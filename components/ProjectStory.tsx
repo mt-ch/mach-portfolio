@@ -35,7 +35,7 @@ const portableTextComponents: PortableTextComponents = {
 function TextBlockView({ block }: { block: TextStoryBlock }) {
   if (!block.content || block.content.length === 0) return null;
   return (
-    <div className="gap-sm flex flex-col">
+    <div className="gap-sm flex flex-col type-body font-medium text-black">
       <PortableText value={block.content} components={portableTextComponents} />
     </div>
   );
