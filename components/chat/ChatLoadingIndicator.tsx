@@ -1,115 +1,40 @@
 "use client";
 
-import gsap from "gsap";
-import { useEffect, useRef, useState } from "react";
-
-const STATUS_LABEL = "Assistant is typing";
-
-// Read once per animation setup rather than every render; a live OS-level
-// change is picked up because each variant's effect re-subscribes.
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setReduced(query.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
-
-  return reduced;
-}
-
-export function PulseLoadingIndicator() {
-  const dotRef = useRef<HTMLSpanElement>(null);
-  const reduced = usePrefersReducedMotion();
-
-  useEffect(() => {
-    const el = dotRef.current;
-    if (reduced || !el) return;
-
-    const tween = gsap.fromTo(
-      el,
-      { scale: 0.6, opacity: 0.5 },
-      { scale: 1, opacity: 1, duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: -1 },
-    );
-    return () => {
-      tween.kill();
-    };
-  }, [reduced]);
-
+// Adapted from the "spokes" spinner (https://loading-ui.com/docs/components/spokes):
+// eight radial lines rotating continuously, sized and colored to match this
+// chat's tokens rather than the library's defaults.
+export function ChatLoadingIndicator() {
   return (
-    <div className="flex justify-start" role="status" aria-label={STATUS_LABEL}>
-      <span ref={dotRef} className="size-3 rounded-full bg-brand" />
+    <div className="flex justify-start" role="status" aria-label="Assistant is typing">
+      <style>{`
+        @keyframes chat-loading-spokes-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .chat-loading-spokes {
+          animation: chat-loading-spokes-spin 1s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .chat-loading-spokes {
+            animation: none;
+          }
+        }
+      `}</style>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="chat-loading-spokes size-4 text-brand"
+      >
+        <path
+          d="M12 2V6M16.2 7.8L19.1 4.9M18 12H22M16.2 16.2L19.1 19.1M12 18V22M4.9 19.1L7.8 16.2M2 12H6M4.9 4.9L7.8 7.8"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </div>
   );
 }
-
-export function GradientLoadingIndicator() {
-  const barRef = useRef<HTMLDivElement>(null);
-  const reduced = usePrefersReducedMotion();
-
-  useEffect(() => {
-    const el = barRef.current;
-    if (reduced || !el) return;
-
-    gsap.set(el, { backgroundPosition: "0% 0%" });
-    const tween = gsap.to(el, { backgroundPosition: "200% 0%", duration: 1.4, ease: "none", repeat: -1 });
-    return () => {
-      tween.kill();
-    };
-  }, [reduced]);
-
-  return (
-    <div className="flex justify-start" role="status" aria-label={STATUS_LABEL}>
-      <div
-        ref={barRef}
-        className="h-2 w-16 rounded-card bg-[linear-gradient(90deg,var(--color-brand),var(--color-accent),var(--color-brand))] bg-[length:200%_100%]"
-      />
-    </div>
-  );
-}
-
-export function OrbitLoadingIndicator() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const reduced = usePrefersReducedMotion();
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (reduced || !container) return;
-
-    const dots = container.querySelectorAll<HTMLSpanElement>("[data-dot]");
-    const tween = gsap.to(dots, {
-      scale: 1.6,
-      opacity: 1,
-      duration: 0.5,
-      ease: "sine.inOut",
-      yoyo: true,
-      repeat: -1,
-      stagger: { each: 0.15, repeat: -1, yoyo: true },
-    });
-    return () => {
-      tween.kill();
-    };
-  }, [reduced]);
-
-  return (
-    <div ref={containerRef} className="flex justify-start" role="status" aria-label={STATUS_LABEL}>
-      <div className="flex items-center gap-xs">
-        {[0, 1, 2].map((i) => (
-          <span key={i} data-dot className="size-1.75 rounded-full bg-brand opacity-50" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export const CHAT_LOADING_VARIANTS = {
-  pulse: PulseLoadingIndicator,
-  gradient: GradientLoadingIndicator,
-  orbit: OrbitLoadingIndicator,
-} as const;
-
-export type ChatLoadingVariant = keyof typeof CHAT_LOADING_VARIANTS;

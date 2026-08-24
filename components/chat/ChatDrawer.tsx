@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, CornerDownRightIcon, RotateCwIcon, XIcon } from "lucide-react";
 
-import { CHAT_LOADING_VARIANTS, type ChatLoadingVariant } from "./ChatLoadingIndicator";
+import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
 import { SUGGESTED_QUESTIONS } from "./suggestedQuestions";
 import { isEmptyAssistantMessage } from "./types";
@@ -25,16 +25,10 @@ interface ChatDrawerProps {
 
 type Phase = "closed" | "opening" | "open" | "closing";
 
-// Dev-only comparison tooling for the three candidate loading indicators —
-// stripped from production builds entirely, never a shipped feature.
-const SHOW_LOADING_VARIANT_SWITCHER = process.env.NODE_ENV !== "production";
-
 export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
   const { messages, isThinking, hasStarted, send, retry, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
-  const [loadingVariant, setLoadingVariant] = useState<ChatLoadingVariant>("pulse");
   const messagesRef = useRef<HTMLDivElement>(null);
-  const LoadingIndicator = CHAT_LOADING_VARIANTS[loadingVariant];
 
   // Mount immediately on open (so the entrance transition has something to
   // animate from), then flip to "open" a frame later to trigger it. On
@@ -138,25 +132,6 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
             <div className="px-md py-sm border-b border-grey-200 flex items-center justify-between gap-sm">
               <p className="type-smal font-medium text-black">Matt LLM</p>
               <div className="flex items-center gap-xs">
-                {SHOW_LOADING_VARIANT_SWITCHER && (
-                  <div className="flex items-center gap-2xs" aria-label="Loading indicator preview (dev only)">
-                    {(Object.keys(CHAT_LOADING_VARIANTS) as ChatLoadingVariant[]).map((variant) => (
-                      <button
-                        key={variant}
-                        type="button"
-                        onClick={() => setLoadingVariant(variant)}
-                        aria-pressed={loadingVariant === variant}
-                        className={`type-caption px-xs py-2xs border ${
-                          loadingVariant === variant
-                            ? "border-brand text-brand"
-                            : "border-grey-200 text-grey-300 hover:text-grey-400"
-                        }`}
-                      >
-                        {variant}
-                      </button>
-                    ))}
-                  </div>
-                )}
                 <button
                   type="button"
                   onClick={onReset}
@@ -192,7 +167,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                       .map((message) => (
                         <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
                       ))}
-                    {isThinking && <LoadingIndicator />}
+                    {isThinking && <ChatLoadingIndicator />}
                   </>
                 ) : (
                   <div className="flex min-h-full flex-col justify-end gap-md">
