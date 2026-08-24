@@ -11,13 +11,17 @@
   --brand: #2f1c2f;
   --accent: #ffc9e6;
 
-  /* Typography */
-  --type-display-size: #{fluid-space(48, 92)};
-  --type-heading-size: #{fluid-space(32, 56)};
-  --type-subheading-size: #{fluid-space(24, 34)};
-  --type-body-size: #{fluid-space(16, 20)};
-  --type-small-size: #{fluid-space(13, 16)};
-  --type-caption-size: #{fluid-space(11, 13)};
+  /* Typography
+   * Two-ratio system: 1.333 (Perfect Fourth) between caption/small/body/subheading,
+   * 1.6 between subheading/heading/display/hero. Every step scales 1.3x from the
+   * 480px to 2560px viewport, so the ratio between steps holds at any width. */
+  --type-hero-size: #{fluid-space(110, 144)};
+  --type-display-size: #{fluid-space(69, 90)};
+  --type-heading-size: #{fluid-space(43, 56)};
+  --type-subheading-size: #{fluid-space(27, 35)};
+  --type-body-size: #{fluid-space(20, 26)};
+  --type-small-size: #{fluid-space(15, 20)};
+  --type-caption-size: #{fluid-space(11, 15)};
 
   /* Mono-specific sizes */
   --type-mono-small-size: #{fluid-space(13, 15)};
@@ -25,6 +29,7 @@
   --type-mono-code-size: #{fluid-space(13, 15)};
 
   /* Line heights */
+  --leading-hero: 1;
   --leading-display: 1;
   --leading-heading: 1.05;
   --leading-subheading: 1.15;
@@ -34,6 +39,7 @@
   --leading-code: 1.5;
 
   /* Letter spacing */
+  --tracking-hero: -0.025em;
   --tracking-display: -0.02em;
   --tracking-heading: -0.0125em;
   --tracking-subheading: -0.0075em;
@@ -133,8 +139,12 @@
   --color-refusal-foreground: var(--refusal-foreground);
 
   /* Typography */
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-open-sauce-one);
   --font-mono: var(--font-geist-mono);
+
+  --text-hero: var(--type-hero-size);
+  --text-hero--line-height: var(--leading-hero);
+  --text-hero--letter-spacing: var(--tracking-hero);
 
   --text-display: var(--type-display-size);
   --text-display--line-height: var(--leading-display);
