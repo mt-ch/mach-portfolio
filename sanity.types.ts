@@ -46,6 +46,7 @@ export type ImageBlock = {
 
 export type TextBlock = {
   _type: "textBlock";
+  heading?: string;
   content: Array<{
     children?: Array<{
       marks?: Array<string>;
@@ -64,6 +65,7 @@ export type TextBlock = {
     _type: "block";
     _key: string;
   }>;
+  layout?: "one-column" | "two-column-split" | "two-column-left" | "two-column-right";
 };
 
 export type SanityFileAssetReference = {

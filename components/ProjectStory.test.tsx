@@ -92,6 +92,92 @@ describe("ProjectStory", () => {
     expect(screen.getByText(/Some/)).toBeInTheDocument();
   });
 
+  it("renders a Text Block's optional block-level heading", () => {
+    const block = textBlock({ heading: "Section Title" });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    expect(screen.getByRole("heading", { name: "Section Title" })).toBeInTheDocument();
+  });
+
+  it("omits the block-level heading when not set", () => {
+    const block = textBlock();
+
+    render(<ProjectStory blocks={[block]} />);
+
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+  });
+
+  it("renders a two-column-split Text Block with heading before body in document order", () => {
+    const block = textBlock({
+      heading: "Split Heading",
+      layout: "two-column-split",
+    });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    const heading = screen.getByRole("heading", { name: "Split Heading" });
+    const body = screen.getByText("Hello world.");
+    expect(heading.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("renders a two-column-split Text Block's body even when no heading is set", () => {
+    const block = textBlock({ layout: "two-column-split" });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    expect(screen.getByText("Hello world.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+  });
+
+  it("renders a two-column-left Text Block with heading and body together, sharing a parent", () => {
+    const block = textBlock({
+      heading: "Left Heading",
+      layout: "two-column-left",
+    });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    const heading = screen.getByRole("heading", { name: "Left Heading" });
+    const body = screen.getByText("Hello world.");
+    const headingWrapper = heading.parentElement;
+    expect(headingWrapper?.contains(body)).toBe(true);
+    expect(headingWrapper?.parentElement?.children).toHaveLength(1);
+  });
+
+  it("renders a two-column-right Text Block with heading and body together, sharing a parent", () => {
+    const block = textBlock({
+      heading: "Right Heading",
+      layout: "two-column-right",
+    });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    const heading = screen.getByRole("heading", { name: "Right Heading" });
+    const body = screen.getByText("Hello world.");
+    const headingWrapper = heading.parentElement;
+    expect(headingWrapper?.contains(body)).toBe(true);
+    expect(headingWrapper?.parentElement?.children).toHaveLength(1);
+  });
+
+  it("renders a two-column-right Text Block's body even when no heading is set", () => {
+    const block = textBlock({ layout: "two-column-right" });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    expect(screen.getByText("Hello world.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+  });
+
+  it("defaults to one-column layout and renders unchanged when no layout is set", () => {
+    const block = textBlock({ heading: "Untouched" });
+
+    render(<ProjectStory blocks={[block]} />);
+
+    expect(screen.getByRole("heading", { name: "Untouched" })).toBeInTheDocument();
+    expect(screen.getByText("Hello world.")).toBeInTheDocument();
+  });
+
   it("renders a full-layout Image Block with one image and its alt text", () => {
     const block = imageBlock({ layout: "full" });
 
@@ -165,11 +251,79 @@ describe("ProjectStory", () => {
     });
 
     render(<ProjectStory blocks={[first, second]} />);
-
     const firstEl = screen.getByText("First block");
     const secondEl = screen.getByText("Second block");
     expect(
       firstEl.compareDocumentPosition(secondEl) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("gives the gap after a Text Block extra (xl) spacing, even next to an Image Block", () => {
+    const { container } = render(
+      <ProjectStory blocks={[textBlock({ _key: "a" }), imageBlock({ _key: "b" })]} />,
+    );
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers?.[1]).toHaveClass("mt-xl");
+  });
+
+  it("gives the gap before a Text Block extra (xl) spacing, even after an Image Block", () => {
+    const { container } = render(
+      <ProjectStory blocks={[imageBlock({ _key: "a" }), textBlock({ _key: "b" })]} />,
+    );
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers?.[1]).toHaveClass("mt-xl");
+  });
+
+  it("gives the gap between two Text Blocks extra (xl) spacing", () => {
+    const { container } = render(
+      <ProjectStory blocks={[textBlock({ _key: "a" }), textBlock({ _key: "b" })]} />,
+    );
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers?.[1]).toHaveClass("mt-xl");
+  });
+
+  it("keeps the tight (gap-sm) spacing between two adjacent Image Blocks", () => {
+    const { container } = render(
+      <ProjectStory blocks={[imageBlock({ _key: "a" }), imageBlock({ _key: "b" })]} />,
+    );
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers?.[1]).toHaveClass("mt-sm");
+    expect(wrappers?.[1]).not.toHaveClass("mt-xl");
+  });
+
+  it("does not put a top margin on the first block", () => {
+    const { container } = render(
+      <ProjectStory blocks={[textBlock({ _key: "a" }), imageBlock({ _key: "b" })]} />,
+    );
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers?.[0]).not.toHaveClass("mt-xl");
+    expect(wrappers?.[0]).not.toHaveClass("mt-sm");
+  });
+
+  it("skips a phantom gap-only wrapper for a block that renders nothing (empty Text Block content)", () => {
+    const empty = textBlock({ _key: "empty", content: [] });
+    const second = imageBlock({ _key: "second" });
+
+    const { container } = render(<ProjectStory blocks={[empty, second]} />);
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers).toHaveLength(1);
+    expect(wrappers?.[0]).not.toHaveClass("mt-xl");
+    expect(wrappers?.[0]).not.toHaveClass("mt-sm");
+  });
+
+  it("skips a phantom gap-only wrapper for a block that renders nothing (Image Block with no assets)", () => {
+    const first = textBlock({ _key: "first" });
+    const empty = imageBlock({ _key: "empty", image: { _type: "image", asset: undefined, alt: "" } });
+
+    const { container } = render(<ProjectStory blocks={[first, empty]} />);
+
+    const wrappers = container.firstElementChild?.children;
+    expect(wrappers).toHaveLength(1);
   });
 });
