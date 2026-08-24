@@ -56,7 +56,10 @@ describe("reindexChunks", () => {
 
     const result = await reindexChunks("doc-1", chunks);
 
-    expect(embedTextsMock).toHaveBeenCalledWith(["text for doc-1:0", "text for doc-1:1"]);
+    expect(embedTextsMock).toHaveBeenCalledWith(
+      ["text for doc-1:0", "text for doc-1:1"],
+      { retry: true },
+    );
     expect(upsertChunksMock).toHaveBeenCalledWith(chunks, [[0.1], [0.2]]);
     expect(result).toBe(2);
   });

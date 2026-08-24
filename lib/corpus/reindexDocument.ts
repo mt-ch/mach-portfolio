@@ -12,7 +12,10 @@ export async function reindexChunks(
   await deleteDocumentChunks(documentId);
   if (chunks.length === 0) return 0;
 
-  const vectors = await embedTexts(chunks.map((chunk) => chunk.text));
+  const vectors = await embedTexts(
+    chunks.map((chunk) => chunk.text),
+    { retry: true },
+  );
   await upsertChunks(chunks, vectors);
   return chunks.length;
 }
