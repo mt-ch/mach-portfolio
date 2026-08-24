@@ -10,7 +10,10 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
   const hasCustomColors = Boolean(backgroundColor && foregroundColor);
 
   return (
-    <header className="px-md pt-md relative min-h-124 grid lg:grid-cols-2 w-full bg-white text-black">
+    <header
+      className={`px-md pt-md relative min-h-124 grid lg:grid-cols-2 w-full${hasCustomColors ? "" : " bg-grey-400 text-white"}`}
+      style={hasCustomColors ? { backgroundColor, color: foregroundColor } : undefined}
+    >
       <div className="flex flex-col col-start-2 justify-between gap-2xl pt-4xl lg:pt-0">
         <h2 className="type-body font-medium hidden lg:block">(Work)</h2>
         <div className="flex flex-col gap-2xl">
