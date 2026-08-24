@@ -5,19 +5,17 @@ import type { Metadata } from "next";
 import { ChatShell } from "@/components/chat/ChatShell";
 import "./globals.scss";
 
-const satoshi = localFont({
-  variable: "--font-satoshi",
+const openSauceOne = localFont({
+  variable: "--font-open-sauce-one",
   src: [
-    {
-      path: "./fonts/Satoshi-Variable.woff2",
-      style: "normal",
-      weight: "300 900",
-    },
-    {
-      path: "./fonts/Satoshi-VariableItalic.woff2",
-      style: "italic",
-      weight: "300 900",
-    },
+    { path: "./fonts/OpenSauceOne-Regular.woff2", style: "normal", weight: "400" },
+    { path: "./fonts/OpenSauceOne-Italic.woff2", style: "italic", weight: "400" },
+    { path: "./fonts/OpenSauceOne-Medium.woff2", style: "normal", weight: "500" },
+    { path: "./fonts/OpenSauceOne-MediumItalic.woff2", style: "italic", weight: "500" },
+    { path: "./fonts/OpenSauceOne-SemiBold.woff2", style: "normal", weight: "600" },
+    { path: "./fonts/OpenSauceOne-SemiBoldItalic.woff2", style: "italic", weight: "600" },
+    { path: "./fonts/OpenSauceOne-Bold.woff2", style: "normal", weight: "700" },
+    { path: "./fonts/OpenSauceOne-BoldItalic.woff2", style: "italic", weight: "700" },
   ],
   display: "swap",
 });
@@ -40,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${satoshi.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${openSauceOne.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="h-full overflow-hidden">
