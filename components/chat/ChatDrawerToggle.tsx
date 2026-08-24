@@ -1,5 +1,7 @@
 "use client";
 
+import { DotIcon } from "lucide-react";
+
 import type { DrawerMode } from "./useDrawerVisibility";
 
 interface ChatDrawerToggleProps {
@@ -21,11 +23,21 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-label="Open chat"
-      className={`fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white px-sm py-xs mix-blend-difference transition-transform duration-300 ease-out ${
+      className={`fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white h-10 px-sm mix-blend-difference transition-transform duration-300 ease-out ${
         mode === "push" && isOpen ? "-translate-x-102" : "translate-x-0"
       }`}
     >
-      <span className="type-small font-medium text-black">{isOpen ? "..." : "Ask"}</span>
+      <span className="type-small font-medium text-black">
+        {isOpen ? (
+          <div className="flex items-center gap-2xs">
+            <div className="size-1 rounded-full bg-black" />
+            <div className="size-1 rounded-full bg-black" />
+            <div className="size-1 rounded-full bg-black" />
+          </div>
+        ) : (
+          "Ask"
+        )}
+      </span>
     </button>
   );
 }
