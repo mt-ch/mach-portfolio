@@ -11,8 +11,8 @@ export function HeroSection({ about }: { about: About }) {
     .filter((line) => line.length > 0);
 
   return (
-    <div className="p-md gap-xl bg-white relative flex flex-col h-124">
-      <h1 className="type-body font-medium text-black">
+    <div className="p-md gap-xl bg-brand relative flex flex-col h-124">
+      <h1 className="type-body font-medium text-accent">
         <span className="text-transparent">{about.name}{" "}</span>
         {headlineLines.map((line, index) => (
           <Fragment key={index}>

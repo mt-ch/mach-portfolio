@@ -48,7 +48,7 @@ function TextBlockView({ block }: { block: TextStoryBlock }) {
     <h2 className="type-subheading font-medium text-foreground">{block.heading}</h2>
   ) : null;
   const body = (
-    <div className="gap-sm flex flex-col type-body font-medium text-black">
+    <div className="gap-sm flex flex-col type-body font-normal text-black">
       <PortableText value={block.content} components={portableTextComponents} />
     </div>
   );
@@ -133,7 +133,7 @@ function hasRenderableContent(block: StoryBlock): boolean {
 }
 
 function gapClassBetween(previous: StoryBlock["_type"], current: StoryBlock["_type"]): string {
-  return previous === "textBlock" || current === "textBlock" ? "mt-xl" : "mt-sm";
+  return previous === "textBlock" || current === "textBlock" ? "mt-2xl" : "mt-sm";
 }
 
 export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefined }) {
