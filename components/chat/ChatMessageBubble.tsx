@@ -21,8 +21,14 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
 
   if (message.role === "assistant-refusal") {
     return (
-      <div role="status" className="flex justify-start type-small text-black">
-        <span className="max-w-11/12">{message.text}</span>
+      <div className="flex justify-start">
+        <div
+          role="status"
+          className="flex max-w-11/12 items-start gap-sm border border-refusal-border bg-refusal-background p-sm text-small text-refusal-foreground"
+        >
+          <AlertTriangleIcon aria-hidden="true" className="mt-1 size-md shrink-0" strokeWidth={1.75} />
+          <span>{message.text}</span>
+        </div>
       </div>
     );
   }
