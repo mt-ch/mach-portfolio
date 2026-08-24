@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, CornerDownRightIcon, RotateCwIcon, XIcon } from "lucide-react";
 
-import { ChatMessageBubble, ChatTypingIndicator } from "./ChatMessageBubble";
+import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
+import { ChatMessageBubble } from "./ChatMessageBubble";
 import { SUGGESTED_QUESTIONS } from "./suggestedQuestions";
+import { isEmptyAssistantMessage } from "./types";
 import { useChatConversation } from "./useChatConversation";
 import type { DrawerMode } from "./useDrawerVisibility";
 
@@ -153,10 +155,19 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
               <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
                 {hasStarted ? (
                   <>
-                    {messages.map((message) => (
-                      <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
-                    ))}
-                    {isThinking && <ChatTypingIndicator />}
+                    {messages
+                      // Hide only the in-flight placeholder — a message that
+                      // finished with genuinely empty content (no delta, no
+                      // citations) still renders once isThinking clears, so
+                      // it never just vanishes with no feedback.
+                      .filter(
+                        (message, index) =>
+                          !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)),
+                      )
+                      .map((message) => (
+                        <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
+                      ))}
+                    {isThinking && <ChatLoadingIndicator />}
                   </>
                 ) : (
                   <div className="flex min-h-full flex-col justify-end gap-md">

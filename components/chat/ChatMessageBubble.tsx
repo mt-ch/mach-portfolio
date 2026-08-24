@@ -57,7 +57,7 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
   const citations = message.role === "assistant" ? message.citations : [];
 
   return (
-    <div className="flex justify-start">
+    <div className="flex justify-start" data-testid="assistant-bubble">
       <div className="space-y-2">
         <div className="bg-white p-sm type-body border border-grey-200 text-black">{message.text}</div>
         {citations.length > 0 && (
@@ -69,22 +69,6 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
             ))}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-export function ChatTypingIndicator() {
-  return (
-    <div className="flex justify-start" role="status" aria-label="Assistant is typing">
-      <div className="flex items-center gap-xs">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="size-1.75 animate-bounce rounded-full bg-brand motion-reduce:animate-none"
-            style={{ animationDelay: `${i * 120}ms` }}
-          />
-        ))}
       </div>
     </div>
   );

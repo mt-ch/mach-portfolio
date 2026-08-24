@@ -100,6 +100,57 @@ describe("ChatDrawer", () => {
     expect(screen.getByRole("status", { name: /assistant is typing/i })).toBeInTheDocument();
   });
 
+  it("does not render an empty assistant bubble alongside the typing indicator", async () => {
+    const user = userEvent.setup();
+    const { response } = makeStreamResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    render(<Wrapper />);
+    await openAndSend(user, "what has he built?");
+
+    expect(screen.getByRole("status", { name: /assistant is typing/i })).toBeInTheDocument();
+    expect(screen.queryByTestId("assistant-bubble")).not.toBeInTheDocument();
+  });
+
+  it("still renders the assistant bubble once a response completes with no text and no citations", async () => {
+    const user = userEvent.setup();
+    const { response, push, close } = makeStreamResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    render(<Wrapper />);
+    await openAndSend(user, "what has he built?");
+
+    await act(async () => {
+      push("citations", { citations: [] });
+      close();
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByRole("status", { name: /assistant is typing/i })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByTestId("assistant-bubble")).toBeInTheDocument();
+  });
+
+  it("does not render an empty assistant bubble alongside the typing indicator while retrying", async () => {
+    const user = userEvent.setup();
+    const failedResponse = new Response(null, { status: 500 });
+    const retryStream = makeStreamResponse();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(failedResponse)
+      .mockResolvedValueOnce(retryStream.response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<Wrapper />);
+    await openAndSend(user, "what has he built?");
+
+    const retryButton = await screen.findByRole("button", { name: /retry/i });
+    await user.click(retryButton);
+
+    expect(screen.getByRole("status", { name: /assistant is typing/i })).toBeInTheDocument();
+    expect(screen.queryByTestId("assistant-bubble")).not.toBeInTheDocument();
+  });
+
   it("renders a grounded answer with citation pills, distinct from the typing state", async () => {
     const user = userEvent.setup();
     const { response, push, close } = makeStreamResponse();
