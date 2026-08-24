@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatDrawer } from "./ChatDrawer";
+import { ChatDrawerToggle } from "./ChatDrawerToggle";
 import { useDrawerVisibility } from "./useDrawerVisibility";
+import { useTransitionPhase } from "./useTransitionPhase";
 
 function stubMatchMedia(matches: boolean) {
   vi.stubGlobal(
@@ -17,12 +19,20 @@ function stubMatchMedia(matches: boolean) {
   );
 }
 
-// Renders the real useDrawerVisibility hook alongside ChatDrawer, so these
-// tests exercise the same open/close wiring the app uses (launcher, close
-// control, Escape, backdrop) rather than a hand-rolled stand-in.
+// Renders the real useDrawerVisibility hook alongside ChatDrawer and its
+// launcher, so these tests exercise the same open/close wiring the app uses
+// (launcher, close control, Escape, backdrop) rather than a hand-rolled
+// stand-in. The launcher's own visibility/positioning behavior is covered
+// separately in ChatShell.test.tsx, since that's where it actually lives.
 function Wrapper() {
   const { isOpen, mode, close, toggle } = useDrawerVisibility();
-  return <ChatDrawer isOpen={isOpen} mode={mode} onClose={close} onToggle={toggle} />;
+  const { isMounted, isVisible } = useTransitionPhase(isOpen);
+  return (
+    <>
+      <ChatDrawerToggle isOpen={isOpen} mode={mode} isMounted={isMounted} onToggle={toggle} />
+      <ChatDrawer isOpen={isOpen} mode={mode} isMounted={isMounted} isVisible={isVisible} onClose={close} />
+    </>
+  );
 }
 
 function makeStreamResponse() {
@@ -252,16 +262,6 @@ describe("ChatDrawer", () => {
     expect(
       screen.queryByText("Ask me anything about Matt's projects, experience, or background."),
     ).not.toBeInTheDocument();
-  });
-
-  it("hides the launcher pill while the drawer is open, to avoid overlapping the composer", async () => {
-    const user = userEvent.setup();
-    render(<Wrapper />);
-
-    await user.click(screen.getByRole("button", { name: "Open chat" }));
-
-    expect(screen.queryByRole("button", { name: "Open chat" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Close chat" })).not.toBeInTheDocument();
   });
 
   it("closes via the explicit in-drawer close control", async () => {

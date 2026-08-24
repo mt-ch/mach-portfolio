@@ -11,50 +11,19 @@ import { isEmptyAssistantMessage } from "./types";
 import { useChatConversation } from "./useChatConversation";
 import type { DrawerMode } from "./useDrawerVisibility";
 
-// Keep in sync with the duration-300 transition classes below — the panel
-// stays mounted for this long after close so the slide-out (and, in push
-// mode, the main-content resize) can finish before it's removed.
-const TRANSITION_MS = 300;
-
 interface ChatDrawerProps {
   isOpen: boolean;
   mode: DrawerMode;
+  isMounted: boolean;
+  isVisible: boolean;
   onClose: () => void;
-  onToggle: () => void;
 }
 
-type Phase = "closed" | "opening" | "open" | "closing";
-
-export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps) {
+export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: ChatDrawerProps) {
   const { messages, isThinking, hasStarted, send, retry, reset } = useChatConversation();
   const [draft, setDraft] = useState("");
   const messagesRef = useRef<HTMLDivElement>(null);
-
-  // Mount immediately on open (so the entrance transition has something to
-  // animate from), then flip to "open" a frame later to trigger it. On
-  // close, drop straight to "closing" (which reverses the transition) and
-  // only unmount once the CSS transition has had time to finish, so the
-  // slide-out is visible instead of the panel just vanishing.
-  const [phase, setPhase] = useState<Phase>(isOpen ? "open" : "closed");
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen);
-    setPhase(isOpen ? "opening" : "closing");
-  }
-
-  useEffect(() => {
-    if (phase === "opening") {
-      const raf = requestAnimationFrame(() => setPhase("open"));
-      return () => cancelAnimationFrame(raf);
-    }
-    if (phase === "closing") {
-      const timeout = setTimeout(() => setPhase("closed"), TRANSITION_MS);
-      return () => clearTimeout(timeout);
-    }
-  }, [phase]);
-
-  const isMounted = phase !== "closed";
-  const isVisible = phase === "open";
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const el = messagesRef.current;
@@ -62,6 +31,14 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
       el.scrollTo({ top: el.scrollHeight });
     }
   }, [isOpen, messages, isThinking]);
+
+  // In overlay mode the launcher toggle unmounts the instant the drawer
+  // opens (see ChatDrawerToggle), which would otherwise drop focus to
+  // <body>. Move focus into the panel so keyboard/screen-reader users land
+  // somewhere useful instead of losing their place.
+  useEffect(() => {
+    if (isOpen) closeButtonRef.current?.focus();
+  }, [isOpen]);
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,16 +59,6 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        aria-label="Open chat"
-        className="fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-white px-sm py-xs mix-blend-difference"
-      >
-        <span className="type-small font-medium text-black">{isOpen ? "..." : "Ask"}</span>
-      </button>
-
       {mode === "overlay" && isMounted && (
         <div
           aria-hidden="true"
@@ -139,6 +106,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                   <RotateCwIcon className="" strokeWidth={1.75} />
                 </button>
                 <button
+                  ref={closeButtonRef}
                   type="button"
                   onClick={onClose}
                   aria-label="Close chat panel"
