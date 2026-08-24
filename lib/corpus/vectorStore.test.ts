@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { upsertMock, deleteMock, queryMock, fromEnvMock } = vi.hoisted(() => ({
+const { upsertMock, deleteMock, queryMock, infoMock, fromEnvMock } = vi.hoisted(() => ({
   upsertMock: vi.fn(),
   deleteMock: vi.fn(),
   queryMock: vi.fn(),
+  infoMock: vi.fn(),
   fromEnvMock: vi.fn(),
 }));
 
@@ -11,9 +12,8 @@ vi.mock("@upstash/vector", () => ({
   Index: { fromEnv: fromEnvMock },
 }));
 
-const { upsertChunks, deleteDocumentChunks, queryChunks } = await import(
-  "./vectorStore"
-);
+const { upsertChunks, deleteDocumentChunks, queryChunks, getVectorCount } =
+  await import("./vectorStore");
 
 import type { CorpusChunk } from "./types";
 
@@ -24,6 +24,7 @@ describe("vectorStore", () => {
       upsert: upsertMock,
       delete: deleteMock,
       query: queryMock,
+      info: infoMock,
     });
   });
 
@@ -149,6 +150,25 @@ describe("vectorStore", () => {
       const result = await queryChunks([0.1, 0.2], 4);
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("getVectorCount", () => {
+    it("returns the index's vector count", async () => {
+      infoMock.mockResolvedValue({ vectorCount: 42, pendingVectorCount: 0 });
+
+      const result = await getVectorCount();
+
+      expect(result).toBe(42);
+      expect(infoMock).toHaveBeenCalled();
+    });
+
+    it("returns zero for an empty index", async () => {
+      infoMock.mockResolvedValue({ vectorCount: 0, pendingVectorCount: 0 });
+
+      const result = await getVectorCount();
+
+      expect(result).toBe(0);
     });
   });
 });

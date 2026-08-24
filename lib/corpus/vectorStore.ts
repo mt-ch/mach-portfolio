@@ -66,3 +66,8 @@ export async function upsertChunks(
 export async function deleteDocumentChunks(documentId: string): Promise<void> {
   await getIndex().delete({ prefix: `${documentId}:` });
 }
+
+export async function getVectorCount(): Promise<number> {
+  const info = await getIndex().info();
+  return info.vectorCount;
+}
