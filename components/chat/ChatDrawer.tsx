@@ -170,7 +170,7 @@ export function ChatDrawer({ isOpen, mode, onClose, onToggle }: ChatDrawerProps)
                           disabled={isThinking}
                           className="inline-flex items-start gap-xs text-left text-grey-300 disabled:opacity-40 hover:text-brand transition-all duration-200"
                         >
-                          <CornerDownRightIcon className="size-sm shrink-0 mt-0.5" strokeWidth={1.75} />
+                          <CornerDownRightIcon className="size-md shrink-0 mt-0.5" strokeWidth={1.75} />
                           <span className="type-small">{question}</span>
                         </button>
                       ))}

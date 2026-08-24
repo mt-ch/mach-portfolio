@@ -28,7 +28,7 @@ export function OtherProjects({
             </div>
             <h2 className="type-body font-medium text-black">
               {project.title}:{" "}
-              <span className="text-grey-200">{project.summary}</span>
+              <span className="text-grey-300">{project.summary}</span>
             </h2>
           </Link>
         ))}

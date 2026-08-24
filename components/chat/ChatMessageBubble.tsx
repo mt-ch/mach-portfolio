@@ -21,20 +21,8 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
 
   if (message.role === "assistant-refusal") {
     return (
-      <div className="flex justify-start">
-        <div
-          role="status"
-          className="flex max-w-[85%] items-start gap-2 rounded-md border border-refusal-border bg-refusal-background px-3 py-2 text-sm text-refusal-foreground"
-        >
-          <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 size-4 shrink-0">
-            <path
-              fillRule="evenodd"
-              d="M8.257 3.099c.765-1.36 2.72-1.36 3.486 0l6.516 11.59c.75 1.334-.213 2.986-1.743 2.986H3.484c-1.53 0-2.493-1.652-1.743-2.986l6.516-11.59zM10 7a1 1 0 011 1v3a1 1 0 11-2 0V8a1 1 0 011-1zm0 8a1 1 0 100-2 1 1 0 000 2z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span>{message.text}</span>
-        </div>
+      <div role="status" className="flex justify-start type-small text-black">
+        <span>{message.text}</span>
       </div>
     );
   }
