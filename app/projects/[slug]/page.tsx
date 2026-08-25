@@ -39,12 +39,14 @@ export default async function ProjectPage({ params }: Props) {
   const otherProjects = await getOtherProjects(project._id);
 
   return (
-    <main className="relative">
-      <SiteNav about={about} />
-      <ProjectHeader project={project} />
-      <div className="flex flex-col gap-2xl py-2xl bg-white">
-        <ProjectStory blocks={project.story} />
-        <OtherProjects projects={otherProjects} />
+    <main className="relative text-foreground">
+      <div className="bg-background">
+        <SiteNav about={about} />
+        <ProjectHeader project={project} />
+        <div className="flex flex-col gap-2xl py-2xl">
+          <ProjectStory blocks={project.story} />
+          <OtherProjects projects={otherProjects} />
+        </div>
       </div>
       <SiteFooter about={about} />
     </main>

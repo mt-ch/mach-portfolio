@@ -14,33 +14,32 @@ export function SiteFooter({ about }: { about: About }) {
   return (
     <footer>
       <div className="bg-grey-400 h-3xl w-full">
-        <div className="w-full h-full bg-white rounded-b-xl"></div>
+        <div className="w-full h-full bg-background rounded-b-xl"></div>
       </div>
       <div className="p-md gap-xl bg-grey-400 relative flex flex-col h-screen justify-between">
-        <h2 className="type-body font-medium text-white pr-2xl">
-          <span className="text-transparent">{about.name} </span>
+        <h2 className="type-body font-medium text-background pr-2xl">
+          <span className="text-transparent">({about.name}) </span>
           {footerTextLines.map((line, index) => (
             <Fragment key={index}>
               {index > 0 && <br />}
               {line}
             </Fragment>
-          ))}
-          <br />
+          ))}{" "}
           <a href={`mailto:${about.email}`} className="">
             Email me
           </a>
         </h2>
 
         <div className="flex justify-between">
-          <p className="type-body font-medium text-white">©{year}</p>
+          <p className="type-body font-medium text-background">©{year}</p>
           <div className="flex gap-md">
             {about.resumeUrl && (
-              <a href={about.resumeUrl} className="type-body font-medium text-white" download>
+              <a href={about.resumeUrl} className="type-body font-medium text-background" download>
                 Resume
               </a>
             )}
             {about.socialLinks?.map((link) => (
-              <a key={link._key} href={link.url} target="_blank" rel="noreferrer" className="type-body font-medium text-white">
+              <a key={link._key} href={link.url} target="_blank" rel="noreferrer" className="type-body font-medium text-background">
                 {link.platform}
               </a>
             ))}

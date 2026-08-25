@@ -6,7 +6,7 @@ export function SiteNav({ about }: { about: About }) {
   return (
     <header>
       <Link href="/" className="fixed z-10 top-md left-md mix-blend-difference text-[#00c9b1] type-body font-medium">
-        {about.name}
+        ({about.name})
       </Link>
     </header>
   );

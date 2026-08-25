@@ -16,16 +16,18 @@ export default async function Home() {
   }
 
   return (
-    <main className="relative">
-      <SiteNav about={about} />
-      <HeroSection about={about} />
-      {projects.length > 0 && (
-        <div className="p-md gap-md relative flex flex-col bg-white">
-          {projects.map((project) => (
-            <FeaturedProjectRow key={project._id} project={project} />
-          ))}
-        </div>
-      )}
+    <main className="relative text-foreground">
+      <div className="bg-background">
+        <SiteNav about={about} />
+        <HeroSection about={about} />
+        {projects.length > 0 && (
+          <div className="gap-xl relative flex flex-col lg:px-md">
+            {projects.map((project) => (
+              <FeaturedProjectRow key={project._id} project={project} />
+            ))}
+          </div>
+        )}
+      </div>
       <SiteFooter about={about} />
     </main>
   );

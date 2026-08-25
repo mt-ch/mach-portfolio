@@ -34,21 +34,19 @@ const portableTextComponents: PortableTextComponents = {
 };
 
 const TEXT_CONTAINER_CLASS: Record<TextLayout, string> = {
-  "one-column": "flex flex-col gap-sm",
-  "two-column-split": "grid grid-cols-1 gap-sm sm:grid-cols-2",
-  "two-column-left": "grid grid-cols-1 gap-sm sm:grid-cols-2",
-  "two-column-right": "grid grid-cols-1 gap-sm sm:grid-cols-2",
+  "one-column": "flex flex-col gap-sm px-md lg:px-0",
+  "two-column-split": "grid grid-cols-1 gap-sm sm:grid-cols-2 px-md lg:px-0",
+  "two-column-left": "grid grid-cols-1 gap-sm sm:grid-cols-2 px-md lg:px-0",
+  "two-column-right": "grid grid-cols-1 gap-sm sm:grid-cols-2 px-md lg:px-0",
 };
 
 function TextBlockView({ block }: { block: TextStoryBlock }) {
   if (!block.content || block.content.length === 0) return null;
 
   const layout: TextLayout = block.layout ?? "one-column";
-  const heading = block.heading ? (
-    <h2 className="type-subheading font-medium text-foreground">{block.heading}</h2>
-  ) : null;
+  const heading = block.heading ? <h2 className="type-subheading font-medium text-foreground">{block.heading}</h2> : null;
   const body = (
-    <div className="gap-sm flex flex-col type-body font-normal text-black">
+    <div className="gap-sm flex flex-col type-body font-normal text-foreground">
       <PortableText value={block.content} components={portableTextComponents} />
     </div>
   );
@@ -133,7 +131,7 @@ function hasRenderableContent(block: StoryBlock): boolean {
 }
 
 function gapClassBetween(previous: StoryBlock["_type"], current: StoryBlock["_type"]): string {
-  return previous === "textBlock" || current === "textBlock" ? "mt-xl" : "mt-sm";
+  return previous === "textBlock" || current === "textBlock" ? "mt-2xl" : "mt-sm";
 }
 
 export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefined }) {
@@ -141,7 +139,7 @@ export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefine
   if (renderableBlocks.length === 0) return null;
 
   return (
-    <div className="px-md flex flex-col">
+    <div className="lg:px-md flex flex-col">
       {renderableBlocks.map((block, index) => {
         const previous = renderableBlocks[index - 1];
         const gapClass = previous ? gapClassBetween(previous._type, block._type) : "";
