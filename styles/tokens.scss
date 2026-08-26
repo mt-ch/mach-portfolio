@@ -92,6 +92,14 @@
 
   --card-background: var(--grey-400);
   --card-foreground: var(--white);
+
+  --error-border: rgba(248, 113, 113, 0.4);
+  --error-background: #3f1d1d;
+  --error-foreground: #fecaca;
+
+  --refusal-border: rgba(251, 190, 36, 0.4);
+  --refusal-background: #3f2f0a;
+  --refusal-foreground: #fde68a;
 }
 
 @theme {
