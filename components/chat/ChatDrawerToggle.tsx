@@ -2,6 +2,7 @@
 
 import { DotIcon } from "lucide-react";
 
+import { isHiddenInOverlay, pushTranslateClassName } from "./toggleClusterAnimation";
 import type { DrawerMode } from "./useDrawerVisibility";
 
 interface ChatDrawerToggleProps {
@@ -15,7 +16,7 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
   // Overlay mode's drawer already has its own explicit close control, and
   // there's no room to shift the toggle sideways on a narrow viewport, so
   // it steps aside entirely until the drawer has fully closed again.
-  if (mode === "overlay" && isMounted) return null;
+  if (isHiddenInOverlay(mode, isMounted)) return null;
 
   return (
     <button
@@ -23,9 +24,7 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-label="Open chat"
-      className={`fixed top-md right-md z-10 inline-flex items-center gap-sm rounded-full bg-[#00c9b1] h-10 px-sm mix-blend-difference transition-transform duration-300 ease-out ${
-        mode === "push" && isOpen ? "-translate-x-102" : "translate-x-0"
-      }`}
+      className={`inline-flex items-center gap-sm rounded-full bg-[#00c9b1] h-10 px-sm mix-blend-difference transition-transform duration-300 ease-out ${pushTranslateClassName(mode, isOpen)}`}
     >
       <span className="type-small font-medium text-black">
         {isOpen ? (

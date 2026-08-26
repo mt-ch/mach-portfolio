@@ -30,6 +30,11 @@ export const metadata: Metadata = {
   description: "Portfolio site",
 };
 
+// Runs before hydration so the correct theme class is on <html> before
+// first paint — otherwise the page would flash light before useTheme's
+// effect ever runs. Mirrors the resolution order in components/chat/useTheme.ts.
+const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}if(t==="dark"){document.documentElement.classList.add("dark");}}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,6 +46,9 @@ export default function RootLayout({
       className={`${openSauceOne.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="h-full overflow-hidden">
         <ChatShell>{children}</ChatShell>
       </body>
