@@ -7,10 +7,11 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 // Icons
-import { Eye } from "lucide-react";
+import { Eye, Mail } from "lucide-react";
 
 const cursorIcons = {
   eye: Eye,
+  mail: Mail,
 } as const;
 
 type CursorIconName = keyof typeof cursorIcons;
@@ -355,7 +356,7 @@ export default function CustomCursor() {
           yPercent: -50,
           opacity: 1,
           scale: 1,
-          backgroundColor: "var(--black)",
+          backgroundColor: "var(--foreground)",
           duration: 0.24,
           ease: "power4.out",
           overwrite: "auto",
@@ -436,7 +437,7 @@ export default function CustomCursor() {
       >
         <div
           ref={marqueeInnerRef}
-          className="type-mono-small relative flex w-max shrink-0 items-center font-medium text-black uppercase opacity-0 will-change-transform"
+          className="type-small relative flex w-max shrink-0 items-center font-medium text-white opacity-0 will-change-transform"
         >
           {Array.from({ length: 4 }).map((_, index) => (
             <span
@@ -453,7 +454,7 @@ export default function CustomCursor() {
                 }}
               />
 
-              {CursorIcon ? <CursorIcon className="size-md shrink-0" strokeWidth={1.5} aria-hidden="true" /> : null}
+              {CursorIcon ? <CursorIcon className="size-md shrink-0" strokeWidth={1.75} aria-hidden="true" /> : null}
             </span>
           ))}
         </div>

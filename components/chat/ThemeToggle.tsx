@@ -29,6 +29,7 @@ export function ThemeToggle({ theme, onToggle, mode, isOpen, isMounted }: ThemeT
         mode,
         isOpen
       )}`}
+      data-cursor="button"
     >
       {theme === "dark" ? <SunIcon className="size-md" strokeWidth={1.75} /> : <MoonIcon className="size-md" strokeWidth={1.75} />}
     </button>

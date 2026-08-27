@@ -26,7 +26,7 @@ export function SiteFooter({ about }: { about: About }) {
             </Fragment>
           ))}
           <br />
-          <a href={`mailto:${about.email}`} className="">
+          <a href={`mailto:${about.email}`} className="" data-cursor-text="Copy Email" data-cursor-icon="mail">
             Email me
           </a>
         </h2>
@@ -35,12 +35,19 @@ export function SiteFooter({ about }: { about: About }) {
           <p className="type-body font-medium text-background">©{year}</p>
           <div className="flex gap-md">
             {about.resumeUrl && (
-              <a href={about.resumeUrl} className="type-body font-medium text-background" download>
+              <a href={about.resumeUrl} className="type-body font-medium text-background" download data-cursor="link">
                 Resume
               </a>
             )}
             {about.socialLinks?.map((link) => (
-              <a key={link._key} href={link.url} target="_blank" rel="noreferrer" className="type-body font-medium text-background">
+              <a
+                key={link._key}
+                href={link.url}
+                target="_blank"
+                rel="noreferrer"
+                className="type-body font-medium text-background"
+                data-cursor="link"
+              >
                 {link.platform}
               </a>
             ))}

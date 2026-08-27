@@ -1,3 +1,5 @@
+import CustomCursor from "@/components/motion/CustomCursor";
+
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
@@ -41,17 +43,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${openSauceOne.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={`${openSauceOne.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="h-full overflow-hidden">
         <ChatShell>{children}</ChatShell>
       </body>
+      <CustomCursor />
     </html>
   );
 }

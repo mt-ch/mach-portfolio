@@ -103,6 +103,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                   aria-label="Reset conversation"
                   className="inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 text-small font-medium size-10 px-sm transition-transform duration-300 ease-out cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={isThinking || !hasStarted}
+                  data-cursor="button"
                 >
                   <RotateCwIcon className="size-md shrink-0" strokeWidth={1.75} />
                 </button>
@@ -111,7 +112,8 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                   type="button"
                   onClick={onClose}
                   aria-label="Close chat panel"
-                  className="inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 text-small font-medium size-10 px-sm transition-transform duration-300 ease-out cursor-pointer"
+                  className="inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 text-small font-medium size-10 px-sm transition-transform duration-300 ease-out cursor-pointer lg:hidden"
+                  data-cursor="button"
                 >
                   <XIcon className="size-md shrink-0" strokeWidth={1.75} />
                 </button>
@@ -144,6 +146,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                           onClick={() => onSuggestedQuestion(question)}
                           disabled={isThinking}
                           className="inline-flex items-start gap-xs text-left text-grey-500 dark:text-grey-400 disabled:opacity-40 hover:text-brand transition-all duration-200"
+                          data-cursor="link"
                         >
                           <span className="type-small">{question}</span>
                         </button>
@@ -181,6 +184,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                       disabled={!draft.trim() || isThinking}
                       aria-label="Send"
                       className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-10 px-sm text-white transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                      data-cursor="button"
                     >
                       <ArrowUpIcon className="size-md shrink-0" strokeWidth={1.75} />
                     </button>

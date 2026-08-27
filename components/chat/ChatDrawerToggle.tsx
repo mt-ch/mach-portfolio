@@ -29,6 +29,7 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
           ? "-translate-x-102 w-10 bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200"
           : "translate-x-0 bg-brand text-white"
       }`}
+      data-cursor="button"
     >
       <span className="type-small font-medium">{isOpen ? <XIcon className="size-md" strokeWidth={1.75} /> : "Ask"}</span>
     </button>

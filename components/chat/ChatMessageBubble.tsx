@@ -52,6 +52,7 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
                   onClick={() => onRetry(message.id)}
                   disabled={retryDisabled}
                   className="inline-flex items-center font-medium disabled:opacity-40"
+                  data-cursor="link"
                 >
                   Retry
                 </button>
@@ -76,6 +77,7 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
                 key={`${citation.href}-${citation.label}`}
                 href={citation.href}
                 className="border border-grey-200 p-xs type-caption text-grey-700 bg-white hover:bg-grey-200 hover:text-black dark:bg-grey-900 dark:border-grey-700 dark:text-grey-200 dark:hover:bg-grey-800 dark:hover:text-white transition-colors duration-200 ease-in-out"
+                data-cursor="link"
               >
                 {citation.label}
               </a>
