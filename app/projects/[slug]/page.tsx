@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getAbout, getOtherProjects, getProject, getProjects } from "@/lib/sanity";
-import { OtherProjects } from "@/components/OtherProjects";
-import { ProjectHeader } from "@/components/ProjectHeader";
-import { ProjectStory } from "@/components/ProjectStory";
-import { SiteNav } from "@/components/home/SiteNav";
-import { SiteFooter } from "@/components/home/SiteFooter";
+import { OtherProjects } from "@/components/features/project/OtherProjects";
+import { ProjectHeader } from "@/components/features/project/ProjectHeader";
+import { ProjectStory } from "@/components/features/project/ProjectStory";
+import { SiteNav } from "@/components/layout/SiteNav";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export async function generateStaticParams() {
   const projects = await getProjects();

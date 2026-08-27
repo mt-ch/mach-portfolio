@@ -2,7 +2,7 @@ import { Fragment } from "react";
 
 import type { About } from "@/lib/sanity";
 
-import { LogoImage } from "./CoverImage";
+import { LogoImage } from "@/components/ui/CoverImage";
 
 export function HeroSection({ about }: { about: About }) {
   const headlineLines = about.headline
