@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
-import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
 
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
