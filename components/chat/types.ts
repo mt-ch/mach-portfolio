@@ -1,4 +1,4 @@
-import type { ChatCitation } from "@/lib/chat/types";
+import type { ChatCitation } from "@/lib/assistant/chat/types";
 
 import type { ChatErrorCause } from "./chatErrors";
 

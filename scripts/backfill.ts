@@ -1,4 +1,4 @@
-import { runBackfill } from "@/lib/corpus/backfill";
+import { runBackfill } from "@/lib/assistant/corpus/backfill";
 
 runBackfill()
   .then(({ documentsIndexed, chunksIndexed }) => {
