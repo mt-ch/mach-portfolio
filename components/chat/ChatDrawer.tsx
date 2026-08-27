@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { ArrowUpIcon, RotateCwIcon } from "lucide-react";
+import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
 
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
@@ -84,7 +84,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
               // backdrop behind it is a real, tappable region rather than
               // being fully painted over by this opaque full-width panel.
               mode === "overlay"
-                ? `fixed inset-x-0 bottom-0 top-16 z-30 flex w-full flex-col bg-grey-100 dark:bg-grey-800 transition-transform duration-300 ease-out ${
+                ? `fixed inset-x-0 bottom-0 top-0 z-30 flex w-full flex-col bg-grey-100 dark:bg-grey-800 transition-transform duration-300 ease-out ${
                     isVisible ? "translate-x-0" : "translate-x-full"
                   }`
                 : `ml-auto flex h-full w-102 flex-col border-l border-grey-200 bg-grey-100 dark:bg-grey-800 dark:border-grey-700`
@@ -105,6 +105,15 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                   disabled={isThinking || !hasStarted}
                 >
                   <RotateCwIcon className="size-md shrink-0" strokeWidth={1.75} />
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-expanded={isOpen}
+                  aria-label="Open chat"
+                  className="inline-flex items-center justify-center translate-x-0 bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 gap-sm size-10 px-sm transition-transform duration-300 ease-out cursor-pointer"
+                >
+                  <span className="type-small font-medium">{isOpen ? <XIcon className="size-md" strokeWidth={1.75} /> : "Ask"}</span>
                 </button>
               </div>
             </div>
