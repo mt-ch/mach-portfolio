@@ -74,7 +74,10 @@
   --layout-grid-gap: #{fluid-space(16, 32)};
 
   /* Radius */
-  --radius-card: #{fluid-space(4, 8)};
+  --radius-scale: 1;
+  --radius-sm: calc(0.25rem * var(--radius-scale));
+  --radius-md: calc(0.5rem * var(--radius-scale));
+  --radius-lg: calc(0.75rem * var(--radius-scale));
 
   /* Semantic */
   --background: var(--white);
@@ -205,5 +208,7 @@
   --spacing-section-y: var(--layout-section-y);
   --spacing-grid-gap: var(--layout-grid-gap);
 
-  --radius-card: var(--radius-card);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
 }
