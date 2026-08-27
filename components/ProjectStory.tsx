@@ -131,7 +131,7 @@ function hasRenderableContent(block: StoryBlock): boolean {
 }
 
 function gapClassBetween(previous: StoryBlock["_type"], current: StoryBlock["_type"]): string {
-  return previous === "textBlock" || current === "textBlock" ? "mt-2xl" : "mt-sm";
+  return previous === "textBlock" || current === "textBlock" ? "mt-xl" : "mt-sm";
 }
 
 export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefined }) {
