@@ -14,7 +14,7 @@ export function SiteFooter({ about }: { about: About }) {
   return (
     <footer>
       <div className="bg-foreground h-3xl w-full">
-        <div className="w-full h-full bg-background rounded-b-xl"></div>
+        <div className="w-full h-full bg-background rounded-b-lg"></div>
       </div>
       <div className="p-md gap-xl bg-foreground relative flex flex-col h-screen justify-between">
         <h2 className="type-body font-medium text-background pr-2xl">

@@ -4,7 +4,7 @@ import type { ProjectListItem } from "@/lib/sanity";
 
 export function ProjectCard({ project }: { project: ProjectListItem }) {
   return (
-    <article className="rounded-lg border border-gray-200 p-6 dark:border-gray-800">
+    <article className="rounded-md border border-gray-200 p-6 dark:border-gray-800">
       <h3 className="text-lg font-semibold">
         <Link href={`/projects/${project.slug.current}`}>
           {project.title}
