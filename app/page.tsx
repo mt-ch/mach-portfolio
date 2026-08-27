@@ -1,8 +1,8 @@
 import { getAbout, getFeaturedProjects } from "@/lib/sanity";
-import { FeaturedProjectRow } from "@/components/home/FeaturedProjectRow";
-import { HeroSection } from "@/components/home/HeroSection";
-import { SiteFooter } from "@/components/home/SiteFooter";
-import { SiteNav } from "@/components/home/SiteNav";
+import { FeaturedProjectRow } from "@/components/features/home/FeaturedProjectRow";
+import { HeroSection } from "@/components/features/home/HeroSection";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteNav } from "@/components/layout/SiteNav";
 
 export default async function Home() {
   const [about, projects] = await Promise.all([getAbout(), getFeaturedProjects()]);

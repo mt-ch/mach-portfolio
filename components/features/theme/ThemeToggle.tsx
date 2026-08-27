@@ -2,8 +2,8 @@
 
 import { MoonIcon, SunIcon } from "lucide-react";
 
-import { isHiddenInOverlay, pushTranslateClassName } from "./toggleClusterAnimation";
-import type { DrawerMode } from "./useDrawerVisibility";
+import { isHiddenInOverlay, pushTranslateClassName } from "@/components/features/chat/toggleClusterAnimation";
+import type { DrawerMode } from "@/components/features/chat/useDrawerVisibility";
 import type { Theme } from "./useTheme";
 
 interface ThemeToggleProps {

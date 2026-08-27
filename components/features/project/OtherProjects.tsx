@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import type { OtherProjectListItem } from "@/lib/sanity";
-import { CoverImage } from "@/components/home/CoverImage";
+import { CoverImage } from "@/components/ui/CoverImage";
 
 export function OtherProjects({ projects }: { projects: OtherProjectListItem[] }) {
   return (

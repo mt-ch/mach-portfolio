@@ -1,10 +1,10 @@
-import CustomCursor from "@/components/motion/CustomCursor";
+import CustomCursor from "@/components/ui/CustomCursor";
 
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
 import type { Metadata } from "next";
-import { ChatShell } from "@/components/chat/ChatShell";
+import { ChatShell } from "@/components/features/chat/ChatShell";
 import "./globals.scss";
 
 const openSauceOne = localFont({
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
 // Runs before hydration so the correct theme class is on <html> before
 // first paint — otherwise the page would flash light before useTheme's
-// effect ever runs. Mirrors the resolution order in components/chat/useTheme.ts.
+// effect ever runs. Mirrors the resolution order in components/features/theme/useTheme.ts.
 const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}if(t==="dark"){document.documentElement.classList.add("dark");}}catch(e){}})();`;
 
 export default function RootLayout({

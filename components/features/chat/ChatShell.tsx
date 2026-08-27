@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 
 import { ChatDrawer } from "./ChatDrawer";
 import { ChatDrawerToggle } from "./ChatDrawerToggle";
-import { ThemeToggle } from "./ThemeToggle";
+import { ThemeToggle } from "@/components/features/theme/ThemeToggle";
 import { useDrawerVisibility } from "./useDrawerVisibility";
-import { useTheme } from "./useTheme";
+import { useTheme } from "@/components/features/theme/useTheme";
 import { useTransitionPhase } from "./useTransitionPhase";
 
 export function ChatShell({ children }: { children: ReactNode }) {

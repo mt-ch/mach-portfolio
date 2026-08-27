@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import type { FeaturedProjectListItem } from "@/lib/sanity";
 
-import { CoverImage } from "./CoverImage";
+import { CoverImage } from "@/components/ui/CoverImage";
 
 export function FeaturedProjectRow({ project }: { project: FeaturedProjectListItem }) {
   const href = `/projects/${project.slug.current}`;
