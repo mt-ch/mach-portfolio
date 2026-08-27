@@ -64,7 +64,7 @@ function TextBlockView({ block }: { block: TextStoryBlock }) {
     const placement = layout === "two-column-left" ? "sm:col-start-1" : "sm:col-start-2";
     return (
       <div className={TEXT_CONTAINER_CLASS[layout]}>
-        <div className={`flex flex-col gap-sm ${placement}`}>
+        <div className={`flex flex-col gap-md ${placement}`}>
           {heading}
           {body}
         </div>

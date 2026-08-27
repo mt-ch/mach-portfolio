@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { ArrowUpIcon, CornerDownRightIcon, RotateCwIcon, XIcon } from "lucide-react";
+import { ArrowUpIcon, RotateCwIcon } from "lucide-react";
 
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
@@ -84,35 +84,27 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
               // backdrop behind it is a real, tappable region rather than
               // being fully painted over by this opaque full-width panel.
               mode === "overlay"
-                ? `fixed inset-x-0 bottom-0 top-16 z-30 flex w-full flex-col bg-grey-100 transition-transform duration-300 ease-out ${
+                ? `fixed inset-x-0 bottom-0 top-16 z-30 flex w-full flex-col bg-grey-100 dark:bg-grey-800 transition-transform duration-300 ease-out ${
                     isVisible ? "translate-x-0" : "translate-x-full"
                   }`
-                : `ml-auto flex h-full w-102 flex-col border-l border-grey-200 bg-grey-100`
+                : `ml-auto flex h-full w-102 flex-col border-l border-grey-200 bg-grey-100 dark:bg-grey-800 dark:border-grey-700`
             }
           >
             <div role="status" aria-live="polite" className="sr-only">
               {isThinking && "Thinking…"}
             </div>
 
-            <div className="px-md py-sm border-b border-grey-200 flex items-center justify-between gap-sm">
-              <p className="type-small font-medium text-black">Ask</p>
+            <div className="px-md py-md border-b border-grey-200 flex items-center justify-between gap-sm dark:border-grey-700">
+              <p className="type-body font-medium text-brand">[Ask]</p>
               <div className="flex items-center gap-xs">
                 <button
                   type="button"
                   onClick={onReset}
                   aria-label="Reset conversation"
-                  className="inline-flex items-center justify-center hover:bg-grey-200 size-lg p-xs rounded-full hover:text-grey-400 text-grey-300 transition-all duration-200"
+                  className="inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 text-small font-medium size-10 px-sm transition-transform duration-300 ease-out cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                  disabled={isThinking || !hasStarted}
                 >
-                  <RotateCwIcon className="" strokeWidth={1.75} />
-                </button>
-                <button
-                  ref={closeButtonRef}
-                  type="button"
-                  onClick={onClose}
-                  aria-label="Close chat panel"
-                  className="inline-flex items-center justify-center hover:bg-grey-200 size-lg p-xs rounded-full hover:text-grey-400 text-grey-300 transition-all duration-200"
-                >
-                  <XIcon className="" strokeWidth={1.75} />
+                  <RotateCwIcon className="size-md shrink-0" strokeWidth={1.75} />
                 </button>
               </div>
             </div>
@@ -134,7 +126,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                   </>
                 ) : (
                   <div className="flex min-h-full flex-col justify-end gap-md">
-                    <p className="type-body font-medium text-black">Hey, ask away.</p>
+                    <p className="type-body font-medium text-black dark:text-white">Hey, ask away.</p>
                     <div className="flex flex-col gap-md">
                       {SUGGESTED_QUESTIONS.map((question) => (
                         <button
@@ -142,7 +134,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                           type="button"
                           onClick={() => onSuggestedQuestion(question)}
                           disabled={isThinking}
-                          className="inline-flex items-start gap-xs text-left text-grey-300 disabled:opacity-40 hover:text-brand transition-all duration-200"
+                          className="inline-flex items-start gap-xs text-left text-grey-500 dark:text-grey-400 disabled:opacity-40 hover:text-brand transition-all duration-200"
                         >
                           <span className="type-small">{question}</span>
                         </button>
@@ -153,7 +145,10 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
               </div>
 
               <div className="px-md pb-md">
-                <form onSubmit={onSubmit} className="relative flex items-center justify-between border border-grey-200 bg-white">
+                <form
+                  onSubmit={onSubmit}
+                  className="relative flex items-center justify-between border border-grey-200 bg-white dark:bg-grey-900 dark:border-grey-700"
+                >
                   <label htmlFor="chat-drawer-input" className="sr-only">
                     Hey, ask away.
                   </label>
@@ -167,7 +162,7 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                       event.currentTarget.form?.requestSubmit();
                     }}
                     placeholder="Ask about Matt..."
-                    className="type-small w-full p-sm text-black placeholder:text-grey-300 auto-grow-textarea focus:outline-none"
+                    className="type-small w-full p-sm text-black placeholder:text-grey-700 dark:text-white dark:placeholder:text-grey-400 auto-grow-textarea focus:outline-none"
                     autoComplete="off"
                     rows={1}
                   />
@@ -176,9 +171,9 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                       type="submit"
                       disabled={!draft.trim() || isThinking}
                       aria-label="Send"
-                      className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-lg p-xs text-accent transition-all duration-200 disabled:opacity-40"
+                      className="inline-flex items-center justify-center hover:bg-brand/80 bg-brand size-10 px-sm text-white transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      <ArrowUpIcon strokeWidth={1.75} />
+                      <ArrowUpIcon className="size-md shrink-0" strokeWidth={1.75} />
                     </button>
                   </div>
                 </form>

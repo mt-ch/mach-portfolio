@@ -13,10 +13,10 @@ export function SiteFooter({ about }: { about: About }) {
 
   return (
     <footer>
-      <div className="bg-grey-400 h-3xl w-full">
+      <div className="bg-foreground h-3xl w-full">
         <div className="w-full h-full bg-background rounded-b-xl"></div>
       </div>
-      <div className="p-md gap-xl bg-grey-400 relative flex flex-col h-screen justify-between">
+      <div className="p-md gap-xl bg-foreground relative flex flex-col h-screen justify-between">
         <h2 className="type-body font-medium text-background pr-2xl">
           <span className="text-transparent">({about.name}) </span>
           {footerTextLines.map((line, index) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { DotIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 
 import { isHiddenInOverlay, pushTranslateClassName } from "./toggleClusterAnimation";
 import type { DrawerMode } from "./useDrawerVisibility";
@@ -24,19 +24,13 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-label="Open chat"
-      className={`inline-flex items-center gap-sm rounded-full bg-[#00c9b1] h-10 px-sm mix-blend-difference transition-transform duration-300 ease-out ${pushTranslateClassName(mode, isOpen)}`}
+      className={`inline-flex items-center justify-center gap-sm h-10 px-sm transition-transform duration-300 ease-out cursor-pointer ${
+        mode === "push" && isOpen
+          ? "-translate-x-102 w-10 bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200"
+          : "translate-x-0 bg-brand text-white"
+      }`}
     >
-      <span className="type-small font-medium text-black">
-        {isOpen ? (
-          <div className="flex items-center gap-2xs">
-            <div className="size-1 rounded-full bg-black" />
-            <div className="size-1 rounded-full bg-black" />
-            <div className="size-1 rounded-full bg-black" />
-          </div>
-        ) : (
-          "Ask"
-        )}
-      </span>
+      <span className="type-small font-medium">{isOpen ? <XIcon className="size-md" strokeWidth={1.75} /> : "Ask"}</span>
     </button>
   );
 }

@@ -25,9 +25,12 @@ export function ThemeToggle({ theme, onToggle, mode, isOpen, isMounted }: ThemeT
       type="button"
       onClick={onToggle}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className={`inline-flex items-center justify-center rounded-full bg-[#00c9b1] size-10 mix-blend-difference transition-transform duration-300 ease-out ${pushTranslateClassName(mode, isOpen)}`}
+      className={`inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 size-10 transition-transform duration-300 ease-out cursor-pointer ${pushTranslateClassName(
+        mode,
+        isOpen
+      )}`}
     >
-      {theme === "dark" ? <SunIcon className="size-md text-black" /> : <MoonIcon className="size-md text-black" />}
+      {theme === "dark" ? <SunIcon className="size-md" strokeWidth={1.75} /> : <MoonIcon className="size-md" strokeWidth={1.75} />}
     </button>
   );
 }

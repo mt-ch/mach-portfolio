@@ -36,7 +36,7 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
         )}
       </div>
       <h2 className="type-body font-medium px-md lg:px-0">
-        ({project.title}) <span className="text-grey-300">{project.summary}</span>
+        [{project.title}] <span className="text-grey-500 dark:text-grey-400">{project.summary}</span>
       </h2>
     </Link>
   );

@@ -14,7 +14,9 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
   if (message.role === "user") {
     return (
       <div className=" flex justify-end">
-        <div className="bg-white max-w-11/12 p-sm type-small border border-grey-200 text-black">{message.text}</div>
+        <div className="bg-white max-w-11/12 p-sm type-small border border-grey-200 text-black dark:bg-grey-900 dark:border-grey-700 dark:text-grey-200">
+          {message.text}
+        </div>
       </div>
     );
   }
@@ -66,14 +68,14 @@ export function ChatMessageBubble({ message, onRetry, retryDisabled }: ChatMessa
   return (
     <div className="flex justify-start" data-testid="assistant-bubble">
       <div className="space-y-md max-w-11/12">
-        <div className="type-small text-black">{message.text}</div>
+        <div className="type-small text-black dark:text-white">{message.text}</div>
         {citations.length > 0 && (
           <div className="flex flex-wrap gap-xs">
             {citations.map((citation) => (
               <a
                 key={`${citation.href}-${citation.label}`}
                 href={citation.href}
-                className="border border-grey-200 p-xs type-caption text-grey-400 bg-white hover:bg-grey-200 hover:text-black transition-colors duration-200 ease-in-out"
+                className="border border-grey-200 p-xs type-caption text-grey-700 bg-white hover:bg-grey-200 hover:text-black dark:bg-grey-900 dark:border-grey-700 dark:text-grey-200 dark:hover:bg-grey-800 dark:hover:text-white transition-colors duration-200 ease-in-out"
               >
                 {citation.label}
               </a>
