@@ -1,4 +1,4 @@
-import type { CorpusChunkMatch } from "@/lib/corpus/vectorStore";
+import type { CorpusChunkMatch } from "@/lib/assistant/corpus/vectorStore";
 
 // Below this, retrieval didn't find anything meaningfully related to the
 // question — generating against weak context risks a hallucinated answer,

@@ -1,9 +1,9 @@
 import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
 import { NextResponse } from "next/server";
 
-import { chunkAbout, chunkExperience, chunkProject } from "@/lib/corpus/chunk";
-import { reindexChunks } from "@/lib/corpus/reindexDocument";
-import type { CorpusChunk } from "@/lib/corpus/types";
+import { chunkAbout, chunkExperience, chunkProject } from "@/lib/assistant/corpus/chunk";
+import { reindexChunks } from "@/lib/assistant/corpus/reindexDocument";
+import type { CorpusChunk } from "@/lib/assistant/corpus/types";
 import {
   getAboutFresh,
   getExperienceEntryById,

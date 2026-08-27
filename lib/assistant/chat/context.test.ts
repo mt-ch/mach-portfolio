@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CorpusChunkMatch } from "@/lib/corpus/vectorStore";
+import type { CorpusChunkMatch } from "@/lib/assistant/corpus/vectorStore";
 
 import { buildContext } from "./context";
 

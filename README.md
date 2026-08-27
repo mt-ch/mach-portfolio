@@ -30,6 +30,6 @@ Both send the same `{_id, _type}` shape; the route always refetches the document
 - `sanity/` — Studio config, schema types (Project, Experience, About), desk structure
 - `lib/sanity/` — the only module that talks to the Sanity client; typed fetch functions (`getProjects`, `getProject`, `getExperience`, `getAbout`) consumed by pages and components
 - `app/api/revalidate` — signed webhook endpoint that triggers on-demand ISR on publish
-- `lib/corpus/` — chunking/embedding/vector-store pipeline for the Q&A chatbot corpus (see `pnpm backfill`)
+- `lib/assistant/corpus/` — chunking/embedding/vector-store pipeline for the Q&A chatbot corpus (see `pnpm backfill`)
 - `app/api/reindex` — signed webhook endpoint that keeps the vector index in sync with Sanity publish/delete events
 - See `CONTEXT.md` and `docs/adr/` for domain language and architectural decisions

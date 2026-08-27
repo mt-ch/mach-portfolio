@@ -9,9 +9,9 @@ const { embedTextsMock, queryChunksMock, streamMock, createMock, checkRateLimits
     checkRateLimitsMock: vi.fn(),
   }));
 
-vi.mock("@/lib/corpus/embed", () => ({ embedTexts: embedTextsMock }));
-vi.mock("@/lib/corpus/vectorStore", () => ({ queryChunks: queryChunksMock }));
-vi.mock("@/lib/guardrails/rateLimit", () => ({
+vi.mock("@/lib/assistant/corpus/embed", () => ({ embedTexts: embedTextsMock }));
+vi.mock("@/lib/assistant/corpus/vectorStore", () => ({ queryChunks: queryChunksMock }));
+vi.mock("@/lib/assistant/guardrails/rateLimit", () => ({
   checkRateLimits: checkRateLimitsMock,
 }));
 

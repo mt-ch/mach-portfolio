@@ -1,4 +1,4 @@
-import { checkIndexHealth } from "@/lib/corpus/indexHealth";
+import { checkIndexHealth } from "@/lib/assistant/corpus/indexHealth";
 
 checkIndexHealth()
   .then(() => {

@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { buildContext } from "@/lib/chat/context";
-import { condenseQuery } from "@/lib/chat/condense";
-import { streamAnswer } from "@/lib/chat/generateAnswer";
-import { retrieveChunks } from "@/lib/chat/retrieve";
-import type { ChatTurn } from "@/lib/chat/types";
-import { isAnswerGrounded } from "@/lib/guardrails/citationCheck";
-import { passesConfidenceGate } from "@/lib/guardrails/confidenceGate";
-import { getClientIp } from "@/lib/guardrails/getClientIp";
-import { checkRateLimits } from "@/lib/guardrails/rateLimit";
-import { REFUSAL_MESSAGE } from "@/lib/guardrails/refusal";
-import { sanitizeInput } from "@/lib/guardrails/sanitize";
+import { buildContext } from "@/lib/assistant/chat/context";
+import { condenseQuery } from "@/lib/assistant/chat/condense";
+import { streamAnswer } from "@/lib/assistant/chat/generateAnswer";
+import { retrieveChunks } from "@/lib/assistant/chat/retrieve";
+import type { ChatTurn } from "@/lib/assistant/chat/types";
+import { isAnswerGrounded } from "@/lib/assistant/guardrails/citationCheck";
+import { passesConfidenceGate } from "@/lib/assistant/guardrails/confidenceGate";
+import { getClientIp } from "@/lib/assistant/guardrails/getClientIp";
+import { checkRateLimits } from "@/lib/assistant/guardrails/rateLimit";
+import { REFUSAL_MESSAGE } from "@/lib/assistant/guardrails/refusal";
+import { sanitizeInput } from "@/lib/assistant/guardrails/sanitize";
 
 export const runtime = "nodejs";
 

@@ -12,7 +12,7 @@ const {
   getProjectForIndexByIdMock: vi.fn(),
 }));
 
-vi.mock("@/lib/corpus/reindexDocument", () => ({
+vi.mock("@/lib/assistant/corpus/reindexDocument", () => ({
   reindexChunks: reindexChunksMock,
 }));
 vi.mock("@/lib/sanity", () => ({

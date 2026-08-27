@@ -1,5 +1,5 @@
-import { embedTexts } from "@/lib/corpus/embed";
-import { queryChunks, type CorpusChunkMatch } from "@/lib/corpus/vectorStore";
+import { embedTexts } from "@/lib/assistant/corpus/embed";
+import { queryChunks, type CorpusChunkMatch } from "@/lib/assistant/corpus/vectorStore";
 
 // Fixed rather than scaled to corpus size, so retrieval behavior stays
 // predictable as the corpus grows.

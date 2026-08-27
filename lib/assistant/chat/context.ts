@@ -1,5 +1,5 @@
-import type { CorpusChunkMetadata } from "@/lib/corpus/types";
-import type { CorpusChunkMatch } from "@/lib/corpus/vectorStore";
+import type { CorpusChunkMetadata } from "@/lib/assistant/corpus/types";
+import type { CorpusChunkMatch } from "@/lib/assistant/corpus/vectorStore";
 
 import type { ChatCitation } from "./types";
 

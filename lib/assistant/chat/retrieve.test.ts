@@ -5,8 +5,8 @@ const { embedTextsMock, queryChunksMock } = vi.hoisted(() => ({
   queryChunksMock: vi.fn(),
 }));
 
-vi.mock("@/lib/corpus/embed", () => ({ embedTexts: embedTextsMock }));
-vi.mock("@/lib/corpus/vectorStore", () => ({ queryChunks: queryChunksMock }));
+vi.mock("@/lib/assistant/corpus/embed", () => ({ embedTexts: embedTextsMock }));
+vi.mock("@/lib/assistant/corpus/vectorStore", () => ({ queryChunks: queryChunksMock }));
 
 const { retrieveChunks, TOP_K } = await import("./retrieve");
 
