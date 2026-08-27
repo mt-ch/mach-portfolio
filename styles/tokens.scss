@@ -74,7 +74,7 @@
   --layout-grid-gap: #{fluid-space(16, 32)};
 
   /* Radius */
-  --radius-scale: 1;
+  --radius-scale: 0;
   --radius-sm: calc(0.25rem * var(--radius-scale));
   --radius-md: calc(0.5rem * var(--radius-scale));
   --radius-lg: calc(0.75rem * var(--radius-scale));
