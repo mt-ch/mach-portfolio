@@ -24,7 +24,8 @@ export function SiteFooter({ about }: { about: About }) {
               {index > 0 && <br />}
               {line}
             </Fragment>
-          ))}{" "}
+          ))}
+          <br />
           <a href={`mailto:${about.email}`} className="">
             Email me
           </a>

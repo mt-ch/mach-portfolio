@@ -33,7 +33,7 @@ describe("FeaturedProjectRow", () => {
         name: "Home Hospital: Treatment that transcends limits",
       }),
     ).toHaveAttribute("href", "/projects/home-hospital");
-    expect(screen.getByText("Home Hospital:")).toBeInTheDocument();
+    expect(screen.getByText("[Home Hospital]")).toBeInTheDocument();
     expect(
       screen.getByText("Treatment that transcends limits"),
     ).toBeInTheDocument();
