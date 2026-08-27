@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
+import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
 
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
@@ -107,13 +108,13 @@ export function ChatDrawer({ isOpen, mode, isMounted, isVisible, onClose }: Chat
                   <RotateCwIcon className="size-md shrink-0" strokeWidth={1.75} />
                 </button>
                 <button
+                  ref={closeButtonRef}
                   type="button"
                   onClick={onClose}
-                  aria-expanded={isOpen}
-                  aria-label="Open chat"
-                  className="inline-flex items-center justify-center translate-x-0 bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 gap-sm size-10 px-sm transition-transform duration-300 ease-out cursor-pointer"
+                  aria-label="Close chat panel"
+                  className="inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 text-small font-medium size-10 px-sm transition-transform duration-300 ease-out cursor-pointer"
                 >
-                  <span className="type-small font-medium">{isOpen ? <XIcon className="size-md" strokeWidth={1.75} /> : "Ask"}</span>
+                  <XIcon className="size-md shrink-0" strokeWidth={1.75} />
                 </button>
               </div>
             </div>

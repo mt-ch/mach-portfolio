@@ -21,7 +21,7 @@ describe("SiteNav", () => {
   it("renders the site owner name in the nav", () => {
     render(<SiteNav about={about} />);
 
-    expect(screen.getByRole("link", { name: "Matt Chan" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "[Matt Chan]" })).toHaveAttribute(
       "href",
       "/",
     );
