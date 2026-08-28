@@ -2,7 +2,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { ThemeProvider } from "@/components/features/theme/ThemeProvider";
+
 import { ChatShell } from "./ChatShell";
+
+// ChatShell renders the ThemeToggle, which reads theme from context, so
+// every render needs a ThemeProvider around it.
+function renderShell() {
+  return render(<ChatShell>content</ChatShell>, { wrapper: ThemeProvider });
+}
 
 function stubMatchMedia(matches: boolean) {
   vi.stubGlobal(
@@ -44,14 +52,14 @@ describe("ChatShell", () => {
 
   it("shows the toggle button when the drawer is closed, in push mode", () => {
     stubMatchMedia(true);
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     expect(screen.getByRole("button", { name: "Open chat" })).toBeInTheDocument();
   });
 
   it("shows the toggle button when the drawer is closed, in overlay mode", () => {
     stubMatchMedia(false);
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     expect(screen.getByRole("button", { name: "Open chat" })).toBeInTheDocument();
   });
@@ -59,7 +67,7 @@ describe("ChatShell", () => {
   it("keeps the toggle visible and shifts it left when the drawer opens in push mode (desktop)", async () => {
     stubMatchMedia(true);
     const user = userEvent.setup();
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     const toggle = screen.getByRole("button", { name: "Open chat" });
     await user.click(toggle);
@@ -71,7 +79,7 @@ describe("ChatShell", () => {
   it("returns the toggle to its resting position once the drawer closes again in push mode", async () => {
     stubMatchMedia(true);
     const user = userEvent.setup();
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     const toggle = screen.getByRole("button", { name: "Open chat" });
     await user.click(toggle);
@@ -84,7 +92,7 @@ describe("ChatShell", () => {
   it("hides the toggle entirely while the drawer is open in overlay mode (mobile/tablet)", async () => {
     stubMatchMedia(false);
     const user = userEvent.setup();
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     await user.click(screen.getByRole("button", { name: "Open chat" }));
 
@@ -94,7 +102,7 @@ describe("ChatShell", () => {
   it("brings the toggle back once the drawer has fully closed again in overlay mode", async () => {
     stubMatchMedia(false);
     const user = userEvent.setup();
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     await user.click(screen.getByRole("button", { name: "Open chat" }));
     await user.click(screen.getByRole("button", { name: "Close chat panel" }));
@@ -104,14 +112,14 @@ describe("ChatShell", () => {
 
   it("renders the theme toggle alongside the chat toggle", () => {
     stubMedia({ desktop: true, dark: false });
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeInTheDocument();
   });
 
   it("defaults the theme toggle to the OS preference when nothing is stored", () => {
     stubMedia({ desktop: true, dark: true });
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeInTheDocument();
     expect(document.documentElement.classList.contains("dark")).toBe(true);
@@ -120,7 +128,7 @@ describe("ChatShell", () => {
   it("clicking the theme toggle switches the label and applies the dark class", async () => {
     stubMedia({ desktop: true, dark: false });
     const user = userEvent.setup();
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     await user.click(screen.getByRole("button", { name: "Switch to dark mode" }));
 
@@ -131,12 +139,12 @@ describe("ChatShell", () => {
   it("persists the theme choice so it's honored on the next mount", async () => {
     stubMedia({ desktop: true, dark: false });
     const user = userEvent.setup();
-    const { unmount } = render(<ChatShell>content</ChatShell>);
+    const { unmount } = renderShell();
 
     await user.click(screen.getByRole("button", { name: "Switch to dark mode" }));
     unmount();
 
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeInTheDocument();
   });
@@ -144,7 +152,7 @@ describe("ChatShell", () => {
   it("shifts the theme toggle left together with the chat toggle when the drawer opens in push mode", async () => {
     stubMedia({ desktop: true, dark: false });
     const user = userEvent.setup();
-    render(<ChatShell>content</ChatShell>);
+    renderShell();
 
     const themeToggle = screen.getByRole("button", { name: "Switch to dark mode" });
     await user.click(screen.getByRole("button", { name: "Open chat" }));
