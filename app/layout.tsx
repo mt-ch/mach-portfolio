@@ -1,10 +1,7 @@
-import CustomCursor from "@/components/ui/CustomCursor";
-
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
 import type { Metadata } from "next";
-import { ChatShell } from "@/components/features/chat/ChatShell";
 import "./globals.scss";
 
 const openSauceOne = localFont({
@@ -47,10 +44,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="h-full overflow-hidden">
-        <ChatShell>{children}</ChatShell>
-      </body>
-      <CustomCursor />
+      <body className="h-full overflow-hidden">{children}</body>
     </html>
   );
 }
