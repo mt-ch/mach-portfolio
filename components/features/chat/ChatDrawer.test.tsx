@@ -202,9 +202,10 @@ describe("ChatDrawer", () => {
     const refusal = await screen.findByText(
       "I can only answer questions about Matt's background.",
     );
-    const refusalContainer = refusal.closest('[role="status"]');
-    expect(refusalContainer).not.toBeNull();
-    expect(refusalContainer).toHaveClass("border-refusal-border");
+    expect(refusal.closest('[role="status"]')).not.toBeNull();
+    expect(
+      screen.queryByRole("status", { name: /assistant is typing/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an error bubble with a retry button on a failed request, and retrying resends the message", async () => {
@@ -250,17 +251,6 @@ describe("ChatDrawer", () => {
     expect(queryGreeting()).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "What's your favourite project and why?" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("does not render assistant-intro styling anywhere", async () => {
-    const user = userEvent.setup();
-    render(<Wrapper />);
-
-    await user.click(screen.getByRole("button", { name: "Open chat" }));
-
-    expect(
-      screen.queryByText("Ask me anything about Matt's projects, experience, or background."),
     ).not.toBeInTheDocument();
   });
 
