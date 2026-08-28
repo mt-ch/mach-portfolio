@@ -37,3 +37,22 @@ A Content Block wrapping a standard Portable Text array (headings, bold, italic,
 
 **Image Block**:
 A Content Block holding one or two images (each with its own alt text), an optional shared caption, and a layout (full-bleed, inset, or side-by-side pair).
+
+## Project structure
+
+Where files go. See `docs/adr/0006-repo-structure.md` for the rationale.
+
+- `components/ui/` — generic, presentational, no domain knowledge (cursor, cover-image wrapper).
+- `components/layout/` — site chrome: navigation, footer.
+- `components/features/<name>/` — one folder per domain concept or page section: `home/`, `project/`, `chat/`, `theme/`. Nothing sits loose at the root of `components/`.
+- `lib/assistant/` — the chatbot: `chat/`, `corpus/`, `guardrails/`.
+- `lib/sanity/` — the data layer. The only module that constructs the Sanity client.
+- `lib/theme/` — shared theme constants (storage key, dark class, media query), imported by both the pre-hydration `<script>` and the theme hook.
+- `app/layout.tsx` — document shell, fonts, theme bootstrap `<script>`, `ThemeProvider`. Nothing else.
+- `app/(site)/` — the public site (route group, no URL segment). Its layout owns cursor, chat shell, navigation.
+- `app/studio/`, `app/api/` — outside `(site)`; the Studio renders no site chrome.
+- Co-locate a component's test next to it (`Foo.tsx` / `Foo.test.tsx`). Imports use the `@/*` alias.
+
+### Testing
+
+Assert externally observable behaviour — what a visitor sees, what a caller receives — never markup. A test should fail only when behaviour regresses; checking that a class name is present or that the DOM nests a certain way is not a test worth keeping. Model new tests on the `lib/` and API-route suites (chat context building, `/api/chat`, retrieval, guardrail units).
