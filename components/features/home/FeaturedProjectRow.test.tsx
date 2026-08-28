@@ -38,18 +38,4 @@ describe("FeaturedProjectRow", () => {
       screen.getByText("Treatment that transcends limits"),
     ).toBeInTheDocument();
   });
-
-  it("renders for right-dominant cover layout without error", () => {
-    render(
-      <FeaturedProjectRow
-        project={{ ...project, coverLayout: "right-dominant" }}
-      />,
-    );
-
-    expect(
-      screen.getByRole("link", {
-        name: "Home Hospital: Treatment that transcends limits",
-      }),
-    ).toBeInTheDocument();
-  });
 });

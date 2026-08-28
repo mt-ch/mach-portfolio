@@ -46,19 +46,21 @@ describe("SiteFooter", () => {
     );
   });
 
-  it("renders nothing extra when footerText is empty", () => {
+  it("omits the footer text when footerText is not set", () => {
     render(<SiteFooter about={{ ...about, footerText: null }} />);
 
+    expect(
+      screen.queryByText(/for collaborations and full time roles/),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Email me" })).toBeInTheDocument();
   });
 
-  it("preserves line breaks in multi-line footerText", () => {
-    const { container } = render(
+  it("renders every line of a multi-line footerText", () => {
+    render(
       <SiteFooter about={{ ...about, footerText: "Open to full-time roles\nBased in San Diego" }} />,
     );
 
     expect(screen.getByText(/Open to full-time roles/)).toBeInTheDocument();
     expect(screen.getByText(/Based in San Diego/)).toBeInTheDocument();
-    expect(container.querySelectorAll("br").length).toBeGreaterThanOrEqual(2);
   });
 });

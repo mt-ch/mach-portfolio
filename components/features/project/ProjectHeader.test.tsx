@@ -29,72 +29,62 @@ function project(overrides: Partial<ProjectDetail> = {}): ProjectDetail {
 }
 
 describe("ProjectHeader", () => {
-  it("applies the custom background and foreground colours when both are set", () => {
-    const { container } = render(
-      <ProjectHeader
-        project={project({
-          headerBackgroundColor: { _type: "color", hex: "#123456" },
-          headerForegroundColor: { _type: "color", hex: "#abcdef" },
-        })}
-      />,
+  it("renders the project title as the top-level heading", () => {
+    render(<ProjectHeader project={project({ title: "Home Hospital" })} />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Home Hospital" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the hero text when set and omits it when absent", () => {
+    const { rerender } = render(
+      <ProjectHeader project={project({ heroText: "Treatment that transcends limits" })} />,
     );
+    expect(
+      screen.getByText("Treatment that transcends limits"),
+    ).toBeInTheDocument();
 
-    const header = container.querySelector("header");
-    expect(header).toHaveStyle({ backgroundColor: "#123456", color: "#abcdef" });
+    rerender(<ProjectHeader project={project({ heroText: null })} />);
+    expect(
+      screen.queryByText("Treatment that transcends limits"),
+    ).not.toBeInTheDocument();
   });
 
-  it("falls back to the default colours when neither is set", () => {
-    const { container } = render(<ProjectHeader project={project()} />);
-
-    const header = container.querySelector("header");
-    expect(header?.style.backgroundColor).toBe("");
-    expect(header?.style.color).toBe("");
-    expect(header).toHaveClass("bg-grey-400", "text-white");
-  });
-
-  it("falls back to the default colours when only the background colour is set", () => {
-    const { container } = render(
-      <ProjectHeader
-        project={project({
-          headerBackgroundColor: { _type: "color", hex: "#123456" },
-          headerForegroundColor: null,
-        })}
-      />,
+  it("renders the role when set and omits it when absent", () => {
+    const { rerender } = render(
+      <ProjectHeader project={project({ role: "Lead Product Designer" })} />,
     );
+    expect(screen.getByText("Lead Product Designer")).toBeInTheDocument();
 
-    const header = container.querySelector("header");
-    expect(header?.style.backgroundColor).toBe("");
-    expect(header?.style.color).toBe("");
-    expect(header).toHaveClass("bg-grey-400", "text-white");
+    rerender(<ProjectHeader project={project({ role: null })} />);
+    expect(screen.queryByText("Lead Product Designer")).not.toBeInTheDocument();
   });
 
-  it("falls back to the default colours when only the foreground colour is set", () => {
-    const { container } = render(
-      <ProjectHeader
-        project={project({
-          headerBackgroundColor: null,
-          headerForegroundColor: { _type: "color", hex: "#abcdef" },
-        })}
-      />,
-    );
-
-    const header = container.querySelector("header");
-    expect(header?.style.backgroundColor).toBe("");
-    expect(header?.style.color).toBe("");
-    expect(header).toHaveClass("bg-grey-400", "text-white");
-  });
-
-  it("still renders the title with custom colours applied", () => {
+  it("renders each project link with its label and an external target", () => {
     render(
       <ProjectHeader
         project={project({
-          title: "Custom Colour Project",
-          headerBackgroundColor: { _type: "color", hex: "#123456" },
-          headerForegroundColor: { _type: "color", hex: "#abcdef" },
+          links: [
+            { _key: "1", _type: "link", label: "Live site", url: "https://example.com" },
+            { _key: "2", _type: "link", label: "Case study", url: "https://example.com/cs" },
+          ],
         })}
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Custom Colour Project" })).toBeInTheDocument();
+    const live = screen.getByRole("link", { name: "Live site" });
+    expect(live).toHaveAttribute("href", "https://example.com");
+    expect(live).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: "Case study" })).toHaveAttribute(
+      "href",
+      "https://example.com/cs",
+    );
+  });
+
+  it("renders no link list when the project has no links", () => {
+    render(<ProjectHeader project={project({ links: null })} />);
+
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

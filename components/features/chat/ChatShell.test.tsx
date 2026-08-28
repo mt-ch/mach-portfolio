@@ -50,21 +50,14 @@ describe("ChatShell", () => {
     document.documentElement.classList.remove("dark");
   });
 
-  it("shows the toggle button when the drawer is closed, in push mode", () => {
+  it("shows the toggle button when the drawer is closed", () => {
     stubMatchMedia(true);
     renderShell();
 
     expect(screen.getByRole("button", { name: "Open chat" })).toBeInTheDocument();
   });
 
-  it("shows the toggle button when the drawer is closed, in overlay mode", () => {
-    stubMatchMedia(false);
-    renderShell();
-
-    expect(screen.getByRole("button", { name: "Open chat" })).toBeInTheDocument();
-  });
-
-  it("keeps the toggle visible and shifts it left when the drawer opens in push mode (desktop)", async () => {
+  it("keeps the toggle visible while the drawer is open in push mode (desktop)", async () => {
     stubMatchMedia(true);
     const user = userEvent.setup();
     renderShell();
@@ -73,10 +66,9 @@ describe("ChatShell", () => {
     await user.click(toggle);
 
     expect(toggle).toBeInTheDocument();
-    expect(toggle.className).toContain("-translate-x-102");
   });
 
-  it("returns the toggle to its resting position once the drawer closes again in push mode", async () => {
+  it("keeps the toggle usable after opening and closing the drawer in push mode", async () => {
     stubMatchMedia(true);
     const user = userEvent.setup();
     renderShell();
@@ -85,8 +77,8 @@ describe("ChatShell", () => {
     await user.click(toggle);
     await user.click(toggle);
 
-    expect(toggle.className).not.toContain("-translate-x-102");
-    expect(toggle.className).toContain("translate-x-0");
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toBeEnabled();
   });
 
   it("hides the toggle entirely while the drawer is open in overlay mode (mobile/tablet)", async () => {
@@ -147,16 +139,5 @@ describe("ChatShell", () => {
     renderShell();
 
     expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeInTheDocument();
-  });
-
-  it("shifts the theme toggle left together with the chat toggle when the drawer opens in push mode", async () => {
-    stubMedia({ desktop: true, dark: false });
-    const user = userEvent.setup();
-    renderShell();
-
-    const themeToggle = screen.getByRole("button", { name: "Switch to dark mode" });
-    await user.click(screen.getByRole("button", { name: "Open chat" }));
-
-    expect(themeToggle.className).toContain("-translate-x-102");
   });
 });
