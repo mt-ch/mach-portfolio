@@ -1,6 +1,7 @@
 import CustomCursor from "@/components/ui/CustomCursor";
 
 import { ChatShell } from "@/components/features/chat/ChatShell";
+import { PageTransitionProvider } from "@/components/features/transition/PageTransitionProvider";
 
 export default function SiteLayout({
   children,
@@ -9,7 +10,9 @@ export default function SiteLayout({
 }>) {
   return (
     <>
-      <ChatShell>{children}</ChatShell>
+      <PageTransitionProvider>
+        <ChatShell>{children}</ChatShell>
+      </PageTransitionProvider>
       <CustomCursor />
     </>
   );

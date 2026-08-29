@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { ChatDrawer } from "./ChatDrawer";
 import { ChatDrawerToggle } from "./ChatDrawerToggle";
 import { ThemeToggle } from "@/components/features/theme/ThemeToggle";
+import { SCROLL_CONTAINER_ATTR } from "@/components/features/transition/PageTransitionProvider";
 import { useDrawerVisibility } from "./useDrawerVisibility";
 import { useTransitionPhase } from "./useTransitionPhase";
 
@@ -17,7 +18,9 @@ export function ChatShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <div className="h-full min-w-0 flex-1 overflow-y-auto">{children}</div>
+      <div className="h-full min-w-0 flex-1 overflow-y-auto" {...{ [SCROLL_CONTAINER_ATTR]: "" }}>
+        {children}
+      </div>
       <div className="fixed top-md right-md z-10 flex items-center gap-sm">
         <ThemeToggle mode={mode} isOpen={isOpen} isMounted={isMounted} />
         <ChatDrawerToggle isOpen={isOpen} mode={mode} isMounted={isMounted} onToggle={toggle} />

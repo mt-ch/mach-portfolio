@@ -1,7 +1,6 @@
-import Link from "next/link";
-
 import type { OtherProjectListItem } from "@/lib/sanity";
 import { CoverImage } from "@/components/ui/CoverImage";
+import { TransitionLink } from "@/components/features/transition/TransitionLink";
 
 export function OtherProjects({ projects }: { projects: OtherProjectListItem[] }) {
   return (
@@ -9,7 +8,7 @@ export function OtherProjects({ projects }: { projects: OtherProjectListItem[] }
       <h2 className="type-subheading font-medium px-md lg:px-0">Other Projects</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-md lg:gap-sm">
         {projects.map((project) => (
-          <Link
+          <TransitionLink
             key={project._id}
             href={`/projects/${project.slug.current}`}
             className="inline-flex flex-col gap-md"
@@ -25,7 +24,7 @@ export function OtherProjects({ projects }: { projects: OtherProjectListItem[] }
             <h2 className="type-body font-medium px-md lg:px-0">
               [{project.title}] <span className="text-grey-500 dark:text-grey-400">{project.summary}</span>
             </h2>
-          </Link>
+          </TransitionLink>
         ))}
       </div>
     </div>

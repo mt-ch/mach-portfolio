@@ -1,8 +1,7 @@
-import Link from "next/link";
-
 import type { FeaturedProjectListItem } from "@/lib/sanity";
 
 import { CoverImage } from "@/components/ui/CoverImage";
+import { TransitionLink } from "@/components/features/transition/TransitionLink";
 
 export function FeaturedProjectRow({ project }: { project: FeaturedProjectListItem }) {
   const href = `/projects/${project.slug.current}`;
@@ -10,7 +9,7 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
   const isRightDominant = layout === "right-dominant";
 
   return (
-    <Link
+    <TransitionLink
       href={href}
       className="inline-flex flex-col gap-md"
       aria-label={`${project.title}: ${project.summary}`}
@@ -44,6 +43,6 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
       <h2 className="type-body font-medium px-md lg:px-0">
         [{project.title}] <span className="text-grey-500 dark:text-grey-400">{project.summary}</span>
       </h2>
-    </Link>
+    </TransitionLink>
   );
 }

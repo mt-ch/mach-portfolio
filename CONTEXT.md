@@ -48,6 +48,7 @@ Where files go. See `docs/adr/0006-repo-structure.md` for the rationale.
 - `lib/assistant/` — the chatbot: `chat/`, `corpus/`, `guardrails/`.
 - `lib/sanity/` — the data layer. The only module that constructs the Sanity client.
 - `lib/theme/` — shared theme constants (storage key, dark class, media query), imported by both the pre-hydration `<script>` and the theme hook.
+- `lib/transition/` — shared page-transition timing and easing constants, imported by the transition reducer's consumers (`PageTransitionProvider`).
 - `app/layout.tsx` — document shell, fonts, theme bootstrap `<script>`, `ThemeProvider`. Nothing else.
 - `app/(site)/` — the public site (route group, no URL segment). Its layout owns cursor, chat shell, navigation.
 - `app/studio/`, `app/api/` — outside `(site)`; the Studio renders no site chrome.
