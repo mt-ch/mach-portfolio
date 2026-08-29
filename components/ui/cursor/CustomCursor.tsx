@@ -285,23 +285,28 @@ export default function CustomCursor() {
         });
       };
 
-      if (variant.kind === "label") {
-        enterLabel(variant.text);
-        return;
-      }
-      if (variant.kind === "link") {
-        enterLink();
-        return;
-      }
-      if (variant.kind === "button") {
-        enterButton();
-        return;
+      const runLeave = (kind: CursorVariant["kind"]) => {
+        if (kind === "label") leaveLabel();
+        else if (kind === "link") leaveLink();
+        else if (kind === "button") leaveButton();
+      };
+
+      // React batches the leave + enter of a direct element-to-element move
+      // into one render, so this effect sees only the destination. Replay
+      // the exit for the shape we were in first, exactly as the old
+      // per-element `mouseleave` listener did, so every enter animation
+      // still starts from the resting body.
+      if (previousKind !== "base" && previousKind !== variant.kind) {
+        runLeave(previousKind);
       }
 
-      // variant.kind === "base": play the exit for the shape we were in.
-      if (previousKind === "label") leaveLabel();
-      else if (previousKind === "link") leaveLink();
-      else if (previousKind === "button") leaveButton();
+      // Enter starts from a clean slate, just as each old `mouseenter`
+      // handler re-ran `stopCurrentAnimations` before building its timeline.
+      if (variant.kind !== "base") stopCurrentAnimations();
+
+      if (variant.kind === "label") enterLabel(variant.text);
+      else if (variant.kind === "link") enterLink();
+      else if (variant.kind === "button") enterButton();
 
       // The marquee tween is spawned from a timeline callback, so it sits
       // outside useGSAP's auto-collected scope — kill it explicitly.
