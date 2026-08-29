@@ -3,7 +3,12 @@
 // descriptor the cursor body should animate to. No DOM traversal, no GSAP: the
 // caller (`useCursorInteractions`) owns `closest()` and the animation.
 
-export type CursorIconKey = "eye" | "mail";
+// The single source of truth for the icon vocabulary — the render layer keys
+// its component map off this same tuple, so adding an icon is a one-line change
+// here plus the map entry.
+export const CURSOR_ICON_KEYS = ["eye", "mail"] as const;
+
+export type CursorIconKey = (typeof CURSOR_ICON_KEYS)[number];
 
 export type CursorVariant =
   | { kind: "base" }
@@ -13,10 +18,8 @@ export type CursorVariant =
 
 export const BASE_VARIANT: CursorVariant = { kind: "base" };
 
-const ICON_KEYS: readonly CursorIconKey[] = ["eye", "mail"];
-
 function toIconKey(value: string | null): CursorIconKey | undefined {
-  return ICON_KEYS.includes(value as CursorIconKey) ? (value as CursorIconKey) : undefined;
+  return CURSOR_ICON_KEYS.includes(value as CursorIconKey) ? (value as CursorIconKey) : undefined;
 }
 
 /**

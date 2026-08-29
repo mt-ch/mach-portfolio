@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useEffect, type RefObject } from "react";
 
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -10,6 +10,12 @@ import { useGSAP } from "@gsap/react";
 // blank overlay panel. A plain DOM flag keeps this generic cursor free of
 // transition-domain imports.
 const PAGE_COVERED_ATTR = "data-page-covered";
+
+// The custom cursor only makes sense for a fine, hover-capable pointer. The
+// query is re-evaluated on `change` so plugging in a mouse on a touch device
+// activates the cursor without a reload (and unplugging deactivates it).
+const FINE_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
+const ACTIVE_CLASS = "custom-cursor-active";
 
 type CursorRefs = {
   cursorRef: RefObject<HTMLDivElement | null>;
@@ -21,8 +27,24 @@ type CursorRefs = {
  * setter (no per-frame `gsap.set`), gives a small press response on
  * mouse down / up, and shows / hides as the pointer enters and leaves the
  * viewport or a page transition covers it.
+ *
+ * Also owns the `custom-cursor-active` class on `<html>` (which hides the
+ * native cursor via CSS), tracking the current input device.
  */
 export function useCursorPosition({ cursorRef, cursorBodyRef }: CursorRefs) {
+  useEffect(() => {
+    const mql = window.matchMedia(FINE_POINTER_QUERY);
+    const root = document.documentElement;
+    const apply = () => root.classList.toggle(ACTIVE_CLASS, mql.matches);
+
+    apply();
+    mql.addEventListener("change", apply);
+    return () => {
+      mql.removeEventListener("change", apply);
+      root.classList.remove(ACTIVE_CLASS);
+    };
+  }, []);
+
   useGSAP(
     () => {
       const cursor = cursorRef.current;

@@ -13,8 +13,18 @@ export const CHAT_OPEN_ATTR = "data-chat-open";
 
 const CURSOR_SELECTOR = "[data-cursor]";
 
-function taggedAncestor(target: EventTarget | null): HTMLElement | null {
-  return target instanceof Element ? target.closest<HTMLElement>(CURSOR_SELECTOR) : null;
+/**
+ * The nearest `[data-cursor]` ancestor a `mouseover` / `mouseout` should act
+ * on, or `null` to ignore the event — either because it resolved to no tagged
+ * element, or because the pointer only crossed between two children of the
+ * same tagged element (`relatedTarget` still inside it).
+ */
+function crossedCursorBoundary(event: MouseEvent): HTMLElement | null {
+  const target = event.target;
+  const tagged = target instanceof Element ? target.closest<HTMLElement>(CURSOR_SELECTOR) : null;
+  if (!tagged) return null;
+  if (event.relatedTarget instanceof Node && tagged.contains(event.relatedTarget)) return null;
+  return tagged;
 }
 
 /**
@@ -44,19 +54,12 @@ export function useCursorInteractions(): CursorVariant {
 
   useEffect(() => {
     const handleOver = (event: MouseEvent) => {
-      const tagged = taggedAncestor(event.target);
-      if (!tagged) return;
-      // Moving between two children of the same tagged element must not
-      // re-fire the variant.
-      if (event.relatedTarget instanceof Node && tagged.contains(event.relatedTarget)) return;
-      setVariant(cursorVariants(tagged));
+      const tagged = crossedCursorBoundary(event);
+      if (tagged) setVariant(cursorVariants(tagged));
     };
 
     const handleOut = (event: MouseEvent) => {
-      const tagged = taggedAncestor(event.target);
-      if (!tagged) return;
-      if (event.relatedTarget instanceof Node && tagged.contains(event.relatedTarget)) return;
-      setVariant(BASE_VARIANT);
+      if (crossedCursorBoundary(event)) setVariant(BASE_VARIANT);
     };
 
     document.addEventListener("mouseover", handleOver);

@@ -8,20 +8,30 @@ import { Eye, Mail } from "lucide-react";
 
 import { useCursorInteractions } from "./useCursorInteractions";
 import { useCursorPosition } from "./useCursorPosition";
-import { useCustomCursorActive } from "./useCustomCursorActive";
-import type { CursorIconKey } from "./cursorVariants";
+import { CURSOR_ICON_KEYS, type CursorIconKey, type CursorVariant } from "./cursorVariants";
 
 const MARQUEE_COPIES = 4;
 
-// Resolve `--space-md` to a pixel number: GSAP cannot interpolate a CSS
-// custom property (`var(--space-md) 0`) and snaps it instead.
+// Render-layer counterpart to `CURSOR_ICON_KEYS`: the lucide component for each
+// icon key. Both icons are pre-rendered and toggled imperatively so an icon
+// change never triggers a React re-render mid-animation.
+const ICON_COMPONENTS: Record<CursorIconKey, typeof Eye> = {
+  eye: Eye,
+  mail: Mail,
+};
+
+// Resolve `--space-md` to a pixel number once: GSAP cannot interpolate a CSS
+// custom property (`var(--space-md) 0`) and snaps it instead. Cached because
+// it only feeds the label variant's padding and does not change at runtime.
+let cachedSpaceMd: number | null = null;
 function resolveSpaceMd(): number {
+  if (cachedSpaceMd !== null) return cachedSpaceMd;
   const probe = document.createElement("div");
   probe.style.cssText = "position:absolute;visibility:hidden;height:var(--space-md)";
   document.body.appendChild(probe);
-  const px = probe.getBoundingClientRect().height;
+  cachedSpaceMd = probe.getBoundingClientRect().height || 16;
   probe.remove();
-  return px || 16;
+  return cachedSpaceMd;
 }
 
 export default function CustomCursor() {
@@ -30,12 +40,20 @@ export default function CustomCursor() {
   const marqueeInnerRef = useRef<HTMLDivElement | null>(null);
   const cursorItemRefs = useRef<HTMLSpanElement[]>([]);
   const cursorLabelRefs = useRef<HTMLSpanElement[]>([]);
-  const iconRefs = useRef<Record<CursorIconKey, HTMLSpanElement[]>>({ eye: [], mail: [] });
+  const iconRefs = useRef<Record<CursorIconKey, HTMLSpanElement[]>>(
+    CURSOR_ICON_KEYS.reduce(
+      (acc, key) => {
+        acc[key] = [];
+        return acc;
+      },
+      {} as Record<CursorIconKey, HTMLSpanElement[]>,
+    ),
+  );
 
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const marqueeTweenRef = useRef<gsap.core.Tween | null>(null);
+  const prevKindRef = useRef<CursorVariant["kind"]>("base");
 
-  useCustomCursorActive();
   useCursorPosition({ cursorRef, cursorBodyRef });
 
   const variant = useCursorInteractions();
@@ -59,22 +77,25 @@ export default function CustomCursor() {
 
       stop();
 
-      // Toggle the pre-rendered icons imperatively — no React re-render
-      // interleaved with the GSAP animation.
-      const activeIcon = variant.kind === "label" ? variant.icon : undefined;
-      (Object.keys(iconRefs.current) as CursorIconKey[]).forEach((key) => {
-        iconRefs.current[key].forEach((node) => {
-          node.hidden = key !== activeIcon;
+      const cameFromLabel = prevKindRef.current === "label";
+      prevKindRef.current = variant.kind;
+
+      const setIconVisibility = (activeIcon: CursorIconKey | undefined) => {
+        CURSOR_ICON_KEYS.forEach((key) => {
+          iconRefs.current[key].forEach((node) => {
+            node.hidden = key !== activeIcon;
+          });
         });
-      });
+      };
 
       if (variant.kind === "label") {
+        // Toggle the pre-rendered icons imperatively — no React re-render
+        // interleaved with the GSAP animation.
+        setIconVisibility(variant.icon);
         labels.forEach((node) => {
           node.textContent = variant.text;
         });
-      }
 
-      if (variant.kind === "label") {
         gsap.set(marqueeInner, { opacity: 0, xPercent: 0, x: -24 });
         gsap.set(items, { opacity: 0, x: -8 });
 
@@ -104,13 +125,8 @@ export default function CustomCursor() {
         return;
       }
 
-      // Non-label variants: collapse the marquee and animate the dot.
-      gsap.set(marqueeInner, { opacity: 0, xPercent: 0, x: 0 });
-      gsap.set(items, { opacity: 0, x: -8 });
-      labels.forEach((node) => {
-        node.textContent = "";
-      });
-
+      // Non-label variants: collapse the marquee (fading it out if we are
+      // coming from the label) and animate the dot to its target shape.
       const target =
         variant.kind === "link"
           ? { width: 32, height: 32, opacity: 0.25, backgroundColor: "var(--brand)" }
@@ -118,17 +134,37 @@ export default function CustomCursor() {
             ? { width: 10, height: 10, opacity: 1, backgroundColor: "var(--foreground)" }
             : { width: 16, height: 16, opacity: 1, backgroundColor: "var(--brand)" };
 
-      gsap.to(cursorBody, {
+      const collapse = {
         ...target,
         paddingTop: 0,
         paddingBottom: 0,
         xPercent: -50,
         yPercent: -50,
         scale: 1,
-        duration: 0.28,
-        ease: "power4.out",
-        overwrite: "auto",
+        ease: "expo.out",
+        overwrite: "auto" as const,
+      };
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setIconVisibility(undefined);
+          gsap.set(marqueeInner, { xPercent: 0, x: 0 });
+          labels.forEach((node) => {
+            node.textContent = "";
+          });
+        },
       });
+      timelineRef.current = tl;
+
+      if (cameFromLabel) {
+        tl.to(items, { opacity: 0, x: -8, duration: 0.14, ease: "power2.out" }, 0)
+          .to(marqueeInner, { opacity: 0, duration: 0.12, ease: "power2.out" }, 0)
+          .to(cursorBody, { ...collapse, duration: 0.34 }, 0.04);
+      } else {
+        gsap.set(marqueeInner, { opacity: 0, xPercent: 0, x: 0 });
+        gsap.set(items, { opacity: 0, x: -8 });
+        tl.to(cursorBody, { ...collapse, duration: 0.28 }, 0);
+      }
     },
     { scope: cursorRef, dependencies: [variant] },
   );
@@ -161,22 +197,20 @@ export default function CustomCursor() {
                   if (element) cursorLabelRefs.current[index] = element;
                 }}
               />
-              <span
-                ref={(element) => {
-                  if (element) iconRefs.current.eye[index] = element;
-                }}
-                hidden
-              >
-                <Eye className="size-md shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              </span>
-              <span
-                ref={(element) => {
-                  if (element) iconRefs.current.mail[index] = element;
-                }}
-                hidden
-              >
-                <Mail className="size-md shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              </span>
+              {CURSOR_ICON_KEYS.map((key) => {
+                const Icon = ICON_COMPONENTS[key];
+                return (
+                  <span
+                    key={key}
+                    ref={(element) => {
+                      if (element) iconRefs.current[key][index] = element;
+                    }}
+                    hidden
+                  >
+                    <Icon className="size-md shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                );
+              })}
             </span>
           ))}
         </div>
