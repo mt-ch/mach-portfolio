@@ -54,17 +54,20 @@ describe("transitionPhase", () => {
     expect(results.map((r) => r.state.phase)).toEqual(["covering", "covered", "uncovering", "idle"]);
   });
 
-  it("ignores SAFETY_TIMEOUT while idle or uncovering", () => {
+  it("ignores SAFETY_TIMEOUT while idle", () => {
     const idleResult = transitionPhase(initialTransitionState, { type: "SAFETY_TIMEOUT" });
     expect(idleResult.state.phase).toBe("idle");
+  });
 
+  it("forces uncovering -> idle on SAFETY_TIMEOUT as a last-resort net", () => {
     const results = run([
       { type: "NAV_REQUESTED" },
       { type: "COVER_DONE" },
       { type: "ROUTE_COMMITTED" },
       { type: "SAFETY_TIMEOUT" },
     ]);
-    expect(results.at(-1)?.state.phase).toBe("uncovering");
+    expect(results.map((r) => r.state.phase)).toEqual(["covering", "covered", "uncovering", "idle"]);
+    expect(results.at(-1)?.shouldFadeCursor).toBe(false);
   });
 
   it("ignores NAV_REQUESTED unless idle", () => {
@@ -96,7 +99,7 @@ describe("transitionPhase", () => {
     expect(results.every((r) => r.shouldResetScroll === false)).toBe(true);
   });
 
-  it("sets shouldFadeCursor only while covered", () => {
+  it("sets shouldFadeCursor from the start of covering until back at idle", () => {
     const results = run([
       { type: "NAV_REQUESTED" },
       { type: "COVER_DONE" },
@@ -104,7 +107,13 @@ describe("transitionPhase", () => {
       { type: "UNCOVER_DONE" },
     ]);
 
-    expect(results.map((r) => r.shouldFadeCursor)).toEqual([false, true, false, false]);
+    expect(results.map((r) => r.shouldFadeCursor)).toEqual([true, true, true, false]);
+  });
+
+  it("sets shouldFadeCursor across the back/forward uncover-only path", () => {
+    const results = run([{ type: "POPSTATE" }, { type: "ROUTE_COMMITTED" }, { type: "UNCOVER_DONE" }]);
+
+    expect(results.map((r) => r.shouldFadeCursor)).toEqual([true, true, false]);
   });
 
   it("starts idle with no path", () => {
