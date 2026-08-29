@@ -13,6 +13,7 @@ import {
   CONTENT_RISE_PX,
   COVER_DURATION_MS,
   COVER_EASE,
+  FIRST_LOAD_FONT_CAP_MS,
   HOLD_DURATION_MS,
   REDUCED_MOTION_FADE_MS,
   SAFETY_TIMEOUT_MS,
@@ -21,7 +22,7 @@ import {
 } from "@/lib/transition/constants";
 
 import {
-  initialTransitionResult,
+  firstLoadTransitionResult,
   transitionPhase,
   type TransitionEvent,
 } from "./transitionPhase";
@@ -71,7 +72,10 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
   // The reducer returns the next phase alongside the intent flags
   // (shouldResetScroll, shouldFadeCursor) the provider acts on, so the
   // whole result is held in state rather than re-deriving the flags here.
-  const [{ state, shouldResetScroll, shouldFadeCursor }, setResult] = useState(initialTransitionResult);
+  // Seeded `covered`/`firstload` so the panel is opaque in the server-
+  // rendered HTML and the first client render matches it exactly. The
+  // first-load effect below lifts it once fonts are ready.
+  const [{ state, shouldResetScroll, shouldFadeCursor }, setResult] = useState(firstLoadTransitionResult);
 
   // Re-evaluated live by gsap.matchMedia below, so a change to the OS
   // reduced-motion setting takes effect on the next navigation with no
@@ -111,6 +115,44 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
     },
     [dispatch],
   );
+
+  // First load: the panel is already covering the page (seeded state +
+  // server-rendered opaque). Lift it exactly once, after web fonts have
+  // loaded so text does not reflow under the reader, racing that against
+  // the first-load font cap so a slow/blocked font never strands the page.
+  const firstLoadReleasedRef = useRef(false);
+  useEffect(() => {
+    if (firstLoadReleasedRef.current) return;
+    if (state.phase !== "covered" || state.path !== "firstload") return;
+
+    const release = () => {
+      if (firstLoadReleasedRef.current) return;
+      firstLoadReleasedRef.current = true;
+      dispatch({ type: "ROUTE_COMMITTED" });
+    };
+
+    // The cap is re-armed on every run of this effect (e.g. a dev
+    // StrictMode double-invoke) so it can never be lost, and a `cancelled`
+    // flag stops the fonts.ready callback dispatching after unmount.
+    let cancelled = false;
+    const cap = window.setTimeout(release, FIRST_LOAD_FONT_CAP_MS);
+
+    const fonts: FontFaceSet | undefined = document.fonts;
+    if (fonts) {
+      fonts.ready
+        .then(() => {
+          if (!cancelled) release();
+        })
+        .catch(() => {
+          if (!cancelled) release();
+        });
+    }
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(cap);
+    };
+  }, [state.phase, state.path, dispatch]);
 
   // Drives the route change once the panel is fully covering the page, and
   // resets the nested scroll container so the incoming page is revealed
@@ -236,15 +278,28 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
   // the uncover it lifts away and lets clicks through again.
   const capturesPointer = state.phase === "covering" || state.phase === "covered";
 
+  // Until the first-load cover has lifted, the panel renders opaque so it
+  // covers the page with no JavaScript (view-source / JS disabled). Its
+  // colour comes straight from the `--background` custom property, which
+  // resolves before hydration. Once the machine leaves the `firstload`
+  // path GSAP owns the panel and the base style returns to hidden.
+  const firstLoadCovering = state.path === "firstload";
+  const baseStyle = firstLoadCovering
+    ? { visibility: "visible" as const, opacity: 1, backgroundColor: "var(--background)" }
+    : { visibility: "hidden" as const, opacity: 0 };
+
   return (
     <PageTransitionContext.Provider value={{ startTransition }}>
       {children}
       <div
         ref={panelRef}
         aria-hidden
-        className="fixed inset-0 z-[5]"
-        style={{ visibility: "hidden", opacity: 0, pointerEvents: capturesPointer ? "auto" : "none" }}
-      />
+        className="fixed inset-0 z-[5] flex items-center justify-center"
+        style={{ ...baseStyle, pointerEvents: capturesPointer ? "auto" : "none" }}
+      >
+        {/* Slot: a centred mark/wordmark can be dropped in here later
+            without restructuring the panel (not built here). */}
+      </div>
     </PageTransitionContext.Provider>
   );
 }
