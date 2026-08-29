@@ -9,6 +9,12 @@ import { useGSAP } from "@gsap/react";
 // Icons
 import { Eye, Mail } from "lucide-react";
 
+// Set on <html> while a page transition covers the viewport; the cursor
+// hides itself so it never floats alone on the blank overlay panel. A
+// plain DOM flag keeps this generic cursor free of transition-domain
+// imports.
+const PAGE_COVERED_ATTR = "data-page-covered";
+
 const cursorIcons = {
   eye: Eye,
   mail: Mail,
@@ -39,30 +45,42 @@ export default function CustomCursor() {
       if (!cursor || !cursorBody) return;
 
       let isVisible = false;
+      // True while a page transition covers the screen: the cursor stays
+      // hidden regardless of pointer movement so it never floats alone on
+      // the opaque panel.
+      let isCovered = document.documentElement.hasAttribute(PAGE_COVERED_ATTR);
 
-      const showCursor = () => {
-        if (isVisible) return;
-        isVisible = true;
-
+      const applyOpacity = () => {
         gsap.to(cursor, {
-          opacity: 1,
+          opacity: isCovered || !isVisible ? 0 : 1,
           duration: 0.18,
           ease: "power2.out",
           overwrite: "auto",
         });
+      };
+
+      const showCursor = () => {
+        if (isVisible) return;
+        isVisible = true;
+        applyOpacity();
       };
 
       const hideCursor = () => {
         if (!isVisible) return;
         isVisible = false;
-
-        gsap.to(cursor, {
-          opacity: 0,
-          duration: 0.18,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
+        applyOpacity();
       };
+
+      const coveredObserver = new MutationObserver(() => {
+        const nextCovered = document.documentElement.hasAttribute(PAGE_COVERED_ATTR);
+        if (nextCovered === isCovered) return;
+        isCovered = nextCovered;
+        applyOpacity();
+      });
+      coveredObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: [PAGE_COVERED_ATTR],
+      });
 
       const handleMouseMove = (e: MouseEvent) => {
         gsap.set(cursor, {
@@ -102,6 +120,7 @@ export default function CustomCursor() {
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mousedown", handleMouseDown);
         window.removeEventListener("mouseup", handleMouseUp);
+        coveredObserver.disconnect();
 
         document.documentElement.removeEventListener("mouseleave", hideCursor);
         document.documentElement.removeEventListener("mouseenter", showCursor);

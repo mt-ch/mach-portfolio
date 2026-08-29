@@ -31,6 +31,12 @@ export interface TransitionResult {
 
 export const initialTransitionState: TransitionState = { phase: "idle", path: null };
 
+export const initialTransitionResult: TransitionResult = {
+  state: initialTransitionState,
+  shouldResetScroll: false,
+  shouldFadeCursor: false,
+};
+
 function nextPhase(state: TransitionState, event: TransitionEvent): TransitionState {
   switch (event.type) {
     case "NAV_REQUESTED":
@@ -52,9 +58,16 @@ function nextPhase(state: TransitionState, event: TransitionEvent): TransitionSt
       return state.phase === "uncovering" ? { phase: "idle", path: null } : state;
 
     case "SAFETY_TIMEOUT":
-      return state.phase === "covering" || state.phase === "covered"
-        ? { phase: "uncovering", path: state.path }
-        : state;
+      if (state.phase === "covering" || state.phase === "covered") {
+        return { phase: "uncovering", path: state.path };
+      }
+      // Last-resort net: if the uncover animation's completion callback
+      // never fires, force back to idle so the cursor reappears and later
+      // navigations are not permanently dead.
+      if (state.phase === "uncovering") {
+        return { phase: "idle", path: null };
+      }
+      return state;
 
     default:
       return state;
@@ -67,6 +80,9 @@ export function transitionPhase(state: TransitionState, event: TransitionEvent):
   return {
     state: next,
     shouldResetScroll: next.path === "nav",
-    shouldFadeCursor: next.phase === "covered",
+    // Faded for the whole covered stretch — from the moment the panel
+    // starts covering until it has fully lifted and the machine is idle
+    // again — so the cursor is never visible over the opaque panel.
+    shouldFadeCursor: next.phase !== "idle",
   };
 }

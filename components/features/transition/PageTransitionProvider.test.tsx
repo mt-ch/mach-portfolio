@@ -8,6 +8,11 @@ import { HOLD_DURATION_MS } from "@/lib/transition/constants";
 const push = vi.fn();
 let currentPathname = "/";
 
+// gsap.matchMedia: default to "no reduced-motion preference" (the add
+// callback for `(prefers-reduced-motion: reduce)` never runs), which is
+// the full-motion path every existing test expects.
+let mockMatchMediaShouldMatch = false;
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
   usePathname: () => currentPathname,
@@ -29,7 +34,13 @@ vi.mock("gsap", () => {
     vars.onComplete?.();
     return tl;
   });
-  return { default: { to, set: vi.fn(), timeline } };
+  const matchMedia = vi.fn(() => ({
+    add: (_query: string, callback: () => void | (() => void)) => {
+      if (mockMatchMediaShouldMatch) callback();
+    },
+    revert: vi.fn(),
+  }));
+  return { default: { to, set: vi.fn(), timeline, matchMedia } };
 });
 
 vi.mock("@gsap/react", () => ({
@@ -39,7 +50,12 @@ vi.mock("@gsap/react", () => ({
   },
 }));
 
-import { PageTransitionProvider, SCROLL_CONTAINER_ATTR, usePageTransition } from "./PageTransitionProvider";
+import {
+  PAGE_COVERED_ATTR,
+  PageTransitionProvider,
+  SCROLL_CONTAINER_ATTR,
+  usePageTransition,
+} from "./PageTransitionProvider";
 
 function Trigger({ href }: { href: string }) {
   const transition = usePageTransition();
@@ -53,6 +69,7 @@ function Trigger({ href }: { href: string }) {
 beforeEach(() => {
   push.mockClear();
   currentPathname = "/";
+  mockMatchMediaShouldMatch = false;
 });
 
 afterEach(() => {
@@ -128,5 +145,60 @@ describe("PageTransitionProvider", () => {
     await user.click(screen.getByRole("button", { name: "go" }));
 
     await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ top: 0 }));
+  });
+
+  it("flags the page as covered while transitioning and clears it once idle", async () => {
+    const user = userEvent.setup();
+    let sawCovered = false;
+
+    function App() {
+      return (
+        <PageTransitionProvider>
+          <Trigger href="/projects/home-hospital" />
+        </PageTransitionProvider>
+      );
+    }
+
+    const { rerender } = render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "go" }));
+    await waitFor(() => {
+      if (document.documentElement.hasAttribute(PAGE_COVERED_ATTR)) sawCovered = true;
+      expect(push).toHaveBeenCalledWith("/projects/home-hospital");
+    });
+
+    currentPathname = "/projects/home-hospital";
+    rerender(<App />);
+
+    if (document.documentElement.hasAttribute(PAGE_COVERED_ATTR)) sawCovered = true;
+    expect(sawCovered).toBe(true);
+    await waitFor(() => expect(document.documentElement.hasAttribute(PAGE_COVERED_ATTR)).toBe(false));
+  });
+
+  it("still drives the route change to completion under prefers-reduced-motion", async () => {
+    mockMatchMediaShouldMatch = true;
+    const user = userEvent.setup();
+
+    function App() {
+      return (
+        <PageTransitionProvider>
+          <Trigger href="/projects/home-hospital" />
+        </PageTransitionProvider>
+      );
+    }
+
+    const { rerender } = render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "go" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/projects/home-hospital"));
+
+    // The opacity-only path still commits the route and lifts the panel:
+    // once the new pathname is live the overlay stops capturing pointers.
+    currentPathname = "/projects/home-hospital";
+    rerender(<App />);
+
+    await waitFor(() =>
+      expect(document.querySelector("[aria-hidden]")?.getAttribute("style")).toContain("pointer-events: none"),
+    );
   });
 });
