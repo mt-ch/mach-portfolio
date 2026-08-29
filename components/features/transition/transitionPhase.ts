@@ -37,6 +37,14 @@ export const initialTransitionResult: TransitionResult = {
   shouldFadeCursor: false,
 };
 
+// Seed for a fresh page load: the machine starts already `covered` (path
+// `firstload`) so the server-rendered overlay is accounted for before any
+// JavaScript runs. After hydration the provider dispatches ROUTE_COMMITTED
+// once — gated on fonts being ready — to lift it.
+export const firstLoadTransitionResult: TransitionResult = transitionPhase(initialTransitionState, {
+  type: "FIRST_LOAD_READY",
+});
+
 function nextPhase(state: TransitionState, event: TransitionEvent): TransitionState {
   switch (event.type) {
     case "NAV_REQUESTED":
