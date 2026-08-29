@@ -29,11 +29,7 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
   const [draft, setDraft] = useState("");
   // Snapshot ids present when this drawer instance mounts so restored
   // history never plays an entrance animation on open.
-  const initialMessageIdsRef = useRef<Set<string> | null>(null);
-  if (initialMessageIdsRef.current === null) {
-    initialMessageIdsRef.current = new Set(messages.map((message) => message.id));
-  }
-  const lastPendingAssistantIdRef = useRef<string | null>(null);
+  const [initialMessageIds] = useState(() => new Set(messages.map((message) => message.id)));
   // Mount in the closed visual state, then flip a frame later so the CSS
   // shell transition has a "from" state to animate out of.
   const [isVisible, setIsVisible] = useState(false);
@@ -103,33 +99,16 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
       ? messages[messages.length - 1].id
       : null;
 
-  if (pendingAssistantId) {
-    lastPendingAssistantIdRef.current = pendingAssistantId;
-  }
-
-  const crossfadeAssistantId =
-    lastPendingAssistantIdRef.current &&
-    messages.some(
-      (message) =>
-        message.id === lastPendingAssistantIdRef.current &&
-        message.role === "assistant" &&
-        !isEmptyAssistantMessage(message),
-    )
-      ? lastPendingAssistantIdRef.current
-      : null;
-
-  if (crossfadeAssistantId) {
-    lastPendingAssistantIdRef.current = null;
-  }
-
   function motionVariantForMessage(message: (typeof messages)[number]): MessageMotionVariant {
     if (message.role === "assistant-error" || message.role === "assistant-refusal") {
       return "flat";
     }
-    if (initialMessageIdsRef.current?.has(message.id)) {
+    if (initialMessageIds.has(message.id)) {
       return "none";
     }
-    if (message.role === "assistant" && crossfadeAssistantId === message.id) {
+    // New assistant bubbles always replace the loading indicator at the same
+    // anchor, so they crossfade in rather than playing a separate rise.
+    if (message.role === "assistant") {
       return "crossfade";
     }
     return "entrance";
