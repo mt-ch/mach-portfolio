@@ -44,7 +44,7 @@ Where files go. See `docs/adr/0006-repo-structure.md` for the rationale.
 
 - `components/ui/` — generic, presentational, no domain knowledge (cover-image wrapper). Flat, one exception: `components/ui/cursor/` groups the custom cursor's files around its one pure test seam (see `docs/adr/0007-custom-cursor-interaction-model.md`).
 - `components/layout/` — site chrome: navigation, footer.
-- `components/features/<name>/` — one folder per domain concept or page section: `home/`, `project/`, `chat/`, `theme/`. Nothing sits loose at the root of `components/`.
+- `components/features/<name>/` — one folder per domain concept or page section: `home/`, `project/`, `chat/`, `theme/`, `transition/` (the page-transition provider, `TransitionLink`, and the `transitionPhase` reducer — see `docs/adr/0008-page-transition-overlay-model.md`). Nothing sits loose at the root of `components/`.
 - `lib/assistant/` — the chatbot: `chat/`, `corpus/`, `guardrails/`.
 - `lib/sanity/` — the data layer. The only module that constructs the Sanity client.
 - `lib/theme/` — shared theme constants (storage key, dark class, media query), imported by both the pre-hydration `<script>` and the theme hook.
