@@ -252,6 +252,64 @@ describe("PageTransitionProvider", () => {
     expect(style).toContain("pointer-events: none");
   });
 
+  it("plays an uncover-only reveal on browser back/forward, with no scroll reset", async () => {
+    const scrollTo = vi.fn();
+
+    function App() {
+      return (
+        <PageTransitionProvider>
+          <div
+            {...{ [SCROLL_CONTAINER_ATTR]: "" }}
+            ref={(el) => {
+              if (el) el.scrollTo = scrollTo;
+            }}
+          >
+            <p>page content</p>
+          </div>
+        </PageTransitionProvider>
+      );
+    }
+
+    const { rerender } = await renderSettled(<App />);
+    scrollTo.mockClear();
+
+    // popstate fires only after the URL has already changed under us.
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    currentPathname = "/projects/home-hospital";
+    rerender(<App />);
+
+    // The panel enters covered directly (no cover phase), holds, then
+    // lifts back to idle — and never pushes a route or resets scroll.
+    await waitFor(() =>
+      expect(document.querySelector("[aria-hidden]")?.getAttribute("style")).toContain("visibility: hidden"),
+    );
+    expect(push).not.toHaveBeenCalled();
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("honours reduced motion on the back/forward path", async () => {
+    mockMatchMediaShouldMatch = true;
+
+    function App() {
+      return (
+        <PageTransitionProvider>
+          <p>page content</p>
+        </PageTransitionProvider>
+      );
+    }
+
+    const { rerender } = await renderSettled(<App />);
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    currentPathname = "/projects/home-hospital";
+    rerender(<App />);
+
+    await waitFor(() =>
+      expect(document.querySelector("[aria-hidden]")?.getAttribute("style")).toContain("pointer-events: none"),
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("still drives the route change to completion under prefers-reduced-motion", async () => {
     mockMatchMediaShouldMatch = true;
     const user = userEvent.setup();

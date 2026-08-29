@@ -116,6 +116,31 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
     [dispatch],
   );
 
+  // Browser back/forward: `popstate` fires only *after* history has moved,
+  // so it can't be intercepted the way a TransitionLink click is. The
+  // handler runs synchronously before the browser paints the destination,
+  // so we snap the panel opaque here first — imperatively, ahead of the
+  // React re-render — then dispatch POPSTATE so the machine runs an
+  // uncover-only reveal (no cover phase, no scroll reset). Dispatching
+  // unconditionally means the flag can never be left armed, and a popstate
+  // that doesn't move the pathname (hash/query-only entries) still lifts
+  // cleanly instead of stranding an opaque panel.
+  useEffect(() => {
+    const onPopState = () => {
+      const panel = panelRef.current;
+      if (panel) {
+        const background = getComputedStyle(document.documentElement)
+          .getPropertyValue("--background")
+          .trim();
+        if (background) panel.style.backgroundColor = background;
+        gsap.set(panel, { yPercent: 0, autoAlpha: 1 });
+      }
+      dispatch({ type: "POPSTATE" });
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [dispatch]);
+
   // First load: the panel is already covering the page (seeded state +
   // server-rendered opaque). Lift it exactly once, after web fonts have
   // loaded so text does not reflow under the reader, racing that against
@@ -186,7 +211,7 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
 
   // Once the new pathname is committed, hold briefly, then release the
   // panel. Only meaningful while covered — a pathname change at idle (a
-  // plain link, back/forward) is ignored here.
+  // plain link) is ignored here.
   const prevPathnameRef = useRef(pathname);
   useEffect(() => {
     const pathnameChanged = pathname !== prevPathnameRef.current;
@@ -198,6 +223,17 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
     const hold = window.setTimeout(() => dispatch({ type: "ROUTE_COMMITTED" }), holdMs);
     return () => window.clearTimeout(hold);
   }, [pathname, state.phase, reducedMotion, dispatch]);
+
+  // Back/forward: the POPSTATE dispatch above snaps the machine straight to
+  // `covered` with no pathname change of its own to key off, so hold from
+  // there and release into the uncover-only reveal.
+  useEffect(() => {
+    if (state.phase !== "covered" || state.path !== "popstate") return;
+
+    const holdMs = reducedMotion ? 0 : HOLD_DURATION_MS;
+    const hold = window.setTimeout(() => dispatch({ type: "ROUTE_COMMITTED" }), holdMs);
+    return () => window.clearTimeout(hold);
+  }, [state.phase, state.path, reducedMotion, dispatch]);
 
   useGSAP(
     () => {
@@ -228,6 +264,16 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
           onComplete: () => dispatch({ type: "COVER_DONE" }),
         });
         return () => tween.kill();
+      }
+
+      // Back/forward: no cover animation ran, so snap the panel opaque and
+      // in place over the already-swapped page. The uncover branch then
+      // lifts it exactly as it would after a forward nav.
+      if (state.phase === "covered" && state.path === "popstate") {
+        const background = getComputedStyle(document.documentElement).getPropertyValue("--background").trim();
+        if (background) panel.style.backgroundColor = background;
+        gsap.set(panel, { yPercent: 0, autoAlpha: 1 });
+        return;
       }
 
       if (state.phase === "uncovering") {
@@ -270,7 +316,7 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
         if (container) gsap.set(container, { clearProps: "transform,opacity,visibility" });
       }
     },
-    { dependencies: [state.phase, reducedMotion], scope: panelRef },
+    { dependencies: [state.phase, state.path, reducedMotion], scope: panelRef },
   );
 
   // While the panel is covering or fully covers the page, it must also
