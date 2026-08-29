@@ -120,25 +120,38 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
   // server-rendered opaque). Lift it exactly once, after web fonts have
   // loaded so text does not reflow under the reader, racing that against
   // the first-load font cap so a slow/blocked font never strands the page.
-  const firstLoadHandledRef = useRef(false);
+  const firstLoadReleasedRef = useRef(false);
   useEffect(() => {
-    if (firstLoadHandledRef.current) return;
+    if (firstLoadReleasedRef.current) return;
     if (state.phase !== "covered" || state.path !== "firstload") return;
-    firstLoadHandledRef.current = true;
 
-    let released = false;
     const release = () => {
-      if (released) return;
-      released = true;
+      if (firstLoadReleasedRef.current) return;
+      firstLoadReleasedRef.current = true;
       dispatch({ type: "ROUTE_COMMITTED" });
     };
 
+    // The cap is re-armed on every run of this effect (e.g. a dev
+    // StrictMode double-invoke) so it can never be lost, and a `cancelled`
+    // flag stops the fonts.ready callback dispatching after unmount.
+    let cancelled = false;
     const cap = window.setTimeout(release, FIRST_LOAD_FONT_CAP_MS);
 
     const fonts: FontFaceSet | undefined = document.fonts;
-    if (fonts) fonts.ready.then(release).catch(release);
+    if (fonts) {
+      fonts.ready
+        .then(() => {
+          if (!cancelled) release();
+        })
+        .catch(() => {
+          if (!cancelled) release();
+        });
+    }
 
-    return () => window.clearTimeout(cap);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(cap);
+    };
   }, [state.phase, state.path, dispatch]);
 
   // Drives the route change once the panel is fully covering the page, and

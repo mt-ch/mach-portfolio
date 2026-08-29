@@ -31,12 +31,6 @@ export interface TransitionResult {
 
 export const initialTransitionState: TransitionState = { phase: "idle", path: null };
 
-export const initialTransitionResult: TransitionResult = {
-  state: initialTransitionState,
-  shouldResetScroll: false,
-  shouldFadeCursor: false,
-};
-
 // Seed for a fresh page load: the machine starts already `covered` (path
 // `firstload`) so the server-rendered overlay is accounted for before any
 // JavaScript runs. After hydration the provider dispatches ROUTE_COMMITTED
