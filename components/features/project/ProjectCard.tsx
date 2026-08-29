@@ -1,14 +1,14 @@
-import Link from "next/link";
-
 import type { ProjectListItem } from "@/lib/sanity";
+
+import { TransitionLink } from "@/components/features/transition/TransitionLink";
 
 export function ProjectCard({ project }: { project: ProjectListItem }) {
   return (
     <article className="rounded-md border border-gray-200 p-6 dark:border-gray-800">
       <h3 className="text-lg font-semibold">
-        <Link href={`/projects/${project.slug.current}`}>
+        <TransitionLink href={`/projects/${project.slug.current}`}>
           {project.title}
-        </Link>
+        </TransitionLink>
       </h3>
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
         {project.summary}
