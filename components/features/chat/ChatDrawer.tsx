@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
-import { usePresence } from "motion/react";
+import { AnimatePresence, motion, usePresence } from "motion/react";
 
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
 import { drawerTransitionMs } from "./motionTiming";
+import { type MessageMotionVariant, useMessageMotion } from "./messageMotion";
 import { SUGGESTED_QUESTIONS } from "./suggestedQuestions";
 import { isEmptyAssistantMessage } from "./types";
 import { useChatConversation } from "./useChatConversation";
@@ -24,7 +25,15 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
   // this component mounted through its exit so the CSS slide-out is visible.
   const [isPresent, safeToRemove] = usePresence();
   const { messages, isThinking, hasStarted, send, retry, reset } = useChatConversation();
+  const { reduced, variantFor } = useMessageMotion();
   const [draft, setDraft] = useState("");
+  // Snapshot ids present when this drawer instance mounts so restored
+  // history never plays an entrance animation on open.
+  const initialMessageIdsRef = useRef<Set<string> | null>(null);
+  if (initialMessageIdsRef.current === null) {
+    initialMessageIdsRef.current = new Set(messages.map((message) => message.id));
+  }
+  const lastPendingAssistantIdRef = useRef<string | null>(null);
   // Mount in the closed visual state, then flip a frame later so the CSS
   // shell transition has a "from" state to animate out of.
   const [isVisible, setIsVisible] = useState(false);
@@ -85,6 +94,48 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
     reset();
     setDraft("");
   };
+
+  const pendingAssistantId =
+    isThinking &&
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "assistant" &&
+    isEmptyAssistantMessage(messages[messages.length - 1])
+      ? messages[messages.length - 1].id
+      : null;
+
+  if (pendingAssistantId) {
+    lastPendingAssistantIdRef.current = pendingAssistantId;
+  }
+
+  const crossfadeAssistantId =
+    lastPendingAssistantIdRef.current &&
+    messages.some(
+      (message) =>
+        message.id === lastPendingAssistantIdRef.current &&
+        message.role === "assistant" &&
+        !isEmptyAssistantMessage(message),
+    )
+      ? lastPendingAssistantIdRef.current
+      : null;
+
+  if (crossfadeAssistantId) {
+    lastPendingAssistantIdRef.current = null;
+  }
+
+  function motionVariantForMessage(message: (typeof messages)[number]): MessageMotionVariant {
+    if (message.role === "assistant-error" || message.role === "assistant-refusal") {
+      return "flat";
+    }
+    if (initialMessageIdsRef.current?.has(message.id)) {
+      return "none";
+    }
+    if (message.role === "assistant" && crossfadeAssistantId === message.id) {
+      return "crossfade";
+    }
+    return "entrance";
+  }
+
+  const loadingMotion = variantFor("crossfade");
 
   return (
     <>
@@ -159,18 +210,38 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
           <div className="flex min-h-0 flex-1 flex-col justify-between">
             <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto p-md">
               {hasStarted ? (
-                <>
+                <AnimatePresence initial={false}>
                   {messages
                     // Hide only the in-flight placeholder — a message that
                     // finished with genuinely empty content (no delta, no
                     // citations) still renders once isThinking clears, so
                     // it never just vanishes with no feedback.
-                    .filter((message, index) => !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)))
+                    .filter(
+                      (message, index) =>
+                        !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)),
+                    )
                     .map((message) => (
-                      <ChatMessageBubble key={message.id} message={message} onRetry={retry} retryDisabled={isThinking} />
+                      <ChatMessageBubble
+                        key={`${message.id}-${message.role}`}
+                        message={message}
+                        motionVariant={motionVariantForMessage(message)}
+                        onRetry={retry}
+                        retryDisabled={isThinking}
+                      />
                     ))}
-                  {isThinking && <ChatLoadingIndicator />}
-                </>
+                  {pendingAssistantId && (
+                    <motion.div
+                      key={`loading-${pendingAssistantId}`}
+                      variants={loadingMotion.variants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      transition={loadingMotion.transition}
+                    >
+                      <ChatLoadingIndicator reducedMotion={reduced} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               ) : (
                 <div className="flex min-h-full flex-col justify-end gap-md">
                   <p className="type-body font-medium text-black dark:text-white">Hey, ask away.</p>
