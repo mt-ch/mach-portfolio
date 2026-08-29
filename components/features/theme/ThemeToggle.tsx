@@ -2,7 +2,11 @@
 
 import { MoonIcon, SunIcon } from "lucide-react";
 
-import { isHiddenInOverlay, pushTranslateClassName } from "@/components/features/chat/toggleClusterAnimation";
+import {
+  clusterTransitionClassName,
+  isHiddenInOverlay,
+  pushTranslateClassName,
+} from "@/components/features/chat/toggleClusterAnimation";
 import type { DrawerMode } from "@/components/features/chat/useDrawerVisibility";
 import { useTheme } from "./ThemeProvider";
 
@@ -25,9 +29,9 @@ export function ThemeToggle({ mode, isOpen, isMounted }: ThemeToggleProps) {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className={`inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 size-10 transition-transform duration-300 ease-out cursor-pointer ${pushTranslateClassName(
+      className={`inline-flex items-center justify-center bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200 size-10 ${clusterTransitionClassName} cursor-pointer ${pushTranslateClassName(
         mode,
-        isOpen
+        isOpen,
       )}`}
       data-cursor="button"
     >

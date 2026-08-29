@@ -1,11 +1,11 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { AnimatePresence } from "motion/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatDrawer } from "./ChatDrawer";
 import { ChatDrawerToggle } from "./ChatDrawerToggle";
 import { useDrawerVisibility } from "./useDrawerVisibility";
-import { useTransitionPhase } from "./useTransitionPhase";
 
 function stubMatchMedia(matches: boolean) {
   vi.stubGlobal(
@@ -26,11 +26,12 @@ function stubMatchMedia(matches: boolean) {
 // separately in ChatShell.test.tsx, since that's where it actually lives.
 function Wrapper() {
   const { isOpen, mode, close, toggle } = useDrawerVisibility();
-  const { isMounted, isVisible } = useTransitionPhase(isOpen);
   return (
     <>
-      <ChatDrawerToggle isOpen={isOpen} mode={mode} isMounted={isMounted} onToggle={toggle} />
-      <ChatDrawer isOpen={isOpen} mode={mode} isMounted={isMounted} isVisible={isVisible} onClose={close} />
+      <ChatDrawerToggle isOpen={isOpen} mode={mode} isMounted={isOpen} onToggle={toggle} />
+      <AnimatePresence>
+        {isOpen && <ChatDrawer key="chat-drawer" mode={mode} onClose={close} />}
+      </AnimatePresence>
     </>
   );
 }
