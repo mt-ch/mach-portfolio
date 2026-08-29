@@ -23,7 +23,13 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
             <ul className="gap-md flex flex-wrap">
               {project.links.map((link) => (
                 <li key={link._key}>
-                  <Link href={link.url} target="_blank" rel="noreferrer" className="type-body font-medium flex items-center gap-xs">
+                  <Link
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="type-body font-medium flex items-center gap-xs"
+                    data-cursor="link"
+                  >
                     <ArrowRightIcon className="size-md" strokeWidth={1.75} />
                     {link.label}
                   </Link>
