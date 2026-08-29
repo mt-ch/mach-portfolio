@@ -1,4 +1,4 @@
-import CustomCursor from "@/components/ui/CustomCursor";
+import CustomCursor from "@/components/ui/cursor/CustomCursor";
 
 import { ChatShell } from "@/components/features/chat/ChatShell";
 import { PageTransitionProvider } from "@/components/features/transition/PageTransitionProvider";
