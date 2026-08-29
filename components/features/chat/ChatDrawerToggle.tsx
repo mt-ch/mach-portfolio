@@ -2,7 +2,7 @@
 
 import { XIcon } from "lucide-react";
 
-import { isHiddenInOverlay, pushTranslateClassName } from "./toggleClusterAnimation";
+import { isHiddenInOverlay } from "./toggleClusterAnimation";
 import type { DrawerMode } from "./useDrawerVisibility";
 
 interface ChatDrawerToggleProps {
@@ -24,7 +24,7 @@ export function ChatDrawerToggle({ isOpen, mode, isMounted, onToggle }: ChatDraw
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-label="Open chat"
-      className={`inline-flex items-center justify-center gap-sm h-10 px-sm transition-transform duration-300 ease-out cursor-pointer ${
+      className={`inline-flex items-center justify-center gap-sm h-10 px-sm transition-transform duration-[var(--duration-slow)] ease-out motion-reduce:transition-none cursor-pointer ${
         mode === "push" && isOpen
           ? "-translate-x-102 w-10 bg-grey-200 text-grey-700 dark:bg-grey-700 dark:text-grey-200"
           : "translate-x-0 bg-brand text-white"

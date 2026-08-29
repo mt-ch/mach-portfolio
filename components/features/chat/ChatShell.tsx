@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+
+import { AnimatePresence } from "motion/react";
 
 import { CHAT_OPEN_ATTR } from "@/components/ui/cursor/useCursorInteractions";
 
@@ -9,14 +11,14 @@ import { ChatDrawerToggle } from "./ChatDrawerToggle";
 import { ThemeToggle } from "@/components/features/theme/ThemeToggle";
 import { SCROLL_CONTAINER_ATTR } from "@/components/features/transition/PageTransitionProvider";
 import { useDrawerVisibility } from "./useDrawerVisibility";
-import { useTransitionPhase } from "./useTransitionPhase";
 
 export function ChatShell({ children }: { children: ReactNode }) {
   const { isOpen, mode, close, toggle } = useDrawerVisibility();
-  // Computed once here and passed down, rather than let ChatDrawer and
-  // ChatDrawerToggle each derive their own copy — they animate off the
-  // same open/close timing by construction, not by convention.
-  const { isMounted, isVisible } = useTransitionPhase(isOpen);
+  // The drawer owns its own presence via AnimatePresence; the cluster only
+  // needs to know whether the panel is still on screen (including during its
+  // exit) so it can stay out of the way in overlay mode until fully gone.
+  const [isDrawerMounted, setIsDrawerMounted] = useState(false);
+  if (isOpen && !isDrawerMounted) setIsDrawerMounted(true);
 
   // Expose drawer open/closed to the custom cursor, which lives outside this
   // subtree and resets its variant when the drawer's late-mounted buttons
@@ -34,10 +36,12 @@ export function ChatShell({ children }: { children: ReactNode }) {
         {children}
       </div>
       <div className="fixed top-md right-md z-10 flex items-center gap-sm">
-        <ThemeToggle mode={mode} isOpen={isOpen} isMounted={isMounted} />
-        <ChatDrawerToggle isOpen={isOpen} mode={mode} isMounted={isMounted} onToggle={toggle} />
+        <ThemeToggle mode={mode} isOpen={isOpen} isMounted={isDrawerMounted} />
+        <ChatDrawerToggle isOpen={isOpen} mode={mode} isMounted={isDrawerMounted} onToggle={toggle} />
       </div>
-      <ChatDrawer isOpen={isOpen} mode={mode} isMounted={isMounted} isVisible={isVisible} onClose={close} />
+      <AnimatePresence onExitComplete={() => setIsDrawerMounted(false)}>
+        {isOpen && <ChatDrawer key="chat-drawer" mode={mode} onClose={close} />}
+      </AnimatePresence>
     </div>
   );
 }
