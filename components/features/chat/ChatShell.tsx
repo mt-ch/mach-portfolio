@@ -1,6 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+
+import { CHAT_OPEN_ATTR } from "@/components/ui/cursor/useCursorInteractions";
 
 import { ChatDrawer } from "./ChatDrawer";
 import { ChatDrawerToggle } from "./ChatDrawerToggle";
@@ -15,6 +17,16 @@ export function ChatShell({ children }: { children: ReactNode }) {
   // ChatDrawerToggle each derive their own copy — they animate off the
   // same open/close timing by construction, not by convention.
   const { isMounted, isVisible } = useTransitionPhase(isOpen);
+
+  // Expose drawer open/closed to the custom cursor, which lives outside this
+  // subtree and resets its variant when the drawer's late-mounted buttons
+  // appear or vanish.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isOpen) root.setAttribute(CHAT_OPEN_ATTR, "");
+    else root.removeAttribute(CHAT_OPEN_ATTR);
+    return () => root.removeAttribute(CHAT_OPEN_ATTR);
+  }, [isOpen]);
 
   return (
     <div className="flex h-full w-full overflow-hidden">
