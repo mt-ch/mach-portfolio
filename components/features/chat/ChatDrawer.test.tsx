@@ -209,7 +209,29 @@ describe("ChatDrawer", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows an error bubble with a retry button on a failed request, and retrying resends the message", async () => {
+  it("shows restored conversation immediately when the drawer opens, with no entrance delay", async () => {
+    window.sessionStorage.setItem(
+      "chat:history",
+      JSON.stringify([
+        { id: "1-user", role: "user", text: "what has he built?" },
+        { id: "1-assistant", role: "assistant", text: "Collab Canvas.", citations: [] },
+      ]),
+    );
+
+    const user = userEvent.setup();
+    render(<Wrapper />);
+
+    expect(screen.queryByText("what has he built?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Collab Canvas.")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Open chat" }));
+
+    expect(screen.getByText("what has he built?")).toBeInTheDocument();
+    expect(screen.getByText("Collab Canvas.")).toBeInTheDocument();
+    expect(queryGreeting()).not.toBeInTheDocument();
+  });
+
+  it("swaps the error bubble for the typing indicator on retry, then back to an answer bubble", async () => {
     const user = userEvent.setup();
     const failedResponse = new Response(null, { status: 500 });
     const retryStream = makeStreamResponse();
@@ -224,8 +246,12 @@ describe("ChatDrawer", () => {
 
     const retryButton = await screen.findByRole("button", { name: /retry/i });
     expect(screen.getByRole("alert")).toHaveTextContent(/something went wrong/i);
+    expect(screen.queryByRole("status", { name: /assistant is typing/i })).not.toBeInTheDocument();
 
     await user.click(retryButton);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("status", { name: /assistant is typing/i })).toBeInTheDocument();
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const secondCallBody = JSON.parse(String(fetchMock.mock.calls[1][1].body));
