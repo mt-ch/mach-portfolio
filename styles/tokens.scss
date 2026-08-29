@@ -79,6 +79,17 @@
   --radius-md: calc(0.5rem * var(--radius-scale));
   --radius-lg: calc(0.75rem * var(--radius-scale));
 
+  /* Motion
+   * --duration-slow is deliberately equal to the 300ms drawer transition
+   * constant (TRANSITION_MS). --duration-hero is reserved, unused for now. */
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 300ms;
+  --duration-hero: 420ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
   /* Semantic */
   --background: var(--white);
   --foreground: var(--grey-900);
@@ -211,4 +222,13 @@
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
+
+  /* Motion */
+  --duration-fast: var(--duration-fast);
+  --duration-base: var(--duration-base);
+  --duration-slow: var(--duration-slow);
+  --duration-hero: var(--duration-hero);
+
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
 }
