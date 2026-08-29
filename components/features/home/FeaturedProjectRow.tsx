@@ -13,7 +13,8 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
       href={href}
       className="inline-flex flex-col gap-md"
       aria-label={`${project.title}: ${project.summary}`}
-      data-cursor-text="View Project"
+      data-cursor="label"
+      data-cursor-label="View Project"
       data-cursor-icon="eye"
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-3/2 h-124 w-full max-w-full">

@@ -4,66 +4,50 @@ import { cursorVariants } from "./cursorVariants";
 
 function el(attrs: Record<string, string>): HTMLElement {
   const node = document.createElement("div");
-  for (const [name, value] of Object.entries(attrs)) {
-    node.setAttribute(name, value);
-  }
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
   return node;
 }
 
 describe("cursorVariants", () => {
-  it("returns the base variant for null", () => {
+  it("returns base for null", () => {
     expect(cursorVariants(null)).toEqual({ kind: "base" });
   });
 
-  it("returns the base variant for an element with no cursor hints", () => {
-    expect(cursorVariants(el({}))).toEqual({ kind: "base" });
+  it("returns base for an element with no data-cursor", () => {
+    expect(cursorVariants(el({ href: "#" }))).toEqual({ kind: "base" });
   });
 
-  it("maps data-cursor='link' to the link variant", () => {
-    expect(cursorVariants(el({ "data-cursor": "link" }))).toEqual({ kind: "link" });
-  });
-
-  it("maps data-cursor='button' to the button variant", () => {
-    expect(cursorVariants(el({ "data-cursor": "button" }))).toEqual({ kind: "button" });
-  });
-
-  it("ignores an unknown data-cursor value", () => {
+  it("returns base for an unknown data-cursor value", () => {
     expect(cursorVariants(el({ "data-cursor": "sparkle" }))).toEqual({ kind: "base" });
   });
 
-  it("maps data-cursor-text to a label variant carrying the text", () => {
-    expect(cursorVariants(el({ "data-cursor-text": "View project" }))).toEqual({
-      kind: "label",
-      text: "View project",
-    });
+  it("maps data-cursor=link", () => {
+    expect(cursorVariants(el({ "data-cursor": "link" }))).toEqual({ kind: "link" });
   });
 
-  it("treats an empty data-cursor-text as a label with empty text", () => {
-    expect(cursorVariants(el({ "data-cursor-text": "" }))).toEqual({ kind: "label", text: "" });
+  it("maps data-cursor=button", () => {
+    expect(cursorVariants(el({ "data-cursor": "button" }))).toEqual({ kind: "button" });
   });
 
-  it("carries a known icon key on the label variant", () => {
-    expect(cursorVariants(el({ "data-cursor-text": "Read", "data-cursor-icon": "eye" }))).toEqual({
-      kind: "label",
-      text: "Read",
-      icon: "eye",
-    });
-    expect(cursorVariants(el({ "data-cursor-text": "Email", "data-cursor-icon": "mail" }))).toEqual({
-      kind: "label",
-      text: "Email",
-      icon: "mail",
-    });
+  it("reads label text and icon from data-cursor-label / data-cursor-icon", () => {
+    expect(
+      cursorVariants(el({ "data-cursor": "label", "data-cursor-label": "View Project", "data-cursor-icon": "eye" })),
+    ).toEqual({ kind: "label", text: "View Project", icon: "eye" });
   });
 
-  it("drops an unknown icon key", () => {
-    const result = cursorVariants(el({ "data-cursor-text": "Go", "data-cursor-icon": "rocket" }));
-    expect(result).toEqual({ kind: "label", text: "Go" });
+  it("accepts the mail icon key", () => {
+    expect(
+      cursorVariants(el({ "data-cursor": "label", "data-cursor-label": "Copy Email", "data-cursor-icon": "mail" })),
+    ).toEqual({ kind: "label", text: "Copy Email", icon: "mail" });
   });
 
-  it("prefers the label variant when both data-cursor-text and data-cursor are present", () => {
-    expect(cursorVariants(el({ "data-cursor-text": "View", "data-cursor": "link" }))).toEqual({
-      kind: "label",
-      text: "View",
-    });
+  it("drops an unknown icon key but keeps the label", () => {
+    expect(
+      cursorVariants(el({ "data-cursor": "label", "data-cursor-label": "Go", "data-cursor-icon": "rocket" })),
+    ).toEqual({ kind: "label", text: "Go" });
+  });
+
+  it("defaults label text to empty string when data-cursor-label is absent", () => {
+    expect(cursorVariants(el({ "data-cursor": "label" }))).toEqual({ kind: "label", text: "" });
   });
 });

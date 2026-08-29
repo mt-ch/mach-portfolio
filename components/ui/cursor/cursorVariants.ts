@@ -1,44 +1,46 @@
-// Pure, dependency-free decision core for the custom cursor: given the DOM
-// element the pointer is over (or null when it is over nothing special),
-// return the descriptor for the shape the cursor should take. No React,
-// GSAP, or DOM-listener code lives here — this is the one unit-tested seam
-// of the cursor, mirroring the `transitionPhase` reducer seam (#118).
+// Pure, dependency-free variant resolution — the one unit-test seam for the
+// cursor. Given the nearest `[data-cursor]` element (or `null`), it returns the
+// descriptor the cursor body should animate to. No DOM traversal, no GSAP: the
+// caller (`useCursorInteractions`) owns `closest()` and the animation.
 
-export type CursorIconName = "eye" | "mail";
+// The single source of truth for the icon vocabulary — the render layer keys
+// its component map off this same tuple, so adding an icon is a one-line change
+// here plus the map entry.
+export const CURSOR_ICON_KEYS = ["eye", "mail"] as const;
+
+export type CursorIconKey = (typeof CURSOR_ICON_KEYS)[number];
 
 export type CursorVariant =
   | { kind: "base" }
   | { kind: "link" }
   | { kind: "button" }
-  | { kind: "label"; text: string; icon?: CursorIconName };
+  | { kind: "label"; text: string; icon?: CursorIconKey };
 
 export const BASE_VARIANT: CursorVariant = { kind: "base" };
 
-// The set of icon keys the cursor knows how to render. A `data-cursor-icon`
-// value outside this set resolves to no icon rather than an error.
-const KNOWN_ICONS = new Set<CursorIconName>(["eye", "mail"]);
-
-function toIconName(value: string | null): CursorIconName | undefined {
-  return value && KNOWN_ICONS.has(value as CursorIconName) ? (value as CursorIconName) : undefined;
+function toIconKey(value: string | null): CursorIconKey | undefined {
+  return CURSOR_ICON_KEYS.includes(value as CursorIconKey) ? (value as CursorIconKey) : undefined;
 }
 
-export function cursorVariants(el: HTMLElement | null): CursorVariant {
-  if (!el) return BASE_VARIANT;
+/**
+ * Resolve the cursor variant for an element. `data-cursor` is the single
+ * required discriminator with three values (`link` | `button` | `label`);
+ * anything else — including `null` or an untagged element — is the base dot.
+ */
+export function cursorVariants(element: Element | null): CursorVariant {
+  const value = element?.getAttribute("data-cursor") ?? null;
 
-  // A labelled element (project tiles) wins over the plain link/button
-  // hints: it is the most specific opt-in.
-  if (el.hasAttribute("data-cursor-text")) {
-    const icon = toIconName(el.getAttribute("data-cursor-icon"));
-    return {
-      kind: "label",
-      text: el.getAttribute("data-cursor-text") ?? "",
-      ...(icon ? { icon } : {}),
-    };
+  switch (value) {
+    case "link":
+      return { kind: "link" };
+    case "button":
+      return { kind: "button" };
+    case "label": {
+      const text = element?.getAttribute("data-cursor-label") ?? "";
+      const icon = toIconKey(element?.getAttribute("data-cursor-icon") ?? null);
+      return icon ? { kind: "label", text, icon } : { kind: "label", text };
+    }
+    default:
+      return BASE_VARIANT;
   }
-
-  const cursor = el.getAttribute("data-cursor");
-  if (cursor === "link") return { kind: "link" };
-  if (cursor === "button") return { kind: "button" };
-
-  return BASE_VARIANT;
 }

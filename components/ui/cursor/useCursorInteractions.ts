@@ -2,45 +2,81 @@
 
 import { useEffect, useState } from "react";
 
+import { usePathname } from "next/navigation";
+
 import { BASE_VARIANT, cursorVariants, type CursorVariant } from "./cursorVariants";
 
-const INTERACTIVE_SELECTOR = "[data-cursor-text], [data-cursor='link'], [data-cursor='button']";
+// Set on <html> by `ChatShell` while the chat drawer is open. The cursor lives
+// outside the chat subtree, so a plain DOM flag is how it learns the drawer
+// opened or closed without importing chat state.
+export const CHAT_OPEN_ATTR = "data-chat-open";
 
-// Hover detection for the custom cursor: watches the interactive elements
-// on the page and reports which `CursorVariant` the pointer is currently
-// over (`base` when it is over nothing special). The variant decision
-// itself lives in the pure `cursorVariants` seam; this hook only owns the
-// DOM wiring and its boundary.
-//
-// The binding strategy here (a mount-time scan) and any stuck-state reset
-// are the sibling bug-fix issue's job (#129); this unit fixes only the
-// location and interface.
+const CURSOR_SELECTOR = "[data-cursor]";
+
+/**
+ * The nearest `[data-cursor]` ancestor a `mouseover` / `mouseout` should act
+ * on, or `null` to ignore the event — either because it resolved to no tagged
+ * element, or because the pointer only crossed between two children of the
+ * same tagged element (`relatedTarget` still inside it).
+ */
+function crossedCursorBoundary(event: MouseEvent): HTMLElement | null {
+  const target = event.target;
+  const tagged = target instanceof Element ? target.closest<HTMLElement>(CURSOR_SELECTOR) : null;
+  if (!tagged) return null;
+  if (event.relatedTarget instanceof Node && tagged.contains(event.relatedTarget)) return null;
+  return tagged;
+}
+
+/**
+ * Delegated cursor-variant tracking. One pair of document-level listeners
+ * (`mouseover` / `mouseout`, which bubble — `mouseenter` / `mouseleave` do
+ * not) resolves the nearest `[data-cursor]` ancestor of whatever the pointer
+ * is over. This is correct for elements that mount after this hook (the chat
+ * drawer, the next page after a client-side navigation, the 404 page) with no
+ * re-scan.
+ *
+ * The variant is reset to base on `mouseout` to untagged space, on a committed
+ * route change (`usePathname`), and on the chat drawer opening or closing —
+ * the three ways a hovered element can vanish without a `mouseleave`.
+ */
 export function useCursorInteractions(): CursorVariant {
+  const pathname = usePathname();
   const [variant, setVariant] = useState<CursorVariant>(BASE_VARIANT);
 
+  // Route committed: the previous page's hovered element is gone. Adjusting
+  // state during render (rather than in an effect) is React's recommended
+  // pattern for reacting to a changed value and avoids a cascading render.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (variant.kind !== "base") setVariant(BASE_VARIANT);
+  }
+
   useEffect(() => {
-    const elements = Array.from(document.querySelectorAll<HTMLElement>(INTERACTIVE_SELECTOR));
-
-    const handleEnter = (event: Event) => {
-      setVariant(cursorVariants(event.currentTarget as HTMLElement));
+    const handleOver = (event: MouseEvent) => {
+      const tagged = crossedCursorBoundary(event);
+      if (tagged) setVariant(cursorVariants(tagged));
     };
 
-    const handleLeave = () => {
-      setVariant(BASE_VARIANT);
+    const handleOut = (event: MouseEvent) => {
+      if (crossedCursorBoundary(event)) setVariant(BASE_VARIANT);
     };
 
-    elements.forEach((element) => {
-      element.addEventListener("mouseenter", handleEnter);
-      element.addEventListener("mouseleave", handleLeave);
-    });
+    document.addEventListener("mouseover", handleOver);
+    document.addEventListener("mouseout", handleOut);
 
     return () => {
-      elements.forEach((element) => {
-        element.removeEventListener("mouseenter", handleEnter);
-        element.removeEventListener("mouseleave", handleLeave);
-      });
-      setVariant(BASE_VARIANT);
+      document.removeEventListener("mouseover", handleOver);
+      document.removeEventListener("mouseout", handleOut);
     };
+  }, []);
+
+  // Chat drawer opened or closed: a hovered drawer button may have unmounted.
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => setVariant(BASE_VARIANT));
+    observer.observe(root, { attributes: true, attributeFilter: [CHAT_OPEN_ATTR] });
+    return () => observer.disconnect();
   }, []);
 
   return variant;

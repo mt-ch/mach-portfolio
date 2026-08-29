@@ -26,7 +26,13 @@ export function SiteFooter({ about }: { about: About }) {
             </Fragment>
           ))}
           <br />
-          <a href={`mailto:${about.email}`} className="" data-cursor-text="Copy Email" data-cursor-icon="mail">
+          <a
+            href={`mailto:${about.email}`}
+            className=""
+            data-cursor="label"
+            data-cursor-label="Copy Email"
+            data-cursor-icon="mail"
+          >
             Email me
           </a>
         </h2>

@@ -13,7 +13,8 @@ export function OtherProjects({ projects }: { projects: OtherProjectListItem[] }
             href={`/projects/${project.slug.current}`}
             className="inline-flex flex-col gap-md"
             aria-label={`${project.title}: ${project.summary}`}
-            data-cursor-text="View Project"
+            data-cursor="label"
+            data-cursor-label="View Project"
             data-cursor-icon="eye"
           >
             <div className="aspect-3/2 h-124 w-full max-w-full">
