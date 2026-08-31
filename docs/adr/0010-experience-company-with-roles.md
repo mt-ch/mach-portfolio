@@ -19,7 +19,9 @@ company counts as "current" in corpus metadata if any of its roles is ongoing.
 folds every role — title, date range, and flattened summary — into the header
 template and passes no Portable Text body, so company context attaches to every
 role in a single chunk. Metadata carries `company`, the leading role's `title`,
-`roleTitles`, and the aggregate `isCurrent`.
+`roleTitles`, and the aggregate `isCurrent`. The old per-document `startDate` /
+`endDate` metadata keys are dropped — a single pair is meaningless across
+multiple roles, and nothing filters on them today.
 
 **The Studio content list is unchanged** — still a single Experience type
 (`sanity/structure.ts` untouched).

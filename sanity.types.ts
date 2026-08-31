@@ -604,6 +604,7 @@ export type ProjectForIndexByIdQueryResult = {
 } | null;
 
 export type ExperienceQueryRole = {
+  _key: string;
   title: string;
   startDate: string;
   endDate: string | null;

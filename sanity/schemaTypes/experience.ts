@@ -34,7 +34,10 @@ export const experience = defineType({
       name: "roles",
       title: "Roles",
       type: "array",
-      validation: (rule) => rule.required().min(1),
+      // `required()` on an array rejects an empty one — a company with no
+      // roles is meaningless. The data layer still tolerates a null `roles`
+      // from an in-progress draft.
+      validation: (rule) => rule.required(),
       of: [
         defineArrayMember({
           type: "object",

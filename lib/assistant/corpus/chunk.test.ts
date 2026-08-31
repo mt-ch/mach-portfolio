@@ -171,6 +171,7 @@ describe("chunkExperience", () => {
       order: 0,
       roles: [
         {
+          _key: "r1",
           title: "Senior Engineer",
           startDate: "2022-01-01",
           endDate: null,
@@ -178,6 +179,7 @@ describe("chunkExperience", () => {
           isCurrent: true,
         },
         {
+          _key: "r2",
           title: "Engineer",
           startDate: "2020-01-01",
           endDate: "2022-01-01",
@@ -214,6 +216,7 @@ describe("chunkExperience", () => {
       order: 1,
       roles: [
         {
+          _key: "r1",
           title: "Contractor",
           startDate: "2018-01-01",
           endDate: "2019-01-01",
