@@ -34,6 +34,21 @@ function experienceChunk(overrides: Partial<CorpusChunkMatch> = {}): CorpusChunk
   };
 }
 
+function knowledgeChunk(overrides: Partial<CorpusChunkMatch> = {}): CorpusChunkMatch {
+  return {
+    id: "kb-1:0",
+    score: 0.95,
+    text: "Knowledge base note: Positioning statement\n\nI focus on frontend systems.",
+    metadata: {
+      documentType: "knowledge",
+      documentId: "kb-1",
+      title: "Positioning statement",
+      tags: [],
+    },
+    ...overrides,
+  };
+}
+
 describe("buildContext", () => {
   it("joins chunk text in retrieval order", () => {
     const { contextText } = buildContext([projectChunk(), experienceChunk()]);
@@ -117,6 +132,34 @@ describe("buildContext", () => {
     const result = buildContext([]);
 
     expect(result).toEqual({ contextText: "", citations: [] });
+  });
+
+  it("excludes a knowledge chunk from citations but keeps its text in contextText", () => {
+    const { contextText, citations } = buildContext([knowledgeChunk(), projectChunk()]);
+
+    expect(contextText).toContain("Positioning statement");
+    expect(contextText).toContain("Collab Canvas");
+    expect(citations).toEqual([
+      { label: "Collab Canvas", href: "/projects/collab-canvas" },
+    ]);
+  });
+
+  it("returns no citations when every included chunk is a knowledge chunk", () => {
+    const { contextText, citations } = buildContext([knowledgeChunk()]);
+
+    expect(contextText).toContain("Positioning statement");
+    expect(citations).toEqual([]);
+  });
+
+  it("still counts a knowledge chunk's text toward the token budget", () => {
+    const huge = "x".repeat(30_000);
+    const { contextText, citations } = buildContext([
+      knowledgeChunk({ text: huge }),
+      projectChunk(),
+    ]);
+
+    expect(contextText).toBe(huge);
+    expect(citations).toEqual([]);
   });
 
   it("stops including chunks once the token budget would be exceeded, but always keeps the first", () => {

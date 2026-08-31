@@ -1,10 +1,17 @@
-import type { About, ExperienceEntry, PortableTextBlock, ProjectForIndex } from "@/lib/sanity";
+import type {
+  About,
+  ExperienceEntry,
+  KnowledgeBaseEntry,
+  PortableTextBlock,
+  ProjectForIndex,
+} from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
 
-import { flattenStory, splitAtHeadings } from "./portableText";
+import { flattenStory, splitAtHeadings, toPlainText } from "./portableText";
 import {
   templateAboutHeader,
   templateExperienceHeader,
+  templateKnowledgeHeader,
   templateProjectHeader,
 } from "./templates";
 import type { CorpusChunk, CorpusChunkMetadata, CorpusDocumentType } from "./types";
@@ -76,6 +83,31 @@ export function chunkExperience(entry: ExperienceEntry): CorpusChunk[] {
     null,
     metadata,
   );
+}
+
+// One Knowledge Base Entry always yields exactly one chunk — no
+// splitAtHeadings — since these are short hand-authored notes, not
+// multi-section case studies.
+export function chunkKnowledgeEntry(entry: KnowledgeBaseEntry): CorpusChunk[] {
+  const metadata: CorpusChunkMetadata = {
+    documentType: "knowledge",
+    documentId: entry._id,
+    title: entry.title,
+    tags: entry.tags ?? [],
+  };
+  const text = [templateKnowledgeHeader(entry), toPlainText(entry.body) || null]
+    .filter((part): part is string => !!part)
+    .join("\n\n");
+
+  return [
+    {
+      id: `${entry._id}:0`,
+      documentId: entry._id,
+      documentType: "knowledge",
+      text,
+      metadata,
+    },
+  ];
 }
 
 export function chunkAbout(about: About): CorpusChunk[] {

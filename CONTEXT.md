@@ -42,6 +42,10 @@ A Content Block wrapping a standard Portable Text array (headings, bold, italic,
 **Image Block**:
 A Content Block holding one or two images (each with its own alt text), an optional shared caption, and a layout (full-bleed, inset, or side-by-side pair).
 
+**Knowledge Base Entry**:
+A hand-authored, bot-only note (title + Portable Text body + optional tags) that the assistant retrieves from during chat but which never renders anywhere on the site. Indexed into the chat corpus like any other document, but excluded from client-visible reference/citation output at source.
+_Avoid_: FAQ, snippet, bot note
+
 ## Project structure
 
 Where files go. See `docs/adr/0006-repo-structure.md` for the rationale.

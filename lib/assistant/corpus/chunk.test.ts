@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { About, ExperienceEntry, ProjectForIndex } from "@/lib/sanity";
+import type { About, ExperienceEntry, KnowledgeBaseEntry, ProjectForIndex } from "@/lib/sanity";
 
-import { chunkAbout, chunkExperience, chunkProject } from "./chunk";
+import { chunkAbout, chunkExperience, chunkKnowledgeEntry, chunkProject } from "./chunk";
 
 function makeProject(overrides: Partial<ProjectForIndex> = {}): ProjectForIndex {
   return {
@@ -307,6 +307,70 @@ describe("chunkExperience", () => {
     };
 
     expect(chunkExperience(entry)[0].metadata).toMatchObject({ isCurrent: false });
+  });
+});
+
+function makeKnowledgeEntry(
+  overrides: Partial<KnowledgeBaseEntry> = {},
+): KnowledgeBaseEntry {
+  return {
+    _id: "kb-1",
+    title: "Positioning statement",
+    body: [{ style: "normal", children: [{ text: "I focus on frontend systems." }] }],
+    tags: null,
+    ...overrides,
+  };
+}
+
+describe("chunkKnowledgeEntry", () => {
+  it("produces exactly one chunk with a positional id", () => {
+    const chunks = chunkKnowledgeEntry(makeKnowledgeEntry());
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toMatchObject({
+      id: "kb-1:0",
+      documentId: "kb-1",
+      documentType: "knowledge",
+    });
+  });
+
+  it("templates the title, tags, and flattened body into the chunk text", () => {
+    const chunks = chunkKnowledgeEntry(
+      makeKnowledgeEntry({
+        title: "FAQ: Rates",
+        tags: ["positioning", "faq"],
+        body: [{ style: "normal", children: [{ text: "I work on a project basis." }] }],
+      }),
+    );
+
+    expect(chunks[0].text).toContain("Knowledge base note: FAQ: Rates");
+    expect(chunks[0].text).toContain("Tags: positioning, faq");
+    expect(chunks[0].text).toContain("I work on a project basis.");
+  });
+
+  it("does not split multi-heading bodies into multiple chunks", () => {
+    const chunks = chunkKnowledgeEntry(
+      makeKnowledgeEntry({
+        body: [
+          { style: "h2", children: [{ text: "Section" }] },
+          { style: "normal", children: [{ text: "Still one chunk." }] },
+        ],
+      }),
+    );
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0].text).toContain("Still one chunk.");
+  });
+
+  it("sets documentType, title, and tags (defaulted to []) in metadata", () => {
+    const chunks = chunkKnowledgeEntry(makeKnowledgeEntry({ tags: null }));
+
+    expect(chunks[0].metadata).toMatchObject({
+      documentType: "knowledge",
+      documentId: "kb-1",
+      title: "Positioning statement",
+      tags: [],
+    });
   });
 });
 

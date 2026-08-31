@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { About, ProjectForIndex } from "@/lib/sanity";
+import type { About, KnowledgeBaseEntry, ProjectForIndex } from "@/lib/sanity";
 
-import { templateAboutHeader, templateProjectHeader } from "./templates";
+import { templateAboutHeader, templateKnowledgeHeader, templateProjectHeader } from "./templates";
 
 function makeAbout(overrides: Partial<About> = {}): About {
   return {
@@ -112,6 +112,46 @@ describe("templateAboutHeader", () => {
     const header = templateAboutHeader(makeAbout({ resumeUrl: null }));
 
     expect(header).not.toContain("Résumé:");
+  });
+});
+
+function makeKnowledgeEntry(
+  overrides: Partial<KnowledgeBaseEntry> = {},
+): KnowledgeBaseEntry {
+  return {
+    _id: "kb-1",
+    title: "Positioning statement",
+    body: [{ style: "normal", children: [{ text: "I focus on frontend systems." }] }],
+    tags: null,
+    ...overrides,
+  };
+}
+
+describe("templateKnowledgeHeader", () => {
+  it("always includes the title on the 'Knowledge base note:' line", () => {
+    const header = templateKnowledgeHeader(makeKnowledgeEntry({ title: "FAQ: Rates" }));
+
+    expect(header).toContain("Knowledge base note: FAQ: Rates");
+  });
+
+  it("includes a Tags line when tags are present", () => {
+    const header = templateKnowledgeHeader(
+      makeKnowledgeEntry({ tags: ["positioning", "faq"] }),
+    );
+
+    expect(header).toContain("Tags: positioning, faq");
+  });
+
+  it("omits the Tags line when tags is null", () => {
+    const header = templateKnowledgeHeader(makeKnowledgeEntry({ tags: null }));
+
+    expect(header).not.toContain("Tags:");
+  });
+
+  it("omits the Tags line when tags is empty", () => {
+    const header = templateKnowledgeHeader(makeKnowledgeEntry({ tags: [] }));
+
+    expect(header).not.toContain("Tags:");
   });
 });
 

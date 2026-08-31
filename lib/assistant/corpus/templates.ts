@@ -1,4 +1,4 @@
-import type { About, ExperienceEntry, ProjectForIndex } from "@/lib/sanity";
+import type { About, ExperienceEntry, KnowledgeBaseEntry, ProjectForIndex } from "@/lib/sanity";
 import { toPlainText } from "@/lib/sanity/portableText";
 
 function formatList(label: string, items?: string[] | null): string | null {
@@ -53,6 +53,12 @@ function isPlaceholderEmail(email: string): boolean {
 
 function findLinkedInUrl(socialLinks?: About["socialLinks"]): string | null {
   return socialLinks?.find((link) => link.platform.toLowerCase() === "linkedin")?.url ?? null;
+}
+
+export function templateKnowledgeHeader(entry: KnowledgeBaseEntry): string {
+  return [`Knowledge base note: ${entry.title}`, formatList("Tags", entry.tags)]
+    .filter((line): line is string => line !== null)
+    .join("\n");
 }
 
 export function templateAboutHeader(about: About): string {

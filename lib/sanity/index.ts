@@ -1,5 +1,6 @@
 export { getAbout, getAboutFresh } from "./about";
 export { getExperience, getExperienceEntryById } from "./experience";
+export { getKnowledgeEntriesForIndex, getKnowledgeEntryById } from "./knowledge";
 export { toPlainText } from "./portableText";
 export {
   getFeaturedProjects,
@@ -16,6 +17,7 @@ export type {
   ExperienceRole,
   FeaturedProjectListItem,
   ImageContentBlock,
+  KnowledgeBaseEntry,
   OtherProjectListItem,
   PortableTextBlock,
   ProjectDetail,
