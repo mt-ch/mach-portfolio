@@ -12,12 +12,22 @@ function imageBlockText(block: ImageContentBlock): string {
 // Flattens a Project Story (Text Block + Image Block array) back into a
 // single ordered Portable Text sequence, so the existing heading-split logic
 // below can run over it unchanged. Each Text Block's `content` is unwrapped
-// in place; an Image Block folds its caption/alt text in as a plain block at
-// its position, contributing nothing when both are empty.
+// in place; a Text Block with an authored `heading` gets a synthetic h2
+// block inserted immediately before its content, so splitAtHeadings later
+// breaks the story into one chunk per authored section. An Image Block
+// folds its caption/alt text in as a plain block at its position,
+// contributing nothing when both are empty.
 export function flattenStory(story: ContentBlock[] | null | undefined): PortableTextBlock[] {
   if (!story) return [];
   return story.flatMap((block) => {
-    if (block._type === "textBlock") return block.content;
+    if (block._type === "textBlock") {
+      if (!block.heading) return block.content;
+      const heading: PortableTextBlock = {
+        style: "h2",
+        children: [{ text: block.heading }],
+      };
+      return [heading, ...block.content];
+    }
     const text = imageBlockText(block);
     return text ? [{ style: "normal" as const, children: [{ text }] }] : [];
   });
