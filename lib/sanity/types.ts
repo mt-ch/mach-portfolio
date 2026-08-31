@@ -77,6 +77,9 @@ export interface ProjectForIndex {
   title: string;
   slug: { current: string };
   summary: string;
+  heroText: string | null;
+  role: string | null;
+  coverImage: SanityImage | null;
   story: ContentBlock[] | null;
   techStack: string[] | null;
   skills: string[] | null;

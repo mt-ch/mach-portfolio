@@ -9,7 +9,8 @@ function formatList(label: string, items?: string[] | null): string | null {
 export function templateProjectHeader(project: ProjectForIndex): string {
   return [
     `Title: ${project.title}`,
-    `Summary: ${project.summary}`,
+    project.heroText ? `What it is: ${project.heroText}` : null,
+    project.role ? `Type of work: ${project.role}` : null,
     formatList("Tech stack", project.techStack),
     formatList("Skills", project.skills),
     formatList("Impact", project.impact),
