@@ -13,8 +13,12 @@ A Project flagged to appear in the single-page overview, as distinct from Projec
 _Avoid_: Highlighted project, pinned project
 
 **Experience**:
-A single work-history entry — one company/title/date-range combination — shown in reverse-chronological order by default.
-_Avoid_: Job, position, role (role is a field within a Project, not this concept)
+A work-history document representing one company. Repeated employers appear once; each distinct stint is a Role in the document's `roles` array.
+_Avoid_: Job, position
+
+**Role (Experience)**:
+One stint at a company — title, start date, optional end date (empty means current), optional summary — held in an Experience document's `roles` array. Display order follows array order (draggable in the Studio). Distinct from the `role` field on a Project.
+_Avoid_: Job, position, tenure
 
 **About**:
 The singleton record holding site-owner profile information (name, headline, bio, contact, resume, social links). Exactly one instance ever exists.

@@ -1,4 +1,5 @@
 import type { About, ExperienceEntry, ProjectForIndex } from "@/lib/sanity";
+import { toPlainText } from "@/lib/sanity/portableText";
 
 function formatList(label: string, items?: string[] | null): string | null {
   if (!items || items.length === 0) return null;
@@ -18,13 +19,21 @@ export function templateProjectHeader(project: ProjectForIndex): string {
     .join("\n");
 }
 
+// One Experience document is a company with one or more roles. Every role is
+// emitted under the same company heading so company context attaches to each
+// role in the single corpus entry.
 export function templateExperienceHeader(entry: ExperienceEntry): string {
-  const dateRange = `${entry.startDate} – ${entry.isCurrent ? "present" : entry.endDate}`;
-  return [
-    `Company: ${entry.company}`,
-    `Title: ${entry.title}`,
-    `Dates: ${dateRange}`,
-  ].join("\n");
+  const lines: string[] = [`Company: ${entry.company}`];
+  if (entry.companyUrl) lines.push(`Company URL: ${entry.companyUrl}`);
+
+  for (const role of entry.roles) {
+    const dateRange = `${role.startDate} – ${role.isCurrent ? "present" : role.endDate}`;
+    lines.push("", `Role: ${role.title}`, `Dates: ${dateRange}`);
+    const summary = toPlainText(role.summary).trim();
+    if (summary) lines.push(summary);
+  }
+
+  return lines.join("\n");
 }
 
 export function templateAboutHeader(about: About): string {

@@ -139,13 +139,9 @@ export type SanityImageHotspot = {
   width: number;
 };
 
-export type Experience = {
-  _id: string;
-  _type: "experience";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  company: string;
+export type ExperienceRoleObject = {
+  _type: "role";
+  _key: string;
   title: string;
   startDate: string;
   endDate?: string;
@@ -167,6 +163,16 @@ export type Experience = {
     _type: "block";
     _key: string;
   }>;
+};
+
+export type Experience = {
+  _id: string;
+  _type: "experience";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  company: string;
+  companyUrl?: string;
   logo?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -175,6 +181,7 @@ export type Experience = {
     _type: "image";
   };
   order: number;
+  roles: Array<ExperienceRoleObject>;
 };
 
 export type Project = {
@@ -596,12 +603,7 @@ export type ProjectForIndexByIdQueryResult = {
   dateCompleted: string | null;
 } | null;
 
-// Source: lib/sanity/queries.ts
-// Variable: experienceQuery
-// Query: *[_type == "experience"] | order(order asc) {    _id,    company,    title,    startDate,    endDate,    summary,    logo,    order  }
-export type ExperienceQueryResult = Array<{
-  _id: string;
-  company: string;
+export type ExperienceQueryRole = {
   title: string;
   startDate: string;
   endDate: string | null;
@@ -623,6 +625,15 @@ export type ExperienceQueryResult = Array<{
     _type: "block";
     _key: string;
   }> | null;
+};
+
+// Source: lib/sanity/queries.ts
+// Variable: experienceQuery
+// Query: *[_type == "experience"] | order(order asc) {    _id,    company,    companyUrl,    logo,    order,    roles[] { title, startDate, endDate, summary }  }
+export type ExperienceQueryResult = Array<{
+  _id: string;
+  company: string;
+  companyUrl: string | null;
   logo: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -631,35 +642,16 @@ export type ExperienceQueryResult = Array<{
     _type: "image";
   } | null;
   order: number;
+  roles: Array<ExperienceQueryRole> | null;
 }>;
 
 // Source: lib/sanity/queries.ts
 // Variable: experienceEntryByIdQuery
-// Query: *[_type == "experience" && _id == $id][0] {    _id,    company,    title,    startDate,    endDate,    summary,    logo,    order  }
+// Query: *[_type == "experience" && _id == $id][0] {    _id,    company,    companyUrl,    logo,    order,    roles[] { title, startDate, endDate, summary }  }
 export type ExperienceEntryByIdQueryResult = {
   _id: string;
   company: string;
-  title: string;
-  startDate: string;
-  endDate: string | null;
-  summary: Array<{
-    children?: Array<{
-      marks?: Array<string>;
-      text?: string;
-      _type: "span";
-      _key: string;
-    }>;
-    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
-    listItem?: "bullet" | "number";
-    markDefs?: Array<{
-      href?: string;
-      _type: "link";
-      _key: string;
-    }>;
-    level?: number;
-    _type: "block";
-    _key: string;
-  }> | null;
+  companyUrl: string | null;
   logo: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -668,6 +660,7 @@ export type ExperienceEntryByIdQueryResult = {
     _type: "image";
   } | null;
   order: number;
+  roles: Array<ExperienceQueryRole> | null;
 } | null;
 
 // Source: lib/sanity/queries.ts
@@ -723,8 +716,8 @@ declare module "@sanity/client" {
     '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    headerBackgroundColor,\n    headerForegroundColor,\n    story,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectBySlugQueryResult;
     '\n  *[_type == "project"] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectsForIndexQueryResult;
     '\n  *[_type == "project" && _id == $id][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectForIndexByIdQueryResult;
-    '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceQueryResult;
-    '\n  *[_type == "experience" && _id == $id][0] {\n    _id,\n    company,\n    title,\n    startDate,\n    endDate,\n    summary,\n    logo,\n    order\n  }\n': ExperienceEntryByIdQueryResult;
+    '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceQueryResult;
+    '\n  *[_type == "experience" && _id == $id][0] {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceEntryByIdQueryResult;
     '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    logo,\n    footerText,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks\n  }\n': AboutQueryResult;
   }
 }

@@ -23,8 +23,19 @@ export interface OtherProjectListItem {
   order: number | null;
 }
 
-export type ExperienceEntry = ExperienceQueryResult[number] & {
+type ExperienceQueryRole = NonNullable<
+  NonNullable<ExperienceQueryResult[number]["roles"]>[number]
+>;
+
+// One stint at a company. `isCurrent` is computed by the fetcher from an
+// empty `endDate`; display order follows the array order from the Studio.
+export type ExperienceRole = ExperienceQueryRole & {
   isCurrent: boolean;
+};
+
+// One Experience document is a company holding one or more Roles.
+export type ExperienceEntry = Omit<ExperienceQueryResult[number], "roles"> & {
+  roles: ExperienceRole[];
 };
 
 export type About = NonNullable<AboutQueryResult>;

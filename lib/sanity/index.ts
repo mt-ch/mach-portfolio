@@ -12,6 +12,7 @@ export {
 export type {
   About,
   ExperienceEntry,
+  ExperienceRole,
   FeaturedProjectListItem,
   ImageStoryBlock,
   OtherProjectListItem,

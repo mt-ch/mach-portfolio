@@ -119,13 +119,18 @@ describe("POST /api/reindex", () => {
     const entry = {
       _id: "doc-2",
       company: "Acme",
-      title: "Engineer",
-      startDate: "2020-01-01",
-      endDate: null,
-      summary: [],
+      companyUrl: null,
       logo: null,
       order: 1,
-      isCurrent: true,
+      roles: [
+        {
+          title: "Engineer",
+          startDate: "2020-01-01",
+          endDate: null,
+          summary: [],
+          isCurrent: true,
+        },
+      ],
     };
     getExperienceEntryByIdMock.mockResolvedValueOnce(entry);
     reindexChunksMock.mockResolvedValueOnce(1);

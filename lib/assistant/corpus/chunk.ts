@@ -52,20 +52,23 @@ export function chunkProject(project: ProjectForIndex): CorpusChunk[] {
 }
 
 export function chunkExperience(entry: ExperienceEntry): CorpusChunk[] {
+  // Roles are ordered most-recent-first in the Studio; the leading role names
+  // the citation, and the company counts as current if any role is ongoing.
   const metadata: CorpusChunkMetadata = {
     documentType: "experience",
     documentId: entry._id,
     company: entry.company,
-    title: entry.title,
-    startDate: entry.startDate,
-    endDate: entry.endDate,
-    isCurrent: entry.isCurrent,
+    title: entry.roles[0]?.title ?? entry.company,
+    roleTitles: entry.roles.map((role) => role.title),
+    isCurrent: entry.roles.some((role) => role.isCurrent),
   };
+  // All roles are folded into the header by templateExperienceHeader, so the
+  // company document yields exactly one corpus entry.
   return buildChunks(
     entry._id,
     "experience",
     templateExperienceHeader(entry),
-    entry.summary,
+    null,
     metadata,
   );
 }

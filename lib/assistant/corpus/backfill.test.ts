@@ -26,8 +26,8 @@ describe("runBackfill", () => {
   it("reindexes About, every Experience entry, and every Project, and totals the chunk count", async () => {
     getAboutMock.mockResolvedValueOnce({ _id: "about", name: "Matt", headline: "Eng" });
     getExperienceMock.mockResolvedValueOnce([
-      { _id: "exp-1" },
-      { _id: "exp-2" },
+      { _id: "exp-1", company: "Acme", roles: [] },
+      { _id: "exp-2", company: "Globex", roles: [] },
     ]);
     getProjectsForIndexMock.mockResolvedValueOnce([
       { _id: "project-1", slug: { current: "a" } },
