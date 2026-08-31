@@ -36,6 +36,34 @@ export function templateExperienceHeader(entry: ExperienceEntry): string {
   return lines.join("\n");
 }
 
+// As of this ticket, Sanity's About.email is still the seed value
+// "hello@test.com" (checked directly against the production dataset).
+// Templating a fake address into model-visible text is a correctness bug,
+// so known placeholder domains are guarded out here. This is a targeted
+// guard against the current known placeholder, not exhaustive detection of
+// every possible future placeholder — it self-clears once a real address
+// (any domain outside this list) is published, no code change needed.
+const PLACEHOLDER_EMAIL_DOMAINS = ["test.com", "example.com"];
+
+function isPlaceholderEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return domain !== undefined && PLACEHOLDER_EMAIL_DOMAINS.includes(domain);
+}
+
+function findLinkedInUrl(socialLinks?: About["socialLinks"]): string | null {
+  return socialLinks?.find((link) => link.platform.toLowerCase() === "linkedin")?.url ?? null;
+}
+
 export function templateAboutHeader(about: About): string {
-  return [`Name: ${about.name}`, `Headline: ${about.headline}`].join("\n");
+  const linkedInUrl = findLinkedInUrl(about.socialLinks);
+
+  return [
+    `Name: ${about.name}`,
+    `Headline: ${about.headline}`,
+    about.email && !isPlaceholderEmail(about.email) ? `Email: ${about.email}` : null,
+    linkedInUrl ? `LinkedIn: ${linkedInUrl}` : null,
+    about.resumeUrl ? `Résumé: ${about.resumeUrl}` : null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
 }
