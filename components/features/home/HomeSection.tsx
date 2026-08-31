@@ -16,7 +16,7 @@ export function HomeSection({
   }
 
   return (
-    <div className="px-md gap-md relative grid grid-cols-1 sm:grid-cols-2">
+    <div className="px-md gap-md relative flex flex-col lg:flex-row">
       <h2 className="type-body font-medium">[{title}]</h2>
       <div className="gap-lg relative flex flex-col">{children}</div>
     </div>

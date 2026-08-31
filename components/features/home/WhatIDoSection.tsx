@@ -17,7 +17,7 @@ export function WhatIDoSection({ about }: { about: About }) {
             <h3 className="type-body text-grey-500 dark:text-grey-400 font-medium">
               {item.title}
             </h3>
-            <p className="type-body">{item.description}</p>
+            <p className="type-body font-medium">{item.description}</p>
           </div>
         ))}
       </HomeSection>
