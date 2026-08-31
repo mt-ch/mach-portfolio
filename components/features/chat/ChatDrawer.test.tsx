@@ -275,10 +275,40 @@ describe("ChatDrawer", () => {
     render(<Wrapper />);
     await openAndSend(user, "what has he built?");
 
-    expect(queryGreeting()).not.toBeInTheDocument();
+    // The landing pane cross-dissolves out rather than vanishing instantly,
+    // so its removal is asserted asynchronously, same as the drawer's own
+    // CSS slide-out above.
+    await waitFor(() => expect(queryGreeting()).not.toBeInTheDocument());
     expect(
       screen.queryByRole("button", { name: "What's your favourite project and why?" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("fades the message list out and the empty-state greeting back in on reset", async () => {
+    const user = userEvent.setup();
+    const { response, push, close } = makeStreamResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    render(<Wrapper />);
+    await openAndSend(user, "what has he built?");
+    await waitFor(() => expect(queryGreeting()).not.toBeInTheDocument());
+    expect(screen.getByText("what has he built?")).toBeInTheDocument();
+
+    // Reset is disabled while a response is in flight, so let this one
+    // finish first.
+    await act(async () => {
+      push("delta", { text: "Collab Canvas." });
+      push("citations", { citations: [] });
+      close();
+    });
+    await waitFor(() => expect(screen.getByText("Collab Canvas.")).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Reset conversation" }));
+
+    await waitFor(() => expect(screen.queryByText("what has he built?")).not.toBeInTheDocument());
+    expect(screen.queryByText("Collab Canvas.")).not.toBeInTheDocument();
+    expect(queryGreeting()).toBeInTheDocument();
+    expect(screen.getByText("What's your favourite project and why?")).toBeInTheDocument();
   });
 
   it("closes via the explicit in-drawer close control", async () => {
