@@ -38,17 +38,20 @@ export interface PortableTextBlock {
   children?: Array<{ text?: string }>;
 }
 
-// A Project Story is a reorderable array of generic Content Blocks — Text
-// Block (Portable Text) and Image Block (one or two images with alt text and
-// an optional caption). See sanity/schemaTypes/blocks.
-export interface TextStoryBlock {
+// A Content Block is one item in any Content Block array — a Text Block
+// (Portable Text) or an Image Block (one or two images with alt text and an
+// optional caption). The union is deliberately generic, not Project-specific:
+// Project `story` is the current consumer, and it is the intended single type
+// for any future Content Block array (e.g. the homepage "How I work" section).
+// See sanity/schemaTypes/blocks.
+export interface TextContentBlock {
   _type: "textBlock";
   heading?: string;
   content: PortableTextBlock[];
   layout?: "one-column" | "two-column-split" | "two-column-left" | "two-column-right";
 }
 
-export interface ImageStoryBlock {
+export interface ImageContentBlock {
   _type: "imageBlock";
   image?: { alt?: string };
   secondImage?: { alt?: string };
@@ -56,14 +59,14 @@ export interface ImageStoryBlock {
   layout?: "full" | "inset" | "pair";
 }
 
-export type StoryBlock = TextStoryBlock | ImageStoryBlock;
+export type ContentBlock = TextContentBlock | ImageContentBlock;
 
 export interface ProjectForIndex {
   _id: string;
   title: string;
   slug: { current: string };
   summary: string;
-  story: StoryBlock[] | null;
+  story: ContentBlock[] | null;
   techStack: string[] | null;
   skills: string[] | null;
   impact: string[] | null;
