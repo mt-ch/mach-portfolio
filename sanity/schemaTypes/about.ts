@@ -49,6 +49,14 @@ export const about = defineType({
       validation: (rule) => rule.required().email(),
     }),
     defineField({
+      name: "howIWork",
+      title: "How I work",
+      description:
+        'Homepage "How I work" section, composed of the same Text and Image blocks as a Project story. Leave empty to hide the section.',
+      type: "array",
+      of: [{ type: "textBlock" }, { type: "imageBlock" }],
+    }),
+    defineField({
       name: "socialLinks",
       title: "Social links",
       type: "array",

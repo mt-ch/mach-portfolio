@@ -29,6 +29,7 @@ const about: About = {
   resumeUrl: null,
   email: "matt@example.com",
   socialLinks: null,
+  howIWork: null,
 };
 
 describe("HeroSection", () => {

@@ -140,6 +140,7 @@ export const aboutQuery = defineQuery(`
     footerText,
     "resumeUrl": resumeFile.asset->url,
     email,
-    socialLinks
+    socialLinks,
+    howIWork
   }
 `);

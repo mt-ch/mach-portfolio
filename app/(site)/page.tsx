@@ -1,6 +1,7 @@
 import { getAbout, getFeaturedProjects } from "@/lib/sanity";
 import { FeaturedProjectRow } from "@/components/features/home/FeaturedProjectRow";
 import { HeroSection } from "@/components/features/home/HeroSection";
+import { HowIWorkSection } from "@/components/features/home/HowIWorkSection";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { ArrowUpRightIcon } from "lucide-react";
@@ -76,22 +77,7 @@ export default async function Home() {
               </div>
             </div>
           </div>
-          <div className="px-md gap-md relative grid grid-cols-1 sm:grid-cols-2 mb-3xl pb-3xl">
-            <h2 className="type-body font-medium">[How I work]</h2>
-            <div className="gap-lg relative flex flex-col">
-              <div className="gap-xs relative flex flex-col">
-                <p className="type-body">
-                  I slot into existing teams quickly. I communicate in Slack,
-                  deliver in Figma, and stay close to the work without needing
-                  layers of coordination. <br />
-                  <br /> I am comfortable with ambiguous briefs, shifting
-                  priorities, and tight deadlines. Available for project work,
-                  retainers, and short embedded support. Remote or on-site in
-                  Brussels and Oslo.
-                </p>
-              </div>
-            </div>
-          </div>
+          <HowIWorkSection about={about} />
           <div className="px-md gap-md relative grid grid-cols-1 sm:grid-cols-2">
             <h2 className="type-body font-medium">[Experience]</h2>
             <table>
