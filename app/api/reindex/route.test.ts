@@ -5,11 +5,13 @@ const {
   getAboutFreshMock,
   getExperienceEntryByIdMock,
   getProjectForIndexByIdMock,
+  getKnowledgeEntryByIdMock,
 } = vi.hoisted(() => ({
   reindexChunksMock: vi.fn(),
   getAboutFreshMock: vi.fn(),
   getExperienceEntryByIdMock: vi.fn(),
   getProjectForIndexByIdMock: vi.fn(),
+  getKnowledgeEntryByIdMock: vi.fn(),
 }));
 
 vi.mock("@/lib/assistant/corpus/reindexDocument", () => ({
@@ -19,6 +21,7 @@ vi.mock("@/lib/sanity", () => ({
   getAboutFresh: getAboutFreshMock,
   getExperienceEntryById: getExperienceEntryByIdMock,
   getProjectForIndexById: getProjectForIndexByIdMock,
+  getKnowledgeEntryById: getKnowledgeEntryByIdMock,
 }));
 
 const { POST } = await import("./route");
@@ -50,6 +53,7 @@ describe("POST /api/reindex", () => {
     getAboutFreshMock.mockReset();
     getExperienceEntryByIdMock.mockReset();
     getProjectForIndexByIdMock.mockReset();
+    getKnowledgeEntryByIdMock.mockReset();
     reindexChunksMock.mockResolvedValue(0);
   });
 
@@ -200,6 +204,39 @@ describe("POST /api/reindex", () => {
     expect(getAboutFreshMock).not.toHaveBeenCalled();
     expect(getExperienceEntryByIdMock).not.toHaveBeenCalled();
     expect(getProjectForIndexByIdMock).not.toHaveBeenCalled();
+    expect(getKnowledgeEntryByIdMock).not.toHaveBeenCalled();
     expect(reindexChunksMock).toHaveBeenCalledWith("doc-4", []);
+  });
+
+  it("refetches a published knowledge base entry by id and reindexes its chunks", async () => {
+    const entry = {
+      _id: "doc-5",
+      title: "Positioning statement",
+      body: [{ style: "normal", children: [{ text: "I focus on frontend systems." }] }],
+      tags: ["positioning"],
+    };
+    getKnowledgeEntryByIdMock.mockResolvedValueOnce(entry);
+    reindexChunksMock.mockResolvedValueOnce(1);
+    const body = JSON.stringify({ _id: "doc-5", _type: "knowledgeBaseEntry" });
+    const signature = await sign(body);
+
+    const response = await POST(makeRequest(body, signature));
+
+    expect(response.status).toBe(200);
+    expect(getKnowledgeEntryByIdMock).toHaveBeenCalledWith("doc-5");
+    expect(reindexChunksMock).toHaveBeenCalledWith(
+      "doc-5",
+      expect.arrayContaining([expect.objectContaining({ documentId: "doc-5" })]),
+    );
+  });
+
+  it("purges a knowledge base entry's chunks when the refetch finds no document (deleted/unpublished)", async () => {
+    getKnowledgeEntryByIdMock.mockResolvedValueOnce(null);
+    const body = JSON.stringify({ _id: "doc-5", _type: "knowledgeBaseEntry" });
+    const signature = await sign(body);
+
+    await POST(makeRequest(body, signature));
+
+    expect(reindexChunksMock).toHaveBeenCalledWith("doc-5", []);
   });
 });

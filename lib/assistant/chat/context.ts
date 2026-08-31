@@ -59,6 +59,10 @@ export function buildContext(chunks: CorpusChunkMatch[]): ChatContext {
   const seenDocuments = new Set<string>();
   const citations: ChatCitation[] = [];
   for (const chunk of included) {
+    // Knowledge Base Entries are bot-only grounding text — their content still
+    // counts toward contextText/the token budget above, but they never
+    // surface as a client-visible reference/citation.
+    if (chunk.metadata.documentType === "knowledge") continue;
     if (seenDocuments.has(chunk.metadata.documentId)) continue;
     seenDocuments.add(chunk.metadata.documentId);
     citations.push(citationForMetadata(chunk.metadata));

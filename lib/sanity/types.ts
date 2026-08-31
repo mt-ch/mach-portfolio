@@ -72,6 +72,15 @@ export interface ImageContentBlock {
 
 export type ContentBlock = TextContentBlock | ImageContentBlock;
 
+// Hand-typed (rather than via sanity.types.ts) since typegen requires a live
+// Sanity project connection this repo's local/CI environments don't have.
+export interface KnowledgeBaseEntry {
+  _id: string;
+  title: string;
+  body: PortableTextBlock[];
+  tags: string[] | null;
+}
+
 export interface ProjectForIndex {
   _id: string;
   title: string;

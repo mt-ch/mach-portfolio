@@ -1,12 +1,18 @@
 import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
 import { NextResponse } from "next/server";
 
-import { chunkAbout, chunkExperience, chunkProject } from "@/lib/assistant/corpus/chunk";
+import {
+  chunkAbout,
+  chunkExperience,
+  chunkKnowledgeEntry,
+  chunkProject,
+} from "@/lib/assistant/corpus/chunk";
 import { reindexChunks } from "@/lib/assistant/corpus/reindexDocument";
 import type { CorpusChunk } from "@/lib/assistant/corpus/types";
 import {
   getAboutFresh,
   getExperienceEntryById,
+  getKnowledgeEntryById,
   getProjectForIndexById,
 } from "@/lib/sanity";
 
@@ -62,6 +68,10 @@ async function fetchChunksForDocument(payload: WebhookPayload): Promise<CorpusCh
     case "about": {
       const about = await getAboutFresh();
       return about && about._id === payload._id ? chunkAbout(about) : [];
+    }
+    case "knowledgeBaseEntry": {
+      const entry = await getKnowledgeEntryById(payload._id);
+      return entry ? chunkKnowledgeEntry(entry) : [];
     }
     default:
       return [];

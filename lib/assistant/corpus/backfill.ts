@@ -1,6 +1,11 @@
-import { getAbout, getExperience, getProjectsForIndex } from "@/lib/sanity";
+import {
+  getAbout,
+  getExperience,
+  getKnowledgeEntriesForIndex,
+  getProjectsForIndex,
+} from "@/lib/sanity";
 
-import { chunkAbout, chunkExperience, chunkProject } from "./chunk";
+import { chunkAbout, chunkExperience, chunkKnowledgeEntry, chunkProject } from "./chunk";
 import { reindexChunks } from "./reindexDocument";
 
 export interface BackfillResult {
@@ -9,12 +14,13 @@ export interface BackfillResult {
 }
 
 // Full reindex over the entire corpus (About + every Project + every
-// Experience), on demand. Run via `pnpm backfill`.
+// Experience + every Knowledge Base Entry), on demand. Run via `pnpm backfill`.
 export async function runBackfill(): Promise<BackfillResult> {
-  const [about, experience, projects] = await Promise.all([
+  const [about, experience, projects, knowledgeEntries] = await Promise.all([
     getAbout(),
     getExperience(),
     getProjectsForIndex(),
+    getKnowledgeEntriesForIndex(),
   ]);
 
   let documentsIndexed = 0;
@@ -32,6 +38,11 @@ export async function runBackfill(): Promise<BackfillResult> {
 
   for (const project of projects) {
     chunksIndexed += await reindexChunks(project._id, chunkProject(project));
+    documentsIndexed += 1;
+  }
+
+  for (const entry of knowledgeEntries) {
+    chunksIndexed += await reindexChunks(entry._id, chunkKnowledgeEntry(entry));
     documentsIndexed += 1;
   }
 
