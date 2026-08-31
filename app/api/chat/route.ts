@@ -5,7 +5,6 @@ import { condenseQuery } from "@/lib/assistant/chat/condense";
 import { streamAnswer } from "@/lib/assistant/chat/generateAnswer";
 import { retrieveChunks } from "@/lib/assistant/chat/retrieve";
 import type { ChatTurn } from "@/lib/assistant/chat/types";
-import { isAnswerGrounded } from "@/lib/assistant/guardrails/citationCheck";
 import { passesConfidenceGate } from "@/lib/assistant/guardrails/confidenceGate";
 import { getClientIp } from "@/lib/assistant/guardrails/getClientIp";
 import { checkRateLimits } from "@/lib/assistant/guardrails/rateLimit";
@@ -21,9 +20,9 @@ function sseEvent(event: string, data: unknown) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
-// A single SSE event carrying the fixed refusal string, used both when the
-// pre-generation confidence gate skips generation outright and when the
-// post-generation citation check discards an ungrounded answer.
+// A single SSE event carrying the fixed refusal string, emitted only when the
+// pre-generation confidence gate skips generation outright. `refusal` is
+// strictly a pre-stream event — it can never follow a `delta`.
 function refusalStream(): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -113,62 +112,46 @@ export async function POST(request: Request) {
   }
 
   // Weak retrieval means generating against it risks a hallucinated answer,
-  // so generation is skipped entirely in favor of the fixed refusal — this
-  // is the first of the two grounding gates (the second runs post-generation
-  // below).
+  // so generation is skipped entirely in favor of the fixed refusal. This
+  // pre-generation confidence gate (plus the system prompt's "use only the
+  // supplied context" instruction) is now the only automated grounding
+  // enforcement — see docs/adr/0011. It reads the raw retrieval's best score
+  // straight off `chunks`, before buildContext does any token-budget trimming.
   if (!passesConfidenceGate(chunks)) {
     return refusalStream();
   }
 
   const { contextText, citations } = buildContext(chunks);
 
-  // Deltas are buffered rather than forwarded live, so the full answer can
-  // be checked for citation traceability (the second grounding gate) before
-  // any of it reaches the client — an ungrounded answer must never be
-  // partially shown before the check catches it.
+  // Generation deltas are forwarded to the client the moment they arrive, so
+  // a visitor watching the drawer sees words appear as they're generated.
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
-      const deltas: string[] = [];
-      let generationFailed = false;
+      let deltaCount = 0;
 
       try {
         for await (const delta of streamAnswer(sanitized.value, contextText)) {
-          deltas.push(delta);
+          controller.enqueue(encoder.encode(sseEvent("delta", { text: delta })));
+          deltaCount += 1;
         }
-      } catch (error) {
-        console.error("POST /api/chat: generation call failed", error);
-        generationFailed = true;
-      }
-
-      const answerText = deltas.join("");
-      // A total failure (nothing generated before the call threw) has no
-      // grounded/ungrounded answer to fall back to — it's a real error, not
-      // a refusal. A failure that still yielded some grounded partial text
-      // is left alone below; that's not a client-visible failure.
-      const noAnswerFromFailure = generationFailed && deltas.length === 0;
-      const grounded = answerText.trim() === "" || isAnswerGrounded(answerText, contextText);
-
-      // Guards enqueue/close the same way: if the client has already
-      // disconnected, the controller may throw.
-      try {
-        if (noAnswerFromFailure) {
-          controller.enqueue(
-            encoder.encode(sseEvent("error", { message: "Unable to generate a response" })),
-          );
-        } else if (grounded) {
-          for (const delta of deltas) {
-            controller.enqueue(encoder.encode(sseEvent("delta", { text: delta })));
-          }
-          controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
-        } else {
-          controller.enqueue(
-            encoder.encode(sseEvent("refusal", { message: REFUSAL_MESSAGE })),
-          );
-        }
+        controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
         controller.close();
       } catch (error) {
-        console.error("POST /api/chat: failed to flush response", error);
+        console.error("POST /api/chat: generation call failed", error);
+        try {
+          // A throw before any delta is a real failure the client must be
+          // told about. A throw after ≥1 delta just closes the stream — the
+          // client keeps the partial text it already has, no `error`.
+          if (deltaCount === 0) {
+            controller.enqueue(
+              encoder.encode(sseEvent("error", { message: "Unable to generate a response" })),
+            );
+          }
+          controller.close();
+        } catch (flushError) {
+          console.error("POST /api/chat: failed to flush response", flushError);
+        }
       }
     },
   });
