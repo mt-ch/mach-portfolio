@@ -37,8 +37,29 @@ function fakeStream(deltas: string[]) {
   return {
     [Symbol.asyncIterator]: async function* () {
       for (const text of deltas) {
-        yield { type: "content_block_delta", delta: { type: "text_delta", text } };
+        yield { type: "content_block_delta", index: 0, delta: { type: "text_delta", text } };
       }
+    },
+  };
+}
+
+// A stream that emits some answer text and then a `reference_project` tool
+// call asserting `slug`.
+function fakeStreamWithReference(text: string, slug: string) {
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      yield { type: "content_block_delta", index: 0, delta: { type: "text_delta", text } };
+      yield {
+        type: "content_block_start",
+        index: 1,
+        content_block: { type: "tool_use", name: "reference_project" },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "input_json_delta", partial_json: JSON.stringify({ slug }) },
+      };
+      yield { type: "content_block_stop", index: 1 };
     },
   };
 }
@@ -52,6 +73,8 @@ const projectMatch = {
     documentId: "proj-1",
     title: "Collab Canvas",
     slug: "collab-canvas",
+    summary: "Real-time collaborative canvas under load.",
+    imageUrl: "https://cdn.sanity.io/images/collab-canvas.jpg",
   },
 };
 
@@ -141,7 +164,7 @@ describe("POST /api/chat", () => {
     expect(checkRateLimitsMock).toHaveBeenCalledWith("203.0.113.9", "203.0.113.9");
   });
 
-  it("streams delta events followed by a final citations event", async () => {
+  it("streams delta events followed by a final citations event with no project when none was asserted", async () => {
     const response = await POST(
       makeRequest({ message: "has he worked with distributed systems?" }),
     );
@@ -155,15 +178,45 @@ describe("POST /api/chat", () => {
 
     expect(events[0]).toEqual({ event: "delta", data: { text: "Yes, " } });
     expect(events[1]).toEqual({ event: "delta", data: { text: "he has." } });
-    expect(events[2]).toEqual({
+    expect(events[2]).toEqual({ event: "citations", data: { project: null } });
+    expect(events).toHaveLength(3);
+  });
+
+  it("surfaces a reference_project assertion on the citations payload once its slug passes the retrieval allowlist", async () => {
+    streamMock.mockReturnValue(
+      fakeStreamWithReference("I built Collab Canvas.", "collab-canvas"),
+    );
+
+    const response = await POST(makeRequest({ message: "tell me about Collab Canvas" }));
+    const events = await readEvents(response);
+
+    expect(events[0]).toEqual({ event: "delta", data: { text: "I built Collab Canvas." } });
+    expect(events[events.length - 1]).toEqual({
       event: "citations",
       data: {
-        citations: [
-          { label: "Collab Canvas", href: "/projects/collab-canvas" },
-        ],
+        project: {
+          slug: "collab-canvas",
+          title: "Collab Canvas",
+          summary: "Real-time collaborative canvas under load.",
+          imageUrl: "https://cdn.sanity.io/images/collab-canvas.jpg",
+        },
       },
     });
-    expect(events).toHaveLength(3);
+    expect(events.filter((e) => e.event === "citations")).toHaveLength(1);
+  });
+
+  it("drops a reference_project assertion whose slug was not in retrieval", async () => {
+    streamMock.mockReturnValue(
+      fakeStreamWithReference("Something about another project.", "not-retrieved"),
+    );
+
+    const response = await POST(makeRequest({ message: "what has he built?" }));
+    const events = await readEvents(response);
+
+    expect(events[events.length - 1]).toEqual({
+      event: "citations",
+      data: { project: null },
+    });
   });
 
   it("embeds and retrieves using the sanitized message, over-fetching 12 matches", async () => {

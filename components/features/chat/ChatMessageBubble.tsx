@@ -1,10 +1,11 @@
 "use client";
 
-import { AlertTriangleIcon, RotateCwIcon } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AlertTriangleIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 import { ChatMarkdownAnswer } from "./ChatMarkdownAnswer";
 import { type MessageMotionVariant, useMessageMotion } from "./messageMotion";
+import { ProjectReference } from "./ProjectReference";
 import type { ChatMessage } from "./types";
 
 interface ChatMessageBubbleProps {
@@ -23,7 +24,8 @@ export function ChatMessageBubble({
   const { variantFor, citationTransition } = useMessageMotion();
   const { variants, transition, initial } = variantFor(motionVariant);
 
-  const citations = message.role === "assistant" ? message.citations : [];
+  const projectReference =
+    message.role === "assistant" ? message.projectReference : null;
 
   const bubble = (() => {
     if (message.role === "user") {
@@ -83,29 +85,15 @@ export function ChatMessageBubble({
       <div className="flex justify-start" data-testid="assistant-bubble">
         <div className="space-y-md max-w-11/12">
           <ChatMarkdownAnswer text={message.text} />
-          <AnimatePresence initial={false}>
-            {citations.length > 0 && (
-              <motion.div
-                key="citations"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={citationTransition}
-                className="flex flex-wrap gap-xs"
-              >
-                {citations.map((citation) => (
-                  <a
-                    key={`${citation.href}-${citation.label}`}
-                    href={citation.href}
-                    className="border border-grey-200 p-xs type-caption text-grey-700 bg-white hover:bg-grey-200 hover:text-black dark:bg-grey-900 dark:border-grey-700 dark:text-grey-200 dark:hover:bg-grey-800 dark:hover:text-white transition-colors duration-200 ease-in-out"
-                    data-cursor="link"
-                  >
-                    {citation.label}
-                  </a>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {projectReference && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={citationTransition}
+            >
+              <ProjectReference reference={projectReference} />
+            </motion.div>
+          )}
         </div>
       </div>
     );

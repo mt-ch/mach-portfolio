@@ -18,63 +18,101 @@ function fakeStream(events: unknown[]) {
   };
 }
 
+async function collect(message: string, context: string) {
+  const items: ({ type: "text"; text: string } | { type: "reference"; slug: string })[] = [];
+  for await (const item of streamAnswer(message, context)) items.push(item);
+  return items;
+}
+
 describe("streamAnswer", () => {
   beforeEach(() => {
     streamMock.mockReset();
   });
 
-  it("yields text from content_block_delta text_delta events, in order", async () => {
+  it("yields text items from content_block_delta text_delta events, in order", async () => {
     streamMock.mockReturnValue(
       fakeStream([
-        { type: "content_block_start" },
-        { type: "content_block_delta", delta: { type: "text_delta", text: "Hello" } },
-        { type: "content_block_delta", delta: { type: "text_delta", text: " world" } },
-        { type: "content_block_stop" },
+        { type: "content_block_start", index: 0, content_block: { type: "text" } },
+        { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Hello" } },
+        { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: " world" } },
+        { type: "content_block_stop", index: 0 },
       ]),
     );
 
-    const deltas: string[] = [];
-    for await (const delta of streamAnswer("hi", "some context")) {
-      deltas.push(delta);
-    }
-
-    expect(deltas).toEqual(["Hello", " world"]);
+    expect(await collect("hi", "some context")).toEqual([
+      { type: "text", text: "Hello" },
+      { type: "text", text: " world" },
+    ]);
   });
 
-  it("ignores non-text-delta events", async () => {
+  it("accumulates a reference_project tool call and yields one reference item when the block closes", async () => {
     streamMock.mockReturnValue(
       fakeStream([
-        { type: "content_block_delta", delta: { type: "input_json_delta", partial_json: "{}" } },
+        { type: "content_block_start", index: 0, content_block: { type: "text" } },
+        { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "I built Collab Canvas." } },
+        { type: "content_block_stop", index: 0 },
+        {
+          type: "content_block_start",
+          index: 1,
+          content_block: { type: "tool_use", name: "reference_project" },
+        },
+        { type: "content_block_delta", index: 1, delta: { type: "input_json_delta", partial_json: '{"slug":' } },
+        { type: "content_block_delta", index: 1, delta: { type: "input_json_delta", partial_json: '"collab-canvas"}' } },
+        { type: "content_block_stop", index: 1 },
       ]),
     );
 
-    const deltas: string[] = [];
-    for await (const delta of streamAnswer("hi", "context")) {
-      deltas.push(delta);
-    }
-
-    expect(deltas).toEqual([]);
+    expect(await collect("what did you build?", "context")).toEqual([
+      { type: "text", text: "I built Collab Canvas." },
+      { type: "reference", slug: "collab-canvas" },
+    ]);
   });
 
-  it("calls Haiku 4.5 with the message and context stuffed into the user content", async () => {
+  it("never yields tool-input json as a text delta", async () => {
+    streamMock.mockReturnValue(
+      fakeStream([
+        {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "tool_use", name: "reference_project" },
+        },
+        { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: '{"slug":"x"}' } },
+        { type: "content_block_stop", index: 0 },
+      ]),
+    );
+
+    const items = await collect("hi", "context");
+    expect(items).toEqual([{ type: "reference", slug: "x" }]);
+  });
+
+  it("yields no reference when the tool call json never parses", async () => {
+    streamMock.mockReturnValue(
+      fakeStream([
+        {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "tool_use", name: "reference_project" },
+        },
+        { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: '{"slug":' } },
+        { type: "content_block_stop", index: 0 },
+      ]),
+    );
+
+    expect(await collect("hi", "context")).toEqual([]);
+  });
+
+  it("exposes the reference_project tool with tool_choice auto and an unchanged max_tokens", async () => {
     streamMock.mockReturnValue(fakeStream([]));
+    await collect("what has he built?", "Title: Collab Canvas");
 
-    for await (const _ of streamAnswer("what has he built?", "Title: Collab Canvas")) {
-      // drain
-    }
-
-    expect(streamMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: "claude-haiku-4-5",
-        messages: [
-          expect.objectContaining({
-            role: "user",
-            content: expect.stringContaining("Title: Collab Canvas"),
-          }),
-        ],
-      }),
-    );
     const call = streamMock.mock.calls[0][0];
+    expect(call.model).toBe("claude-haiku-4-5");
+    expect(call.max_tokens).toBe(1024);
+    expect(call.tool_choice).toEqual({ type: "auto" });
+    expect(call.tools).toEqual([
+      expect.objectContaining({ name: "reference_project" }),
+    ]);
+    expect(call.messages[0].content).toContain("Title: Collab Canvas");
     expect(call.messages[0].content).toContain("what has he built?");
   });
 });

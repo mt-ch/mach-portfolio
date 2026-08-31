@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { buildContext } from "@/lib/assistant/chat/context";
+import { buildContext, projectReferenceFrom } from "@/lib/assistant/chat/context";
 import { condenseQuery } from "@/lib/assistant/chat/condense";
 import { streamAnswer } from "@/lib/assistant/chat/generateAnswer";
 import { retrieveChunks } from "@/lib/assistant/chat/retrieve";
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
     return refusalStream();
   }
 
-  const { contextText, citations } = buildContext(chunks);
+  const { contextText } = buildContext(chunks);
 
   // Generation deltas are forwarded to the client the moment they arrive, so
   // a visitor watching the drawer sees words appear as they're generated.
@@ -129,13 +129,22 @@ export async function POST(request: Request) {
     async start(controller) {
       const encoder = new TextEncoder();
       let deltaCount = 0;
+      // Held, not forwarded live: the model-asserted Project slug is only
+      // resolved to a card after the answer finishes and the slug is
+      // validated against what retrieval actually returned.
+      let assertedSlug: string | null = null;
 
       try {
-        for await (const delta of streamAnswer(sanitized.value, contextText)) {
-          controller.enqueue(encoder.encode(sseEvent("delta", { text: delta })));
-          deltaCount += 1;
+        for await (const item of streamAnswer(sanitized.value, contextText)) {
+          if (item.type === "text") {
+            controller.enqueue(encoder.encode(sseEvent("delta", { text: item.text })));
+            deltaCount += 1;
+          } else if (item.type === "reference") {
+            assertedSlug = item.slug;
+          }
         }
-        controller.enqueue(encoder.encode(sseEvent("citations", { citations })));
+        const project = projectReferenceFrom(chunks, assertedSlug);
+        controller.enqueue(encoder.encode(sseEvent("citations", { project })));
         controller.close();
       } catch (error) {
         console.error("POST /api/chat: generation call failed", error);
