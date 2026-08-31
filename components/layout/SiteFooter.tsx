@@ -13,50 +13,55 @@ export function SiteFooter({ about }: { about: About }) {
 
   return (
     <footer>
-      <div className="bg-foreground h-3xl w-full">
-        <div className="w-full h-full bg-background rounded-b-lg"></div>
-      </div>
-      <div className="p-md gap-xl bg-foreground relative flex flex-col h-screen justify-between">
-        <h2 className="type-body font-medium text-background pr-2xl">
-          <span className="text-transparent">({about.name}) </span>
-          {footerTextLines.map((line, index) => (
-            <Fragment key={index}>
-              {index > 0 && <br />}
-              {line}
-            </Fragment>
-          ))}
-          <br />
-          <a
-            href={`mailto:${about.email}`}
-            className=""
-            data-cursor="label"
-            data-cursor-label="Copy Email"
-            data-cursor-icon="mail"
-          >
-            Email me
-          </a>
-        </h2>
-
-        <div className="flex justify-between">
-          <p className="type-body font-medium text-background">©{year}</p>
-          <div className="flex gap-md">
-            {about.resumeUrl && (
-              <a href={about.resumeUrl} className="type-body font-medium text-background" download data-cursor="link">
-                Resume
-              </a>
-            )}
-            {about.socialLinks?.map((link) => (
-              <a
-                key={link._key}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="type-body font-medium text-background"
-                data-cursor="link"
-              >
-                {link.platform}
-              </a>
+      <div className="p-md gap-xl bg-background relative flex h-screen">
+        <div className="from-brand to-background absolute bottom-0 left-0 z-0 h-full w-full bg-linear-to-t"></div>
+        <div className="relative z-10 flex h-full w-full flex-col justify-between">
+          <h2 className="type-body text-foreground pr-2xl font-medium">
+            <span className="text-transparent">({about.name}) </span>
+            {footerTextLines.map((line, index) => (
+              <Fragment key={index}>
+                {index > 0 && <br />}
+                {line}
+              </Fragment>
             ))}
+            <br />
+            <a
+              href={`mailto:${about.email}`}
+              className=""
+              data-cursor="label"
+              data-cursor-label="Copy Email"
+              data-cursor-icon="mail"
+            >
+              Email me
+            </a>
+          </h2>
+
+          <div className="flex justify-between">
+            <p className="type-body font-medium text-white">©{year}</p>
+            <div className="gap-md flex">
+              {about.resumeUrl && (
+                <a
+                  href={about.resumeUrl}
+                  className="type-body font-medium text-white"
+                  download
+                  data-cursor="link"
+                >
+                  Resume
+                </a>
+              )}
+              {about.socialLinks?.map((link) => (
+                <a
+                  key={link._key}
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="type-body font-medium text-white"
+                  data-cursor="link"
+                >
+                  {link.platform}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
