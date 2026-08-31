@@ -139,7 +139,7 @@ export async function POST(request: Request) {
           if (item.type === "text") {
             controller.enqueue(encoder.encode(sseEvent("delta", { text: item.text })));
             deltaCount += 1;
-          } else {
+          } else if (item.type === "reference") {
             assertedSlug = item.slug;
           }
         }

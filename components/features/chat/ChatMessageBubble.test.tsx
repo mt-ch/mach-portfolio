@@ -87,9 +87,10 @@ describe("ChatMessageBubble Project reference", () => {
       <ChatMessageBubble message={assistantMessage("I built Collab Canvas.", reference)} />,
     );
 
-    const card = screen.getByTestId("project-reference");
-    expect(card).toHaveAttribute("href", "/projects/collab-canvas");
-    expect(card.querySelector("img")).toHaveAttribute("src", reference.imageUrl);
+    expect(screen.getByRole("link", { name: /Collab Canvas/ })).toHaveAttribute(
+      "href",
+      "/projects/collab-canvas",
+    );
     expect(screen.getByText("Collab Canvas")).toBeInTheDocument();
     expect(screen.getByText(reference.summary)).toBeInTheDocument();
     expect(screen.getByText(/View the project/)).toBeInTheDocument();
@@ -102,8 +103,7 @@ describe("ChatMessageBubble Project reference", () => {
       />,
     );
 
-    const card = screen.getByTestId("project-reference");
-    expect(card.querySelector("img")).toBeNull();
+    expect(screen.queryByRole("img")).toBeNull();
     expect(screen.getByText("Collab Canvas")).toBeInTheDocument();
     expect(screen.getByText(/View the project/)).toBeInTheDocument();
   });
