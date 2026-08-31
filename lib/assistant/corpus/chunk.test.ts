@@ -103,6 +103,60 @@ describe("chunkProject", () => {
     expect(chunks[1].text).toContain("We rebuilt the flow.");
   });
 
+  it("splits into one chunk per textBlock.heading, each still carrying the full header", () => {
+    const project = makeProject({
+      techStack: ["React"],
+      story: [
+        {
+          _type: "textBlock",
+          heading: "Problem",
+          content: [{ style: "normal", children: [{ text: "Onboarding was slow." }] }],
+        },
+        {
+          _type: "textBlock",
+          heading: "Solution",
+          content: [{ style: "normal", children: [{ text: "We rebuilt the flow." }] }],
+        },
+      ],
+    });
+
+    const chunks = chunkProject(project);
+
+    expect(chunks).toHaveLength(2);
+    for (const chunk of chunks) {
+      expect(chunk.text).toContain("Title: Collab Canvas");
+      expect(chunk.text).toContain("Tech stack: React");
+    }
+    expect(chunks[0].text).toContain("## Problem");
+    expect(chunks[0].text).toContain("Onboarding was slow.");
+    expect(chunks[1].text).toContain("## Solution");
+    expect(chunks[1].text).toContain("We rebuilt the flow.");
+  });
+
+  it("yields N chunks for a story with N authored textBlock sections", () => {
+    const project = makeProject({
+      story: [
+        {
+          _type: "textBlock",
+          heading: "One",
+          content: [{ style: "normal", children: [{ text: "First." }] }],
+        },
+        {
+          _type: "textBlock",
+          heading: "Two",
+          content: [{ style: "normal", children: [{ text: "Second." }] }],
+        },
+        {
+          _type: "textBlock",
+          heading: "Three",
+          content: [{ style: "normal", children: [{ text: "Third." }] }],
+        },
+      ],
+    });
+
+    expect(chunkProject(project)).toHaveLength(3);
+  });
+
   it("includes an Image Block's caption/alt text at its position in the flattened story", () => {
     const project = makeProject({
       story: [

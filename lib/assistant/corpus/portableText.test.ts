@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PortableTextBlock } from "@/lib/sanity";
 
-import { splitAtHeadings, toPlainText } from "./portableText";
+import { flattenStory, splitAtHeadings, toPlainText } from "./portableText";
 
 function block(
   text: string,
@@ -22,6 +22,34 @@ describe("toPlainText", () => {
     expect(toPlainText(null)).toBe("");
     expect(toPlainText(undefined)).toBe("");
     expect(toPlainText([])).toBe("");
+  });
+});
+
+describe("flattenStory", () => {
+  it("emits a synthetic h2 heading block before a textBlock's content when heading is set", () => {
+    const blocks = flattenStory([
+      {
+        _type: "textBlock",
+        heading: "Problem",
+        content: [{ style: "normal", children: [{ text: "Onboarding was slow." }] }],
+      },
+    ]);
+
+    expect(blocks).toEqual([
+      { style: "h2", children: [{ text: "Problem" }] },
+      { style: "normal", children: [{ text: "Onboarding was slow." }] },
+    ]);
+  });
+
+  it("unwraps a textBlock with no heading unchanged", () => {
+    const blocks = flattenStory([
+      {
+        _type: "textBlock",
+        content: [{ style: "normal", children: [{ text: "No heading here." }] }],
+      },
+    ]);
+
+    expect(blocks).toEqual([{ style: "normal", children: [{ text: "No heading here." }] }]);
   });
 });
 
