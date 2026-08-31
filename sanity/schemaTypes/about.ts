@@ -38,6 +38,37 @@ export const about = defineType({
       of: [{ type: "block" }],
     }),
     defineField({
+      name: "whatIDo",
+      title: "What I do",
+      description:
+        'Service list shown in the homepage "What I do" section. Hidden when empty.',
+      type: "array",
+      of: [
+        {
+          type: "object",
+          name: "serviceItem",
+          fields: [
+            defineField({
+              name: "title",
+              title: "Title",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "description",
+              title: "Description",
+              type: "text",
+              rows: 3,
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: {
+            select: { title: "title", subtitle: "description" },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: "resumeFile",
       title: "Resume file",
       type: "file",

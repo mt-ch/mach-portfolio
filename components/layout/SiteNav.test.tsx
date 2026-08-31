@@ -10,6 +10,7 @@ const about: About = {
   name: "Matt Chan",
   headline: "Designer",
   bio: null,
+  whatIDo: null,
   logo: null,
   footerText: null,
   resumeUrl: null,
