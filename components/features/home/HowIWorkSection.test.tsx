@@ -20,6 +20,7 @@ function about(howIWork: About["howIWork"]): About {
     name: "Matt Chan",
     headline: "Engineer",
     bio: null,
+    whatIDo: null,
     logo: null,
     footerText: null,
     resumeUrl: null,

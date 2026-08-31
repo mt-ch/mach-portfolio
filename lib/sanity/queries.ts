@@ -136,6 +136,11 @@ export const aboutQuery = defineQuery(`
     name,
     headline,
     bio,
+    whatIDo[] {
+      _key,
+      title,
+      description
+    },
     logo,
     footerText,
     "resumeUrl": resumeFile.asset->url,
