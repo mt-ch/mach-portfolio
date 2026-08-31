@@ -5,7 +5,7 @@ import type { ProjectReference } from "./types";
 // Growth guardrail on stuffed context size, per the spec's ~4,000-6,000 token
 // budget. No tokenizer is wired up for this estimate; ~4 chars/token is a
 // standard-enough approximation for a size cap, not an exact count.
-const MAX_CONTEXT_TOKENS = 5000;
+const MAX_CONTEXT_TOKENS = 6000;
 const CHARS_PER_TOKEN = 4;
 const MAX_CONTEXT_CHARS = MAX_CONTEXT_TOKENS * CHARS_PER_TOKEN;
 

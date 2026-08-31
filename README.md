@@ -11,10 +11,10 @@ cp .env.local.example .env.local
 
 Fill in `.env.local` with a Sanity project ID (create one at sanity.io if you don't have one yet), the `production` dataset, and a revalidation webhook secret.
 
-For corpus reindexing (`/api/reindex`), configure two webhooks in the Sanity dashboard (Settings → API → Webhooks), both signed with `SANITY_REINDEX_SECRET`:
+For corpus reindexing (`/api/reindex`), configure two webhooks in the Sanity dashboard (Settings → API → Webhooks) per indexed document type — `project`, `experience`, `about`, and `knowledgeBaseEntry` — all signed with `SANITY_REINDEX_SECRET`:
 
-- **Publish** — trigger on Create/Update, projection `{"_id": _id, "_type": _type}`.
-- **Delete** — trigger on Delete, projection `{"_id": _id, "_type": before()._type}` (the document is already gone, so the projection reads its prior state via `before()`).
+- **Publish** — trigger on Create/Update, filter `_type == "<type>"`, projection `{"_id": _id, "_type": _type}`.
+- **Delete** — trigger on Delete, filter `_type == "<type>"`, projection `{"_id": _id, "_type": before()._type}` (the document is already gone, so the projection reads its prior state via `before()`).
 
 Both send the same `{_id, _type}` shape; the route always refetches the document fresh by id rather than trusting the payload, so a Delete event (refetch comes back empty) and a Publish event fall through the same delete-then-upsert path.
 

@@ -36,6 +36,21 @@ function experienceChunk(overrides: Partial<CorpusChunkMatch> = {}): CorpusChunk
   };
 }
 
+function knowledgeChunk(overrides: Partial<CorpusChunkMatch> = {}): CorpusChunkMatch {
+  return {
+    id: "kb-1:0",
+    score: 0.95,
+    text: "Knowledge base note: Positioning statement\n\nI focus on frontend systems.",
+    metadata: {
+      documentType: "knowledge",
+      documentId: "kb-1",
+      title: "Positioning statement",
+      tags: [],
+    },
+    ...overrides,
+  };
+}
+
 describe("buildContext", () => {
   it("joins chunk text in retrieval order", () => {
     const { contextText } = buildContext([projectChunk(), experienceChunk()]);
@@ -55,6 +70,35 @@ describe("buildContext", () => {
 
   it("returns empty context for no chunks", () => {
     expect(buildContext([])).toEqual({ contextText: "" });
+  });
+
+  it("fills the context up to the ~6,000-token (24,000-char) budget", () => {
+    const block = "y".repeat(10_000);
+    const { contextText } = buildContext([
+      projectChunk({ id: "proj-1:0", text: block }),
+      projectChunk({ id: "proj-1:1", text: block }),
+      projectChunk({ id: "proj-1:2", text: block }),
+    ]);
+
+    // First two fit within 24,000 chars; the third would push over, so it's dropped.
+    expect(contextText).toBe(`${block}\n\n---\n\n${block}`);
+  });
+
+  it("keeps a knowledge chunk's text in contextText alongside other chunks", () => {
+    const { contextText } = buildContext([knowledgeChunk(), projectChunk()]);
+
+    expect(contextText).toContain("Positioning statement");
+    expect(contextText).toContain("Collab Canvas");
+  });
+
+  it("still counts a knowledge chunk's text toward the token budget", () => {
+    const huge = "x".repeat(30_000);
+    const { contextText } = buildContext([
+      knowledgeChunk({ text: huge }),
+      projectChunk(),
+    ]);
+
+    expect(contextText).toBe(huge);
   });
 
   it("stops including chunks once the token budget would be exceeded, but always keeps the first", () => {
@@ -106,18 +150,18 @@ describe("projectReferenceFrom", () => {
   });
 
   it("never matches a non-project chunk that happens to carry the slug", () => {
-    const knowledgeChunk: CorpusChunkMatch = {
+    const knowledgeWithSlug: CorpusChunkMatch = {
       id: "kb-1:0",
       score: 0.9,
       text: "some knowledge",
       metadata: {
-        documentType: "knowledge" as CorpusChunkMatch["metadata"]["documentType"],
+        documentType: "knowledge",
         documentId: "kb-1",
         slug: "collab-canvas",
       },
     };
 
-    expect(projectReferenceFrom([knowledgeChunk], "collab-canvas")).toBeNull();
+    expect(projectReferenceFrom([knowledgeWithSlug], "collab-canvas")).toBeNull();
   });
 
   it("degrades missing summary/imageUrl metadata to safe defaults", () => {
