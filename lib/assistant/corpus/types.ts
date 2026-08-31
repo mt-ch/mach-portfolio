@@ -1,4 +1,8 @@
-export type CorpusDocumentType = "about" | "project" | "experience";
+export type CorpusDocumentType =
+  | "about"
+  | "project"
+  | "experience"
+  | "knowledge";
 
 export type CorpusChunkMetadataValue =
   | string
