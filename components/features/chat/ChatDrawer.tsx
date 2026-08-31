@@ -280,6 +280,10 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
                 <label htmlFor="chat-drawer-input" className="sr-only">
                   Hey, ask away.
                 </label>
+                {/* The height ease sits on the textarea, not the bordered
+                    form around it: field-sizing still picks every height, and
+                    the form's own auto height re-lays out each frame to
+                    follow, so its border never lags behind the text. */}
                 <textarea
                   id="chat-drawer-input"
                   value={draft}
@@ -290,7 +294,7 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
                     event.currentTarget.form?.requestSubmit();
                   }}
                   placeholder="Ask about Matt..."
-                  className="type-small w-full p-sm text-black placeholder:text-grey-700 dark:text-white dark:placeholder:text-grey-400 auto-grow-textarea focus:outline-none"
+                  className="type-small w-full p-sm text-black placeholder:text-grey-700 dark:text-white dark:placeholder:text-grey-400 auto-grow-textarea focus:outline-none transition-[height] duration-[var(--duration-fast)] ease-out motion-reduce:transition-none"
                   autoComplete="off"
                   rows={1}
                 />

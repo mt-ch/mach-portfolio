@@ -22,6 +22,11 @@ body {
   field-sizing: content;
   overflow-y: auto;
   height: auto !important;
+  // field-sizing keeps the height keyword as `auto`, and CSS cannot
+  // interpolate auto -> auto without opting in. Scoped here rather than on
+  // :root so nothing else on the page changes how its intrinsic sizes
+  // animate. Browsers without support simply snap, as before.
+  interpolate-size: allow-keywords;
 }
 
 html.custom-cursor-active,
