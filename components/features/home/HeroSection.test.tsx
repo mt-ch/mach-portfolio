@@ -24,6 +24,7 @@ const about: About = {
       children: [{ _type: "span", _key: "s1", text: "Specialising in UX/UI design." }],
     },
   ],
+  whatIDo: null,
   logo: null,
   footerText: null,
   resumeUrl: null,

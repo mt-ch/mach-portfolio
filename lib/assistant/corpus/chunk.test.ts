@@ -237,6 +237,7 @@ describe("chunkAbout", () => {
       name: "Matt Chan",
       headline: "Frontend engineer",
       bio: null,
+      whatIDo: null,
       logo: null,
       footerText: null,
       resumeUrl: null,
