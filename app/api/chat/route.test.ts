@@ -166,13 +166,13 @@ describe("POST /api/chat", () => {
     expect(events).toHaveLength(3);
   });
 
-  it("embeds and retrieves using the sanitized message, with a fixed top-k of 4", async () => {
+  it("embeds and retrieves using the sanitized message, over-fetching 12 matches", async () => {
     await POST(makeRequest({ message: "  has he worked with   distributed systems?  " }));
 
     expect(embedTextsMock).toHaveBeenCalledWith([
       "has he worked with distributed systems?",
     ]);
-    expect(queryChunksMock).toHaveBeenCalledWith([0.1, 0.2], 4);
+    expect(queryChunksMock).toHaveBeenCalledWith([0.1, 0.2], 12);
   });
 
   it("stuffs retrieved chunk text into the generation call", async () => {

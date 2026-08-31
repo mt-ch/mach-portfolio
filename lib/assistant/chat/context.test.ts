@@ -134,6 +134,18 @@ describe("buildContext", () => {
     expect(result).toEqual({ contextText: "", citations: [] });
   });
 
+  it("fills the context up to the ~6,000-token (24,000-char) budget", () => {
+    const block = "y".repeat(10_000);
+    const { contextText } = buildContext([
+      projectChunk({ id: "proj-1:0", text: block }),
+      projectChunk({ id: "proj-1:1", text: block }),
+      projectChunk({ id: "proj-1:2", text: block }),
+    ]);
+
+    // First two fit within 24,000 chars; the third would push over, so it's dropped.
+    expect(contextText).toBe(`${block}\n\n---\n\n${block}`);
+  });
+
   it("excludes a knowledge chunk from citations but keeps its text in contextText", () => {
     const { contextText, citations } = buildContext([knowledgeChunk(), projectChunk()]);
 
