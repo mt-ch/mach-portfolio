@@ -11,15 +11,15 @@ export {
 } from "./projects";
 export type {
   About,
+  ContentBlock,
   ExperienceEntry,
   ExperienceRole,
   FeaturedProjectListItem,
-  ImageStoryBlock,
+  ImageContentBlock,
   OtherProjectListItem,
   PortableTextBlock,
   ProjectDetail,
   ProjectForIndex,
   ProjectListItem,
-  StoryBlock,
-  TextStoryBlock,
+  TextContentBlock,
 } from "./types";

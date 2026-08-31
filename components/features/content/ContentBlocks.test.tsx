@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { ProjectDetail } from "@/lib/sanity";
 
-import { ProjectStory } from "./ProjectStory";
+import { ContentBlocks } from "./ContentBlocks";
 
 vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) => (
@@ -49,14 +49,14 @@ function imageBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[n
   } as StoryBlocks[number];
 }
 
-describe("ProjectStory", () => {
+describe("ContentBlocks", () => {
   it("renders nothing when given an empty block array", () => {
-    const { container } = render(<ProjectStory blocks={[]} />);
+    const { container } = render(<ContentBlocks blocks={[]} />);
     expect(container).toBeEmptyDOMElement();
   });
 
   it("renders nothing when given null blocks", () => {
-    const { container } = render(<ProjectStory blocks={null} />);
+    const { container } = render(<ContentBlocks blocks={null} />);
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -84,7 +84,7 @@ describe("ProjectStory", () => {
       ],
     });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     expect(screen.getByRole("heading", { name: "A Heading" })).toBeInTheDocument();
     expect(screen.getByText("bold")).toHaveProperty("tagName", "STRONG");
@@ -95,7 +95,7 @@ describe("ProjectStory", () => {
   it("renders a Text Block's optional block-level heading", () => {
     const block = textBlock({ heading: "Section Title" });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     expect(screen.getByRole("heading", { name: "Section Title" })).toBeInTheDocument();
   });
@@ -103,7 +103,7 @@ describe("ProjectStory", () => {
   it("omits the block-level heading when not set", () => {
     const block = textBlock();
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
   });
@@ -114,7 +114,7 @@ describe("ProjectStory", () => {
       layout: "two-column-split",
     });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     expect(screen.getByRole("heading", { name: "Split Heading" })).toBeInTheDocument();
     expect(screen.getByText("Hello world.")).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe("ProjectStory", () => {
   it("renders a two-column-split Text Block's body even when no heading is set", () => {
     const block = textBlock({ layout: "two-column-split" });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     expect(screen.getByText("Hello world.")).toBeInTheDocument();
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("ProjectStory", () => {
   it("defaults to one-column layout and renders unchanged when no layout is set", () => {
     const block = textBlock({ heading: "Untouched" });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     expect(screen.getByRole("heading", { name: "Untouched" })).toBeInTheDocument();
     expect(screen.getByText("Hello world.")).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe("ProjectStory", () => {
   it("renders a full-layout Image Block with one image and its alt text", () => {
     const block = imageBlock({ layout: "full" });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     const images = screen.getAllByRole("img");
     expect(images).toHaveLength(1);
@@ -161,7 +161,7 @@ describe("ProjectStory", () => {
       },
     });
 
-    render(<ProjectStory blocks={[block]} />);
+    render(<ContentBlocks blocks={[block]} />);
 
     const images = screen.getAllByRole("img");
     expect(images).toHaveLength(2);
@@ -171,10 +171,10 @@ describe("ProjectStory", () => {
 
   it("renders a caption when present and omits it when absent", () => {
     const withCaption = imageBlock({ caption: "A screenshot" });
-    const { rerender } = render(<ProjectStory blocks={[withCaption]} />);
+    const { rerender } = render(<ContentBlocks blocks={[withCaption]} />);
     expect(screen.getByText("A screenshot")).toBeInTheDocument();
 
-    rerender(<ProjectStory blocks={[imageBlock({ caption: undefined })]} />);
+    rerender(<ContentBlocks blocks={[imageBlock({ caption: undefined })]} />);
     expect(screen.queryByText("A screenshot")).not.toBeInTheDocument();
   });
 
@@ -202,7 +202,7 @@ describe("ProjectStory", () => {
       ],
     });
 
-    render(<ProjectStory blocks={[first, second]} />);
+    render(<ContentBlocks blocks={[first, second]} />);
     const firstEl = screen.getByText("First block");
     const secondEl = screen.getByText("Second block");
     expect(
@@ -214,8 +214,8 @@ describe("ProjectStory", () => {
     const empty = textBlock({ _key: "empty", content: [] });
     const image = imageBlock({ _key: "second" });
 
-    const { container: withEmpty } = render(<ProjectStory blocks={[empty, image]} />);
-    const { container: withoutEmpty } = render(<ProjectStory blocks={[image]} />);
+    const { container: withEmpty } = render(<ContentBlocks blocks={[empty, image]} />);
+    const { container: withoutEmpty } = render(<ContentBlocks blocks={[image]} />);
 
     expect(withEmpty.textContent).toBe(withoutEmpty.textContent);
     expect(withEmpty.querySelectorAll("img")).toHaveLength(1);
@@ -225,8 +225,8 @@ describe("ProjectStory", () => {
     const text = textBlock({ _key: "first" });
     const empty = imageBlock({ _key: "empty", image: { _type: "image", asset: undefined, alt: "" } });
 
-    const { container: withEmpty } = render(<ProjectStory blocks={[text, empty]} />);
-    const { container: withoutEmpty } = render(<ProjectStory blocks={[text]} />);
+    const { container: withEmpty } = render(<ContentBlocks blocks={[text, empty]} />);
+    const { container: withoutEmpty } = render(<ContentBlocks blocks={[text]} />);
 
     expect(withEmpty.textContent).toBe(withoutEmpty.textContent);
     expect(withEmpty.querySelectorAll("img")).toHaveLength(0);

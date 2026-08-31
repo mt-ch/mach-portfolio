@@ -1,9 +1,9 @@
 import { toPlainText } from "@/lib/sanity/portableText";
-import type { ImageStoryBlock, PortableTextBlock, StoryBlock } from "@/lib/sanity";
+import type { ContentBlock, ImageContentBlock, PortableTextBlock } from "@/lib/sanity";
 
 export { toPlainText };
 
-function imageBlockText(block: ImageStoryBlock): string {
+function imageBlockText(block: ImageContentBlock): string {
   return [block.caption, block.image?.alt, block.secondImage?.alt]
     .filter((text): text is string => !!text)
     .join(" ");
@@ -14,7 +14,7 @@ function imageBlockText(block: ImageStoryBlock): string {
 // below can run over it unchanged. Each Text Block's `content` is unwrapped
 // in place; an Image Block folds its caption/alt text in as a plain block at
 // its position, contributing nothing when both are empty.
-export function flattenStory(story: StoryBlock[] | null | undefined): PortableTextBlock[] {
+export function flattenStory(story: ContentBlock[] | null | undefined): PortableTextBlock[] {
   if (!story) return [];
   return story.flatMap((block) => {
     if (block._type === "textBlock") return block.content;
