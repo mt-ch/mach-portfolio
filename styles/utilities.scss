@@ -82,6 +82,28 @@
     line-height: var(--leading-code);
     letter-spacing: var(--tracking-code);
   }
+
+  // Block spacing for the Markdown-rendered chat assistant answer. Only
+  // paragraphs and unordered lists render (see ChatMarkdownAnswer); an
+  // ordered list is unwrapped to bare <li> children, so style those too.
+  .chat-markdown {
+    > * + * {
+      margin-top: var(--space-sm);
+    }
+
+    ul {
+      list-style: disc;
+    }
+
+    li {
+      margin-left: var(--space-md);
+      list-style: disc;
+    }
+
+    li + li {
+      margin-top: var(--space-2xs);
+    }
+  }
 }
 
 
