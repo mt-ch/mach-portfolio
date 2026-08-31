@@ -162,29 +162,71 @@ describe("chunkProject", () => {
 });
 
 describe("chunkExperience", () => {
-  it("templates company/title/dates and marks current roles as present", () => {
+  it("folds every role under the company into a single corpus entry", () => {
     const entry: ExperienceEntry = {
       _id: "exp-1",
       company: "Acme",
-      title: "Senior Engineer",
-      startDate: "2022-01-01",
-      endDate: null,
-      summary: null,
+      companyUrl: "https://acme.example",
       logo: null,
       order: 0,
-      isCurrent: true,
+      roles: [
+        {
+          _key: "r1",
+          title: "Senior Engineer",
+          startDate: "2022-01-01",
+          endDate: null,
+          summary: null,
+          isCurrent: true,
+        },
+        {
+          _key: "r2",
+          title: "Engineer",
+          startDate: "2020-01-01",
+          endDate: "2022-01-01",
+          summary: null,
+          isCurrent: false,
+        },
+      ],
     };
 
     const chunks = chunkExperience(entry);
 
     expect(chunks).toHaveLength(1);
     expect(chunks[0].text).toContain("Company: Acme");
+    expect(chunks[0].text).toContain("Role: Senior Engineer");
     expect(chunks[0].text).toContain("Dates: 2022-01-01 – present");
+    expect(chunks[0].text).toContain("Role: Engineer");
+    expect(chunks[0].text).toContain("Dates: 2020-01-01 – 2022-01-01");
     expect(chunks[0].metadata).toMatchObject({
       documentType: "experience",
       documentId: "exp-1",
+      company: "Acme",
+      title: "Senior Engineer",
+      roleTitles: ["Senior Engineer", "Engineer"],
       isCurrent: true,
     });
+  });
+
+  it("marks a company with only past roles as not current", () => {
+    const entry: ExperienceEntry = {
+      _id: "exp-2",
+      company: "Globex",
+      companyUrl: null,
+      logo: null,
+      order: 1,
+      roles: [
+        {
+          _key: "r1",
+          title: "Contractor",
+          startDate: "2018-01-01",
+          endDate: "2019-01-01",
+          summary: null,
+          isCurrent: false,
+        },
+      ],
+    };
+
+    expect(chunkExperience(entry)[0].metadata).toMatchObject({ isCurrent: false });
   });
 });
 

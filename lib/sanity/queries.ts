@@ -102,12 +102,15 @@ export const experienceQuery = defineQuery(`
   *[_type == "experience"] | order(order asc) {
     _id,
     company,
-    title,
-    startDate,
-    endDate,
-    summary,
+    companyUrl,
     logo,
-    order
+    order,
+    roles[] {
+      title,
+      startDate,
+      endDate,
+      summary
+    }
   }
 `);
 
@@ -115,12 +118,15 @@ export const experienceEntryByIdQuery = defineQuery(`
   *[_type == "experience" && _id == $id][0] {
     _id,
     company,
-    title,
-    startDate,
-    endDate,
-    summary,
+    companyUrl,
     logo,
-    order
+    order,
+    roles[] {
+      title,
+      startDate,
+      endDate,
+      summary
+    }
   }
 `);
 
