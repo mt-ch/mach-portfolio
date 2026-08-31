@@ -5,9 +5,9 @@ import type { ProjectDetail } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
 
 // The shared Content Block renderer: Text Block + Image Block rendering, layout
-// handling, empty-block filtering, and inter-block spacing. Project Story is the
-// current caller; any future Content Block array (e.g. the homepage "How I work"
-// section) renders through this same path. The block shape is derived from the
+// handling, empty-block filtering, and inter-block spacing. Project Story and
+// the homepage "How I work" section are the current callers; any future Content
+// Block array renders through this same path. The block shape is derived from the
 // generated Project `story` type since that is the only generated Content Block
 // array and carries the image-asset detail the renderer needs.
 type ContentBlockList = NonNullable<ProjectDetail["story"]>;
@@ -134,6 +134,13 @@ function ImageBlockView({ block }: { block: ImageBlock }) {
 function hasRenderableContent(block: ContentBlockItem): boolean {
   if (block._type === "textBlock") return !!block.content && block.content.length > 0;
   return !!(block.image?.asset || block.secondImage?.asset);
+}
+
+// Whether a Content Block array would render anything. Callers that wrap
+// ContentBlocks in their own chrome (e.g. HowIWorkSection inside HomeSection)
+// use this to omit that chrome for an empty or absent array.
+export function hasRenderableBlocks(blocks: ContentBlockList | null | undefined): boolean {
+  return !!blocks?.some(hasRenderableContent);
 }
 
 function gapClassBetween(previous: ContentBlockItem["_type"], current: ContentBlockItem["_type"]): string {

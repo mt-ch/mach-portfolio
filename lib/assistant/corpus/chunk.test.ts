@@ -243,6 +243,7 @@ describe("chunkAbout", () => {
       resumeUrl: null,
       email: "matt@example.com",
       socialLinks: null,
+      howIWork: null,
     };
 
     const chunks = chunkAbout(about);

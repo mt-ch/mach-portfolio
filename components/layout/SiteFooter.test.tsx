@@ -23,6 +23,7 @@ const about: About = {
       url: "https://linkedin.com/in/matt",
     },
   ],
+  howIWork: null,
 };
 
 describe("SiteFooter", () => {
