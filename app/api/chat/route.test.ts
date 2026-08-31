@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { embedTextsMock, queryChunksMock, streamMock, createMock, checkRateLimitsMock } =
@@ -208,7 +210,7 @@ describe("POST /api/chat", () => {
     ]);
   });
 
-  it("discards a generated answer and returns the refusal event when it isn't traceable to the retrieved context", async () => {
+  it("does not run a post-generation grounding check — an answer that drifts off-context still streams through", async () => {
     streamMock.mockReturnValue(
       fakeStream(["The weather today is sunny and warm in Paris."]),
     );
@@ -217,11 +219,15 @@ describe("POST /api/chat", () => {
     const events = await readEvents(response);
 
     expect(response.status).toBe(200);
-    expect(events).toHaveLength(1);
-    expect(events[0].event).toBe("refusal");
+    expect(events[0]).toEqual({
+      event: "delta",
+      data: { text: "The weather today is sunny and warm in Paris." },
+    });
+    expect(events[events.length - 1].event).toBe("citations");
+    expect(events.some((e) => e.event === "refusal")).toBe(false);
   });
 
-  it("still returns citations for a generation call that fails mid-stream but yields grounded partial text", async () => {
+  it("closes the stream with no error or citations when generation fails after at least one delta, keeping the partial text", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     streamMock.mockReturnValue({
       [Symbol.asyncIterator]: async function* () {
@@ -237,12 +243,40 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     const events = await readEvents(response);
-    expect(events[0]).toEqual({
-      event: "delta",
-      data: { text: "Yes, Collab Canvas used distributed systems." },
-    });
-    expect(events[events.length - 1].event).toBe("citations");
+    expect(events).toEqual([
+      {
+        event: "delta",
+        data: { text: "Yes, Collab Canvas used distributed systems." },
+      },
+    ]);
     errorSpy.mockRestore();
+  });
+
+  it("streams deltas live rather than buffering the whole answer first", async () => {
+    let generatorAdvanced = 0;
+    streamMock.mockReturnValue({
+      [Symbol.asyncIterator]: async function* () {
+        generatorAdvanced += 1;
+        yield { type: "content_block_delta", delta: { type: "text_delta", text: "one " } };
+        generatorAdvanced += 1;
+        yield { type: "content_block_delta", delta: { type: "text_delta", text: "two" } };
+      },
+    });
+
+    const response = await POST(makeRequest({ message: "what has he built?" }));
+    const events = await readEvents(response);
+
+    expect(generatorAdvanced).toBe(2);
+    expect(events.filter((e) => e.event === "delta")).toEqual([
+      { event: "delta", data: { text: "one " } },
+      { event: "delta", data: { text: "two" } },
+    ]);
+  });
+
+  it("never imports the post-generation grounding check into the route", async () => {
+    const source = await readFile("app/api/chat/route.ts", "utf8");
+    expect(source).not.toContain("citationCheck");
+    expect(source).not.toContain("isAnswerGrounded");
   });
 
   it("emits an error event when the generation call fails outright, instead of a blank success", async () => {
