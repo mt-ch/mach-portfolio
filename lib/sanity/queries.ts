@@ -136,6 +136,24 @@ export const experienceEntryByIdQuery = defineQuery(`
   }
 `);
 
+export const knowledgeEntryByIdQuery = defineQuery(`
+  *[_type == "knowledgeBaseEntry" && _id == $id][0] {
+    _id,
+    title,
+    body,
+    tags
+  }
+`);
+
+export const knowledgeEntriesForIndexQuery = defineQuery(`
+  *[_type == "knowledgeBaseEntry"] {
+    _id,
+    title,
+    body,
+    tags
+  }
+`);
+
 export const aboutQuery = defineQuery(`
   *[_type == "about"][0] {
     _id,
