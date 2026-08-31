@@ -55,7 +55,7 @@ describe("useChatConversation", () => {
     const first = renderHook(() => useChatConversation());
     act(() => first.result.current.send("what has he built?"));
     await act(async () => {
-      push("citations", { citations: [] });
+      push("citations", { project: null });
       close();
     });
     await waitFor(() => expect(first.result.current.isThinking).toBe(false));
@@ -71,7 +71,7 @@ describe("useChatConversation", () => {
     const { result } = renderHook(() => useChatConversation());
     act(() => result.current.send("what has he built?"));
     await act(async () => {
-      push("citations", { citations: [] });
+      push("citations", { project: null });
       close();
     });
     await waitFor(() => expect(result.current.isThinking).toBe(false));
@@ -99,7 +99,7 @@ describe("useChatConversation", () => {
     expect(result.current.messages[1]).toMatchObject({
       role: "assistant",
       text: "",
-      citations: [],
+      projectReference: null,
     });
   });
 
@@ -134,18 +134,23 @@ describe("useChatConversation", () => {
     );
   });
 
-  it("on citations event, sets citations on the assistant message and clears isThinking", async () => {
+  it("on citations event, sets the project reference on the assistant message and clears isThinking", async () => {
     const { response, push, close } = controllableResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
+    const reference = {
+      slug: "collab-canvas",
+      title: "Collab Canvas",
+      summary: "Real-time collaborative canvas under load.",
+      imageUrl: null,
+    };
+
     const { result } = renderHook(() => useChatConversation());
-    act(() => result.current.send("what has he built?"));
+    act(() => result.current.send("tell me about Collab Canvas"));
 
     await act(async () => {
       push("delta", { text: "Collab Canvas used distributed systems." });
-      push("citations", {
-        citations: [{ label: "Collab Canvas", href: "/projects/collab-canvas" }],
-      });
+      push("citations", { project: reference });
       close();
     });
 
@@ -154,7 +159,28 @@ describe("useChatConversation", () => {
       id: expect.any(String),
       role: "assistant",
       text: "Collab Canvas used distributed systems.",
-      citations: [{ label: "Collab Canvas", href: "/projects/collab-canvas" }],
+      projectReference: reference,
+    });
+  });
+
+  it("on a citations event with no project, leaves the assistant message with a null project reference", async () => {
+    const { response, push, close } = controllableResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    const { result } = renderHook(() => useChatConversation());
+    act(() => result.current.send("how do you like to work?"));
+
+    await act(async () => {
+      push("delta", { text: "Closely and early." });
+      push("citations", { project: null });
+      close();
+    });
+
+    await waitFor(() => expect(result.current.isThinking).toBe(false));
+    expect(result.current.messages[1]).toMatchObject({
+      role: "assistant",
+      text: "Closely and early.",
+      projectReference: null,
     });
   });
 
@@ -263,7 +289,7 @@ describe("useChatConversation", () => {
 
     await act(async () => {
       retryStream.push("delta", { text: "Collab Canvas." });
-      retryStream.push("citations", { citations: [] });
+      retryStream.push("citations", { project: null });
       retryStream.close();
     });
 
@@ -272,7 +298,7 @@ describe("useChatConversation", () => {
       id: errorId,
       role: "assistant",
       text: "Collab Canvas.",
-      citations: [],
+      projectReference: null,
     });
   });
 
@@ -303,7 +329,7 @@ describe("useChatConversation", () => {
     const { result } = renderHook(() => useChatConversation());
     act(() => result.current.send("what has he built?"));
     await act(async () => {
-      push("citations", { citations: [] });
+      push("citations", { project: null });
       close();
     });
     await waitFor(() => expect(result.current.messages).toHaveLength(2));
@@ -323,7 +349,7 @@ describe("useChatConversation", () => {
     act(() => first.result.current.send("what has he built?"));
     await act(async () => {
       push("delta", { text: "Collab Canvas." });
-      push("citations", { citations: [] });
+      push("citations", { project: null });
       close();
     });
     await waitFor(() => expect(first.result.current.isThinking).toBe(false));
@@ -375,7 +401,7 @@ describe("useChatConversation", () => {
     expect(firstBody.message).toBe("has he worked with distributed systems?");
 
     await act(async () => {
-      firstStream.push("citations", { citations: [] });
+      firstStream.push("citations", { project: null });
       firstStream.close();
     });
     await waitFor(() => expect(result.current.isThinking).toBe(false));

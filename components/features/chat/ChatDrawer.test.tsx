@@ -123,7 +123,7 @@ describe("ChatDrawer", () => {
     expect(screen.queryByTestId("assistant-bubble")).not.toBeInTheDocument();
   });
 
-  it("still renders the assistant bubble once a response completes with no text and no citations", async () => {
+  it("still renders the assistant bubble once a response completes with no text and no project reference", async () => {
     const user = userEvent.setup();
     const { response, push, close } = makeStreamResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
@@ -132,7 +132,7 @@ describe("ChatDrawer", () => {
     await openAndSend(user, "what has he built?");
 
     await act(async () => {
-      push("citations", { citations: [] });
+      push("citations", { project: null });
       close();
     });
 
@@ -162,29 +162,55 @@ describe("ChatDrawer", () => {
     expect(screen.queryByTestId("assistant-bubble")).not.toBeInTheDocument();
   });
 
-  it("renders a grounded answer with citation pills, distinct from the typing state", async () => {
+  it("renders an answer with an inline Project reference card, distinct from the typing state", async () => {
     const user = userEvent.setup();
     const { response, push, close } = makeStreamResponse();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 
     render(<Wrapper />);
-    await openAndSend(user, "has he worked with distributed systems?");
+    await openAndSend(user, "tell me about Collab Canvas");
 
     await act(async () => {
-      push("delta", { text: "Yes, at Acme Corp." });
+      push("delta", { text: "I built Collab Canvas." });
       push("citations", {
-        citations: [{ label: "Experience — Acme Corp", href: "/experience/acme-corp" }],
+        project: {
+          slug: "collab-canvas",
+          title: "Collab Canvas",
+          summary: "Real-time collaborative canvas under load.",
+          imageUrl: null,
+        },
       });
       close();
     });
 
     await waitFor(() =>
-      expect(screen.getByRole("link", { name: "Experience — Acme Corp" })).toBeInTheDocument(),
+      expect(screen.getByRole("link", { name: /Collab Canvas/ })).toHaveAttribute(
+        "href",
+        "/projects/collab-canvas",
+      ),
     );
-    expect(screen.getByText("Yes, at Acme Corp.")).toBeInTheDocument();
+    expect(screen.getByText("I built Collab Canvas.")).toBeInTheDocument();
     expect(
       screen.queryByRole("status", { name: /assistant is typing/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders no reference card for a general answer", async () => {
+    const user = userEvent.setup();
+    const { response, push, close } = makeStreamResponse();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+
+    render(<Wrapper />);
+    await openAndSend(user, "how do you like to work?");
+
+    await act(async () => {
+      push("delta", { text: "Closely and early." });
+      push("citations", { project: null });
+      close();
+    });
+
+    await waitFor(() => expect(screen.getByText("Closely and early.")).toBeInTheDocument());
+    expect(screen.queryByTestId("project-reference")).not.toBeInTheDocument();
   });
 
   it("renders a visually distinct refusal state for out-of-scope questions", async () => {
@@ -214,7 +240,7 @@ describe("ChatDrawer", () => {
       "chat:history",
       JSON.stringify([
         { id: "1-user", role: "user", text: "what has he built?" },
-        { id: "1-assistant", role: "assistant", text: "Collab Canvas.", citations: [] },
+        { id: "1-assistant", role: "assistant", text: "Collab Canvas.", projectReference: null },
       ]),
     );
 
@@ -259,7 +285,7 @@ describe("ChatDrawer", () => {
 
     await act(async () => {
       retryStream.push("delta", { text: "Collab Canvas." });
-      retryStream.push("citations", { citations: [] });
+      retryStream.push("citations", { project: null });
       retryStream.close();
     });
 
@@ -298,7 +324,7 @@ describe("ChatDrawer", () => {
     // finish first.
     await act(async () => {
       push("delta", { text: "Collab Canvas." });
-      push("citations", { citations: [] });
+      push("citations", { project: null });
       close();
     });
     await waitFor(() => expect(screen.getByText("Collab Canvas.")).toBeInTheDocument());

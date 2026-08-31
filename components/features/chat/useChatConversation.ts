@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import type { ChatCitation } from "@/lib/assistant/chat/types";
+import type { ProjectReference } from "@/lib/assistant/chat/types";
 
 import { errorMessageFor, type ChatErrorCause } from "./chatErrors";
 import {
@@ -55,10 +55,12 @@ export function useChatConversation() {
     [applyUpdate],
   );
 
-  const setDeltaCitations = useCallback(
-    (id: string, citations: ChatCitation[]) => {
+  const setProjectReference = useCallback(
+    (id: string, projectReference: ProjectReference | null) => {
       applyUpdate((prev) =>
-        prev.map((m) => (m.id === id && m.role === "assistant" ? { ...m, citations } : m)),
+        prev.map((m) =>
+          m.id === id && m.role === "assistant" ? { ...m, projectReference } : m,
+        ),
       );
     },
     [applyUpdate],
@@ -141,7 +143,7 @@ export function useChatConversation() {
                 if (eventName === "delta") {
                   appendDelta(assistantId, data.text as string);
                 } else if (eventName === "citations") {
-                  setDeltaCitations(assistantId, data.citations as ChatCitation[]);
+                  setProjectReference(assistantId, data.project as ProjectReference | null);
                   setIsThinking(false);
                 } else if (eventName === "refusal") {
                   replaceWithRefusal(assistantId, data.message as string);
@@ -169,7 +171,7 @@ export function useChatConversation() {
         }
       })();
     },
-    [appendDelta, setDeltaCitations, replaceWithRefusal, showError],
+    [appendDelta, setProjectReference, replaceWithRefusal, showError],
   );
 
   const send = useCallback(
@@ -187,7 +189,7 @@ export function useChatConversation() {
       applyUpdate((prev) => [
         ...prev,
         { id: userId, role: "user", text: trimmed },
-        { id: assistantId, role: "assistant", text: "", citations: [] },
+        { id: assistantId, role: "assistant", text: "", projectReference: null },
       ]);
       setIsThinking(true);
 
@@ -209,7 +211,7 @@ export function useChatConversation() {
       const historyTurns = toHistoryTurns(messagesRef.current.slice(0, index));
 
       applyUpdate((prev) =>
-        prev.map((m): ChatMessage => (m.id === id ? { id, role: "assistant", text: "", citations: [] } : m)),
+        prev.map((m): ChatMessage => (m.id === id ? { id, role: "assistant", text: "", projectReference: null } : m)),
       );
       setIsThinking(true);
 
