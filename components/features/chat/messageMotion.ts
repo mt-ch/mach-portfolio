@@ -92,8 +92,39 @@ export function useMessageMotion() {
 
   return {
     reduced,
+    durationBase,
     durationFast,
     variantFor,
     citationTransition: crossfadeTransition,
   };
+}
+
+export type ConversationTransitionDirection = "forward" | "reset";
+
+/**
+ * Landing <-> conversation cross-dissolve (issue #136): a plain opacity
+ * dissolve, never a translate, so the bottom-anchored landing layout and the
+ * top-anchored conversation layout never appear to slide past each other.
+ *
+ * The variants are dynamic (functions of a `custom` direction) rather than a
+ * static object, because AnimatePresence freezes a removed child's *props*
+ * at whatever they were the last time it actually rendered — an exiting pane
+ * never sees a later render's values. `custom` is the one prop AnimatePresence
+ * *does* keep pushing to exiting children, specifically so a variant function
+ * can react to it — which is what lets the exiting pane pick up the same
+ * fast/slow duration as the pane entering alongside it, instead of replaying
+ * whatever direction was current the last time it was the visible pane.
+ */
+export function useConversationDissolve(reduced: boolean, durationBase: number, durationFast: number): { variants: Variants } {
+  function transitionFor(direction: ConversationTransitionDirection): Transition {
+    const durationMs = reduced || direction === "reset" ? durationFast : durationBase;
+    return { duration: durationMs / 1000, ease: EASE_OUT };
+  }
+
+  const variants: Variants = {
+    hidden: (direction: ConversationTransitionDirection) => ({ opacity: 0, transition: transitionFor(direction) }),
+    visible: (direction: ConversationTransitionDirection) => ({ opacity: 1, transition: transitionFor(direction) }),
+  };
+
+  return { variants };
 }

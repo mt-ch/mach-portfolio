@@ -3,12 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ArrowUpIcon, RotateCwIcon, XIcon } from "lucide-react";
-import { AnimatePresence, motion, usePresence } from "motion/react";
+import { AnimatePresence, motion, useIsPresent, usePresence } from "motion/react";
 
 import { ChatLoadingIndicator } from "./ChatLoadingIndicator";
 import { ChatMessageBubble } from "./ChatMessageBubble";
 import { drawerTransitionMs } from "./motionTiming";
-import { type MessageMotionVariant, useMessageMotion } from "./messageMotion";
+import {
+  type ConversationTransitionDirection,
+  type MessageMotionVariant,
+  useConversationDissolve,
+  useMessageMotion,
+} from "./messageMotion";
 import { SUGGESTED_QUESTIONS } from "./suggestedQuestions";
 import { isEmptyAssistantMessage } from "./types";
 import { useChatConversation } from "./useChatConversation";
@@ -25,7 +30,7 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
   // this component mounted through its exit so the CSS slide-out is visible.
   const [isPresent, safeToRemove] = usePresence();
   const { messages, isThinking, hasStarted, send, retry, reset } = useChatConversation();
-  const { reduced, variantFor } = useMessageMotion();
+  const { reduced, durationBase, durationFast, variantFor } = useMessageMotion();
   const [draft, setDraft] = useState("");
   // Snapshot ids present when this drawer instance mounts so restored
   // history never plays an entrance animation on open.
@@ -45,6 +50,18 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
     setWasPresent(isPresent);
     setIsVisible(isPresent);
   }
+
+  // Landing <-> conversation cross-dissolve (issue #136): asking the first
+  // question vs. resetting pick different fade durations (see
+  // useConversationDissolve). Detected the same way wasPresent is above:
+  // compare against the previous render's value directly during render.
+  const [wasStarted, setWasStarted] = useState(hasStarted);
+  const [conversationDirection, setConversationDirection] = useState<ConversationTransitionDirection>("forward");
+  if (hasStarted !== wasStarted) {
+    setWasStarted(hasStarted);
+    setConversationDirection(hasStarted ? "forward" : "reset");
+  }
+  const conversationDissolve = useConversationDissolve(reduced, durationBase, durationFast);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setIsVisible(true));
@@ -187,59 +204,72 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col justify-between">
-            <div ref={messagesRef} className="flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto p-md">
-              {hasStarted ? (
-                <AnimatePresence initial={false}>
-                  {messages
-                    // Hide only the in-flight placeholder — a message that
-                    // finished with genuinely empty content (no delta, no
-                    // citations) still renders once isThinking clears, so
-                    // it never just vanishes with no feedback.
-                    .filter(
-                      (message, index) =>
-                        !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)),
-                    )
-                    .map((message) => (
-                      <ChatMessageBubble
-                        key={`${message.id}-${message.role}`}
-                        message={message}
-                        motionVariant={motionVariantForMessage(message)}
-                        onRetry={retry}
-                        retryDisabled={isThinking}
-                      />
-                    ))}
-                  {pendingAssistantId && (
-                    <motion.div
-                      key={`loading-${pendingAssistantId}`}
-                      variants={loadingMotion.variants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      transition={loadingMotion.transition}
-                    >
-                      <ChatLoadingIndicator reducedMotion={reduced} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              ) : (
-                <div className="flex min-h-full flex-col justify-end gap-md">
-                  <p className="type-body font-medium text-black dark:text-white">Hey, ask away.</p>
-                  <div className="flex flex-col gap-md">
-                    {SUGGESTED_QUESTIONS.map((question) => (
-                      <button
-                        key={question}
-                        type="button"
-                        onClick={() => onSuggestedQuestion(question)}
-                        disabled={isThinking}
-                        className="inline-flex items-start gap-xs text-left text-grey-500 dark:text-grey-400 disabled:opacity-40 hover:text-brand transition-all duration-200"
-                        data-cursor="link"
-                      >
-                        <span className="type-small">{question}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="relative min-h-0 flex-1">
+              <AnimatePresence initial={false} custom={conversationDirection}>
+                {hasStarted ? (
+                  <CrossDissolvePane
+                    key="conversation"
+                    variants={conversationDissolve.variants}
+                    scrollRef={messagesRef}
+                    className="flex flex-col gap-lg p-md"
+                  >
+                    <AnimatePresence initial={false}>
+                      {messages
+                        // Hide only the in-flight placeholder — a message that
+                        // finished with genuinely empty content (no delta, no
+                        // citations) still renders once isThinking clears, so
+                        // it never just vanishes with no feedback.
+                        .filter(
+                          (message, index) =>
+                            !(isThinking && index === messages.length - 1 && isEmptyAssistantMessage(message)),
+                        )
+                        .map((message) => (
+                          <ChatMessageBubble
+                            key={`${message.id}-${message.role}`}
+                            message={message}
+                            motionVariant={motionVariantForMessage(message)}
+                            onRetry={retry}
+                            retryDisabled={isThinking}
+                          />
+                        ))}
+                      {pendingAssistantId && (
+                        <motion.div
+                          key={`loading-${pendingAssistantId}`}
+                          variants={loadingMotion.variants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          transition={loadingMotion.transition}
+                        >
+                          <ChatLoadingIndicator reducedMotion={reduced} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CrossDissolvePane>
+                ) : (
+                  <CrossDissolvePane
+                    key="landing"
+                    variants={conversationDissolve.variants}
+                    className="flex min-h-full flex-col justify-end gap-md p-md"
+                  >
+                    <p className="type-body font-medium text-black dark:text-white">Hey, ask away.</p>
+                    <div className="flex flex-col gap-md">
+                      {SUGGESTED_QUESTIONS.map((question) => (
+                        <button
+                          key={question}
+                          type="button"
+                          onClick={() => onSuggestedQuestion(question)}
+                          disabled={isThinking}
+                          className="inline-flex items-start gap-xs text-left text-grey-500 dark:text-grey-400 disabled:opacity-40 hover:text-brand transition-all duration-200"
+                          data-cursor="link"
+                        >
+                          <span className="type-small">{question}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </CrossDissolvePane>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="px-md pb-md">
@@ -281,5 +311,49 @@ export function ChatDrawer({ mode, onClose }: ChatDrawerProps) {
         </aside>
       </div>
     </>
+  );
+}
+
+interface CrossDissolvePaneProps {
+  variants: ReturnType<typeof useConversationDissolve>["variants"];
+  // Only the conversation pane needs to be found again for auto-scroll.
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
+  className: string;
+  children: React.ReactNode;
+}
+
+// One half of the landing/conversation cross-dissolve (issue #136). Always
+// absolutely positioned with its own scroll, rather than only while its
+// counterpart is also mounted: an exiting pane's *props* freeze at whatever
+// they were the last time AnimatePresence actually rendered it, so a flag
+// flipped only at swap-start would already be stale by the time this pane is
+// the one leaving. Overlaying unconditionally sidesteps that entirely, and
+// giving each pane its own overflow-y-auto (rather than the shared
+// scroll-area div) means a long conversation still scrolls normally with no
+// dependency on swap state.
+function CrossDissolvePane({ variants, scrollRef, className, children }: CrossDissolvePaneProps) {
+  // useIsPresent, not usePresence: usePresence's subscription opts the
+  // component out of AnimatePresence's automatic unmount-after-exit, which
+  // would leave the outgoing pane sitting in the DOM at opacity 0 forever.
+  const isPresent = useIsPresent();
+  return (
+    <motion.div
+      ref={scrollRef}
+      variants={variants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      style={{ pointerEvents: isPresent ? "auto" : "none" }}
+      // aria-hidden and inert together take the outgoing pane out of the
+      // accessibility tree and out of tab order the moment it starts
+      // leaving, so a focused Retry button (say) can't still be reached or
+      // activated by keyboard/AT while it's mid-fade over a conversation
+      // that's already been cleared.
+      aria-hidden={!isPresent}
+      inert={!isPresent}
+      className={`absolute inset-0 overflow-y-auto ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 }
