@@ -1,4 +1,5 @@
 import type { About, ExperienceEntry, PortableTextBlock, ProjectForIndex } from "@/lib/sanity";
+import { urlFor } from "@/lib/sanity/image";
 
 import { flattenStory, splitAtHeadings } from "./portableText";
 import {
@@ -41,6 +42,10 @@ export function chunkProject(project: ProjectForIndex): CorpusChunk[] {
     skills: project.skills ?? [],
     impact: project.impact ?? [],
     dateCompleted: project.dateCompleted ?? null,
+    summary: project.summary,
+    imageUrl: project.coverImage
+      ? urlFor(project.coverImage).width(480).height(270).fit("crop").auto("format").url()
+      : null,
   };
   return buildChunks(
     project._id,

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { About } from "@/lib/sanity";
+import type { About, ProjectForIndex } from "@/lib/sanity";
 
-import { templateAboutHeader } from "./templates";
+import { templateAboutHeader, templateProjectHeader } from "./templates";
 
 function makeAbout(overrides: Partial<About> = {}): About {
   return {
@@ -17,6 +17,24 @@ function makeAbout(overrides: Partial<About> = {}): About {
     email: "matt@example.com",
     socialLinks: null,
     howIWork: null,
+    ...overrides,
+  };
+}
+
+function makeProject(overrides: Partial<ProjectForIndex> = {}): ProjectForIndex {
+  return {
+    _id: "project-1",
+    title: "Collab Canvas",
+    slug: { current: "collab-canvas" },
+    summary: "A collaborative whiteboard.",
+    heroText: null,
+    role: null,
+    coverImage: null,
+    story: null,
+    techStack: null,
+    skills: null,
+    impact: null,
+    dateCompleted: null,
     ...overrides,
   };
 }
@@ -94,5 +112,50 @@ describe("templateAboutHeader", () => {
     const header = templateAboutHeader(makeAbout({ resumeUrl: null }));
 
     expect(header).not.toContain("Résumé:");
+  });
+});
+
+describe("templateProjectHeader", () => {
+  it("never embeds the summary line", () => {
+    const header = templateProjectHeader(makeProject());
+
+    expect(header).not.toContain("Summary:");
+    expect(header).not.toContain("A collaborative whiteboard.");
+  });
+
+  it("includes 'What it is:' from heroText when present", () => {
+    const header = templateProjectHeader(
+      makeProject({ heroText: "A real-time collaborative whiteboard." }),
+    );
+
+    expect(header).toContain("What it is: A real-time collaborative whiteboard.");
+  });
+
+  it("omits the 'What it is:' line when heroText is null", () => {
+    const header = templateProjectHeader(makeProject({ heroText: null }));
+
+    expect(header).not.toContain("What it is:");
+  });
+
+  it("does not fall back to summary when heroText is null", () => {
+    const header = templateProjectHeader(
+      makeProject({ heroText: null, summary: "A collaborative whiteboard." }),
+    );
+
+    expect(header).not.toContain("A collaborative whiteboard.");
+  });
+
+  it("includes 'Type of work:' from role when present", () => {
+    const header = templateProjectHeader(
+      makeProject({ role: "Web Development, Branding" }),
+    );
+
+    expect(header).toContain("Type of work: Web Development, Branding");
+  });
+
+  it("omits the 'Type of work:' line when role is null", () => {
+    const header = templateProjectHeader(makeProject({ role: null }));
+
+    expect(header).not.toContain("Type of work:");
   });
 });

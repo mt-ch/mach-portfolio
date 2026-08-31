@@ -10,6 +10,9 @@ function makeProject(overrides: Partial<ProjectForIndex> = {}): ProjectForIndex 
     title: "Collab Canvas",
     slug: { current: "collab-canvas" },
     summary: "A collaborative whiteboard.",
+    heroText: null,
+    role: null,
+    coverImage: null,
     story: null,
     techStack: null,
     skills: null,
@@ -43,7 +46,7 @@ describe("chunkProject", () => {
       documentType: "project",
     });
     expect(chunks[0].text).toContain("Title: Collab Canvas");
-    expect(chunks[0].text).toContain("Summary: A collaborative whiteboard.");
+    expect(chunks[0].text).not.toContain("Summary:");
     expect(chunks[0].text).toContain("Tech stack: React, Yjs");
     expect(chunks[0].text).toContain("Skills: state management");
     expect(chunks[0].text).toContain("Impact: reduced load time 40%");
@@ -71,6 +74,29 @@ describe("chunkProject", () => {
       skills: ["accessibility"],
       impact: ["led a team"],
     });
+  });
+
+  it("carries summary and a built imageUrl in metadata when a cover image is present", () => {
+    const chunks = chunkProject(
+      makeProject({
+        summary: "A collaborative whiteboard.",
+        coverImage: {
+          _type: "image",
+          asset: { _type: "reference", _ref: "image-abc123-800x600-png" },
+        },
+      }),
+    );
+
+    expect(chunks[0].metadata.summary).toBe("A collaborative whiteboard.");
+    expect(chunks[0].metadata.imageUrl).toEqual(expect.any(String));
+    expect(chunks[0].metadata.imageUrl).toContain("w=480");
+    expect(chunks[0].metadata.imageUrl).toContain("h=270");
+  });
+
+  it("sets imageUrl to null when there is no cover image", () => {
+    const chunks = chunkProject(makeProject({ coverImage: null }));
+
+    expect(chunks[0].metadata.imageUrl).toBeNull();
   });
 
   it("splits into one chunk per heading, repeating the structured-field header in each", () => {
