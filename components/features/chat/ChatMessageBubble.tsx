@@ -3,6 +3,7 @@
 import { AlertTriangleIcon, RotateCwIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { ChatMarkdownAnswer } from "./ChatMarkdownAnswer";
 import { type MessageMotionVariant, useMessageMotion } from "./messageMotion";
 import type { ChatMessage } from "./types";
 
@@ -81,7 +82,7 @@ export function ChatMessageBubble({
     return (
       <div className="flex justify-start" data-testid="assistant-bubble">
         <div className="space-y-md max-w-11/12">
-          <div className="type-small text-black dark:text-white">{message.text}</div>
+          <ChatMarkdownAnswer text={message.text} />
           <AnimatePresence initial={false}>
             {citations.length > 0 && (
               <motion.div

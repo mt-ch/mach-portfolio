@@ -36,6 +36,7 @@
     "next-sanity": "^13.2.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
     "sanity": "^6.8.0",
     "voyageai": "^0.4.0"
   },
