@@ -43,7 +43,7 @@ export default async function ProjectPage({ params }: Props) {
       <div className="bg-background">
         <SiteNav about={about} />
         <ProjectHeader project={project} />
-        <div className="flex flex-col gap-2xl pt-2xl pb-3xl mb-3xl">
+        <div className="flex flex-col gap-3xl pt-3xl pb-3xl mb-3xl lg:px-md">
           <ProjectStory blocks={project.story} />
           <OtherProjects projects={otherProjects} />
         </div>

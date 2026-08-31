@@ -16,9 +16,9 @@ export function HomeSection({
   }
 
   return (
-    <div className="px-md gap-md relative flex flex-col lg:flex-row">
-      <h2 className="type-body font-medium">[{title}]</h2>
-      <div className="gap-lg relative flex flex-col">{children}</div>
+    <div className="px-md gap-md relative grid grid-cols-1 lg:grid-cols-12">
+      <h2 className="type-body font-medium lg:col-span-5">[{title}]</h2>
+      <div className="gap-lg relative flex flex-col w-full lg:col-span-7">{children}</div>
     </div>
   );
 }

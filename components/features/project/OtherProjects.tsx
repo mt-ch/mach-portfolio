@@ -4,7 +4,7 @@ import { TransitionLink } from "@/components/features/transition/TransitionLink"
 
 export function OtherProjects({ projects }: { projects: OtherProjectListItem[] }) {
   return (
-    <div className="lg:px-md flex flex-col gap-md">
+    <div className="lg:px-md flex flex-col gap-md mt-3xl">
       <h2 className="type-subheading font-medium px-md lg:px-0">Other Projects</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-md lg:gap-sm">
         {projects.map((project) => (

@@ -67,10 +67,10 @@ const portableTextComponents: PortableTextComponents = {
 };
 
 const TEXT_CONTAINER_CLASS: Record<TextLayout, string> = {
-  "one-column": "flex flex-col gap-sm",
-  "two-column-split": "grid grid-cols-1 gap-sm sm:grid-cols-2",
-  "two-column-left": "grid grid-cols-1 gap-sm sm:grid-cols-2",
-  "two-column-right": "grid grid-cols-1 gap-sm sm:grid-cols-2",
+  "one-column": "flex flex-col gap-sm px-md lg:px-0",
+  "two-column-split": "grid grid-cols-1 gap-sm sm:grid-cols-2 px-md lg:px-0",
+  "two-column-left": "grid grid-cols-1 gap-sm sm:grid-cols-2 px-md lg:px-0",
+  "two-column-right": "grid grid-cols-1 gap-sm sm:grid-cols-2 px-md lg:px-0",
 };
 
 function TextBlockView({ block }: { block: TextBlock }) {
@@ -199,7 +199,7 @@ function gapClassBetween(
   current: ContentBlockItem["_type"],
 ): string {
   return previous === "textBlock" || current === "textBlock"
-    ? "mt-xl"
+    ? "mt-3xl"
     : "mt-sm";
 }
 
