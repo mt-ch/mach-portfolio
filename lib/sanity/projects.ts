@@ -5,6 +5,7 @@ import {
   projectBySlugQuery,
   projectForIndexByIdQuery,
   projectsForIndexQuery,
+  projectsForSitemapQuery,
   projectsQuery,
 } from "./queries";
 import type {
@@ -13,6 +14,7 @@ import type {
   ProjectDetail,
   ProjectForIndex,
   ProjectListItem,
+  ProjectSitemapItem,
 } from "./types";
 
 export async function getFeaturedProjects(): Promise<FeaturedProjectListItem[]> {
@@ -33,6 +35,10 @@ export async function getOtherProjects(
   currentId: string,
 ): Promise<OtherProjectListItem[]> {
   return client.fetch(otherProjectsQuery, { currentId });
+}
+
+export async function getProjectsForSitemap(): Promise<ProjectSitemapItem[]> {
+  return client.fetch(projectsForSitemapQuery);
 }
 
 export async function getProjectsForIndex(): Promise<ProjectForIndex[]> {

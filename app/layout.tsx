@@ -6,6 +6,7 @@ import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/features/theme/ThemeProvider";
 import { getAbout } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
+import { SITE_URL } from "@/lib/seo/siteUrl";
 import { DARK_CLASS, PREFERS_DARK_QUERY, THEME_STORAGE_KEY } from "@/lib/theme/constants";
 import "./globals.scss";
 
@@ -58,9 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
     : undefined;
 
   return {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    ),
+    metadataBase: new URL(SITE_URL),
     title: {
       default: siteName,
       template: titleTemplate,

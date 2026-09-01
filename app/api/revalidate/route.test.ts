@@ -65,16 +65,18 @@ describe("POST /api/revalidate", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
     expect(revalidatePathMock).toHaveBeenCalledWith("/projects");
     expect(revalidatePathMock).toHaveBeenCalledWith("/projects/a");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/sitemap.xml");
   });
 
-  it("revalidates only the overview for a validly-signed about payload", async () => {
+  it("revalidates the overview and the sitemap for a validly-signed about payload", async () => {
     const body = JSON.stringify({ _type: "about" });
     const signature = await sign(body);
 
     const response = await POST(makeRequest(body, signature));
 
     expect(response.status).toBe(200);
-    expect(revalidatePathMock).toHaveBeenCalledTimes(1);
+    expect(revalidatePathMock).toHaveBeenCalledTimes(2);
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/sitemap.xml");
   });
 });

@@ -1,4 +1,4 @@
-export { getAbout, getAboutFresh } from "./about";
+export { getAbout, getAboutForSitemap, getAboutFresh } from "./about";
 export { getExperience, getExperienceEntryById } from "./experience";
 export { getKnowledgeEntriesForIndex, getKnowledgeEntryById } from "./knowledge";
 export { toPlainText } from "./portableText";
@@ -9,9 +9,11 @@ export {
   getProjectForIndexById,
   getProjects,
   getProjectsForIndex,
+  getProjectsForSitemap,
 } from "./projects";
 export type {
   About,
+  AboutSitemapItem,
   ContentBlock,
   ExperienceEntry,
   ExperienceRole,
@@ -23,5 +25,6 @@ export type {
   ProjectDetail,
   ProjectForIndex,
   ProjectListItem,
+  ProjectSitemapItem,
   TextContentBlock,
 } from "./types";

@@ -23,6 +23,20 @@ export interface OtherProjectListItem {
   order: number | null;
 }
 
+// Hand-typed (rather than via sanity.types.ts) since typegen requires a live
+// Sanity project connection this repo's local/CI environments don't have.
+// Consumed only by app/sitemap.ts via buildSitemapEntries.
+export interface ProjectSitemapItem {
+  _id: string;
+  slug: { current: string };
+  _updatedAt: string;
+  seo: { noIndex: boolean | null } | null;
+}
+
+export interface AboutSitemapItem {
+  _updatedAt: string;
+}
+
 type ExperienceQueryRole = NonNullable<
   NonNullable<ExperienceQueryResult[number]["roles"]>[number]
 >;

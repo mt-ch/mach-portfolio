@@ -91,6 +91,20 @@ export const projectsForIndexQuery = defineQuery(`
   }
 `);
 
+// Minimal projection for app/sitemap.ts: just what buildSitemapEntries needs
+// to emit (or skip) a URL. Ordered so the sitemap lists projects in the same
+// order the site does.
+export const projectsForSitemapQuery = defineQuery(`
+  *[_type == "project"] | order(order asc) {
+    _id,
+    slug,
+    _updatedAt,
+    seo {
+      noIndex
+    }
+  }
+`);
+
 // Unlike projectsForIndexQuery (used for a full backfill), this fetches a
 // single project by id — needed by the reindex webhook to refetch just the
 // document that was published/deleted.
@@ -158,6 +172,14 @@ export const knowledgeEntriesForIndexQuery = defineQuery(`
     title,
     body,
     tags
+  }
+`);
+
+// The homepage has no document of its own; app/sitemap.ts dates its entry
+// from the `about` singleton's last-edited time.
+export const aboutForSitemapQuery = defineQuery(`
+  *[_type == "about"][0] {
+    _updatedAt
   }
 `);
 
