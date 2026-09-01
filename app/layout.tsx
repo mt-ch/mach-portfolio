@@ -1,7 +1,7 @@
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import { ThemeProvider } from "@/components/features/theme/ThemeProvider";
 import { DARK_CLASS, PREFERS_DARK_QUERY, THEME_STORAGE_KEY } from "@/lib/theme/constants";
@@ -30,6 +30,22 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Matt Chan",
   description: "Portfolio site",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fcfaf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#18181b" },
+  ],
 };
 
 // Runs before hydration so the correct theme class is on <html> before
