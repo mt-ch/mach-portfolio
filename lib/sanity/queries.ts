@@ -61,7 +61,14 @@ export const projectBySlugQuery = defineQuery(`
     links,
     featured,
     order,
-    dateCompleted
+    dateCompleted,
+    seo {
+      metaTitle,
+      metaDescription,
+      ogImage,
+      ogImageAlt,
+      noIndex
+    }
   }
 `);
 

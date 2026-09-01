@@ -4,6 +4,7 @@ export const project = defineType({
   name: "project",
   title: "Project",
   type: "document",
+  groups: [{ name: "seo", title: "SEO" }],
   fields: [
     defineField({
       name: "title",
@@ -179,6 +180,12 @@ export const project = defineType({
       name: "dateCompleted",
       title: "Date completed",
       type: "date",
+    }),
+    defineField({
+      name: "seo",
+      title: "SEO",
+      type: "seo",
+      group: "seo",
     }),
   ],
   preview: {

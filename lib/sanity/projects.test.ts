@@ -66,6 +66,41 @@ describe("getProject", () => {
     expect(result).toEqual(project);
   });
 
+  it("selects the seo projection so page-level SEO controls are available", async () => {
+    const project = {
+      _id: "1",
+      title: "A",
+      slug: { current: "a" },
+      seo: {
+        metaTitle: "A — case study",
+        metaDescription: null,
+        ogImage: null,
+        ogImageAlt: null,
+        noIndex: false,
+      },
+    };
+    fetchMock.mockResolvedValueOnce(project);
+
+    const result = await getProject("a");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("seo {"),
+      { slug: "a" },
+    );
+    for (const field of [
+      "metaTitle",
+      "metaDescription",
+      "ogImage",
+      "ogImageAlt",
+      "noIndex",
+    ]) {
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining(field), {
+        slug: "a",
+      });
+    }
+    expect(result).toEqual(project);
+  });
+
   it("returns null when no project matches the slug", async () => {
     fetchMock.mockResolvedValueOnce(null);
 
