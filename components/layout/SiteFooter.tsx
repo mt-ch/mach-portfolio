@@ -16,7 +16,7 @@ export function SiteFooter({ about }: { about: About }) {
       <div className="p-md gap-xl bg-background relative flex h-screen">
         <div className="from-brand to-background absolute bottom-0 left-0 z-0 h-full w-full bg-linear-to-t"></div>
         <div className="relative z-10 flex h-full w-full flex-col justify-between">
-          <h2 className="type-body text-foreground pr-2xl font-medium">
+          <h2 className="type-body text-foreground pr-32 font-medium">
             <span className="text-transparent">({about.name}) </span>
             {footerTextLines.map((line, index) => (
               <Fragment key={index}>
@@ -24,21 +24,20 @@ export function SiteFooter({ about }: { about: About }) {
                 {line}
               </Fragment>
             ))}
-            <br />
-            <a
-              href={`mailto:${about.email}`}
-              className=""
-              data-cursor="label"
-              data-cursor-label="Copy Email"
-              data-cursor-icon="mail"
-            >
-              Email me
-            </a>
           </h2>
 
           <div className="flex justify-between">
             <p className="type-body font-medium text-white">©{year}</p>
-            <div className="gap-md flex">
+            <div className="gap-lg flex">
+              <a
+                href={`mailto:${about.email}`}
+                className="type-body font-medium text-white"
+                data-cursor="label"
+                data-cursor-label="Copy Email"
+                data-cursor-icon="mail"
+              >
+                Email
+              </a>
               {about.resumeUrl && (
                 <a
                   href={about.resumeUrl}
