@@ -388,6 +388,10 @@ describe("chunkAbout", () => {
       email: "matt@example.com",
       socialLinks: null,
       howIWork: null,
+      siteName: null,
+      titleTemplate: null,
+      defaultMetaDescription: null,
+      defaultOgImage: null,
     };
 
     const chunks = chunkAbout(about);

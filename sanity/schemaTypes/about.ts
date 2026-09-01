@@ -4,6 +4,12 @@ export const about = defineType({
   name: "about",
   title: "About",
   type: "document",
+  groups: [
+    {
+      name: "seoDefaults",
+      title: "Site SEO Defaults",
+    },
+  ],
   fields: [
     defineField({
       name: "name",
@@ -111,6 +117,39 @@ export const about = defineType({
           ],
         },
       ],
+    }),
+    defineField({
+      name: "siteName",
+      title: "Site name",
+      description:
+        "Brand name used across social-share cards and as the default browser tab title.",
+      type: "string",
+      group: "seoDefaults",
+    }),
+    defineField({
+      name: "titleTemplate",
+      title: "Title template",
+      description:
+        'Applied to every page-level title. Use %s as the page title placeholder, e.g. "%s | Matt Chan".',
+      type: "string",
+      group: "seoDefaults",
+    }),
+    defineField({
+      name: "defaultMetaDescription",
+      title: "Default meta description",
+      description:
+        "Used for pages that do not set their own meta description.",
+      type: "text",
+      rows: 3,
+      group: "seoDefaults",
+    }),
+    defineField({
+      name: "defaultOgImage",
+      title: "Default social image",
+      description:
+        "Fallback Open Graph / Twitter card image. Served at 1200x630.",
+      type: "image",
+      group: "seoDefaults",
     }),
   ],
   preview: {

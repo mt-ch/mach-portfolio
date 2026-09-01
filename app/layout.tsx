@@ -4,6 +4,8 @@ import localFont from "next/font/local";
 import type { Metadata, Viewport } from "next";
 
 import { ThemeProvider } from "@/components/features/theme/ThemeProvider";
+import { getAbout } from "@/lib/sanity";
+import { urlFor } from "@/lib/sanity/image";
 import { DARK_CLASS, PREFERS_DARK_QUERY, THEME_STORAGE_KEY } from "@/lib/theme/constants";
 import "./globals.scss";
 
@@ -27,19 +29,60 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Matt Chan",
-  description: "Portfolio site",
-  manifest: "/site.webmanifest",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
-      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-  },
+const DEFAULT_SITE_NAME = "Matt Chan";
+const DEFAULT_TITLE_TEMPLATE = "%s | Matt Chan";
+const DEFAULT_META_DESCRIPTION = "Portfolio site";
+
+const iconsMetadata: Metadata["icons"] = {
+  icon: [
+    { url: "/favicon.ico", sizes: "any" },
+    { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+    { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+  ],
+  apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const about = await getAbout();
+
+  const siteName = about?.siteName?.trim() || DEFAULT_SITE_NAME;
+  const titleTemplate = about?.titleTemplate?.trim() || DEFAULT_TITLE_TEMPLATE;
+  const description =
+    about?.defaultMetaDescription?.trim() || DEFAULT_META_DESCRIPTION;
+
+  const ogImageUrl = about?.defaultOgImage
+    ? urlFor(about.defaultOgImage).width(1200).height(630).fit("crop").url()
+    : undefined;
+  const ogImages = ogImageUrl
+    ? [{ url: ogImageUrl, width: 1200, height: 630 }]
+    : undefined;
+
+  return {
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+    ),
+    title: {
+      default: siteName,
+      template: titleTemplate,
+    },
+    description,
+    manifest: "/site.webmanifest",
+    icons: iconsMetadata,
+    openGraph: {
+      siteName,
+      type: "website",
+      title: siteName,
+      description,
+      images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: siteName,
+      description,
+      images: ogImages,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [

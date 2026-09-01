@@ -27,6 +27,10 @@ function about(howIWork: About["howIWork"]): About {
     email: "matt@example.com",
     socialLinks: null,
     howIWork,
+    siteName: null,
+    titleTemplate: null,
+    defaultMetaDescription: null,
+    defaultOgImage: null,
   };
 }
 

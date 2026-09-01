@@ -170,6 +170,10 @@ export const aboutQuery = defineQuery(`
     "resumeUrl": resumeFile.asset->url,
     email,
     socialLinks,
-    howIWork
+    howIWork,
+    siteName,
+    titleTemplate,
+    defaultMetaDescription,
+    defaultOgImage
   }
 `);
