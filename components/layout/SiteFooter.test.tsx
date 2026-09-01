@@ -24,6 +24,10 @@ const about: About = {
     },
   ],
   howIWork: null,
+  siteName: null,
+  titleTemplate: null,
+  defaultMetaDescription: null,
+  defaultOgImage: null,
 };
 
 describe("SiteFooter", () => {

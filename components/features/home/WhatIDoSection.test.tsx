@@ -24,6 +24,10 @@ const about: About = {
   email: "matt@example.com",
   socialLinks: null,
   howIWork: null,
+  siteName: null,
+  titleTemplate: null,
+  defaultMetaDescription: null,
+  defaultOgImage: null,
 };
 
 describe("WhatIDoSection", () => {
