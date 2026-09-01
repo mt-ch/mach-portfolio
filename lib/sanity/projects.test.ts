@@ -15,6 +15,7 @@ const {
   getProjectForIndexById,
   getProjects,
   getProjectsForIndex,
+  getProjectsForSitemap,
 } = await import("./projects");
 
 describe("getFeaturedProjects", () => {
@@ -142,6 +143,30 @@ describe("getProjectsForIndex", () => {
     const result = await getProjectsForIndex();
 
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("story"));
+    expect(result).toEqual(projects);
+  });
+});
+
+describe("getProjectsForSitemap", () => {
+  it("fetches all projects ordered by `order`, selecting slug, _updatedAt and seo.noIndex", async () => {
+    const projects = [
+      {
+        _id: "1",
+        slug: { current: "a" },
+        _updatedAt: "2026-01-01T00:00:00.000Z",
+        seo: { noIndex: false },
+      },
+    ];
+    fetchMock.mockResolvedValueOnce(projects);
+
+    const result = await getProjectsForSitemap();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("order(order asc)"),
+    );
+    for (const field of ["_updatedAt", "slug", "noIndex"]) {
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining(field));
+    }
     expect(result).toEqual(projects);
   });
 });

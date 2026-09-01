@@ -41,14 +41,17 @@ export async function POST(request: Request) {
 function pathsForPayload(payload: WebhookPayload): string[] {
   switch (payload._type) {
     case "project": {
-      const paths = ["/", "/projects"];
+      const paths = ["/", "/projects", "/sitemap.xml"];
       const slug = slugFromPayload(payload);
       if (slug) paths.push(`/projects/${slug}`);
       return paths;
     }
     case "experience":
-    case "about":
       return ["/"];
+    case "about":
+      // The homepage's sitemap entry is dated from the about doc's
+      // `_updatedAt`, so an about edit must refresh /sitemap.xml too.
+      return ["/", "/sitemap.xml"];
     default:
       return [];
   }

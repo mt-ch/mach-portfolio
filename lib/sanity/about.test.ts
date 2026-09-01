@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { aboutQuery } from "./queries";
+import { aboutForSitemapQuery, aboutQuery } from "./queries";
 
 const fetchMock = vi.fn();
 const freshFetchMock = vi.fn();
@@ -10,7 +10,7 @@ vi.mock("./client", () => ({
   freshClient: { fetch: (...args: unknown[]) => freshFetchMock(...args) },
 }));
 
-const { getAbout, getAboutFresh } = await import("./about");
+const { getAbout, getAboutForSitemap, getAboutFresh } = await import("./about");
 
 describe("getAboutFresh", () => {
   it("returns the singleton About document via the non-CDN client", async () => {
@@ -54,6 +54,21 @@ describe("aboutQuery homepage SEO", () => {
     ]) {
       expect(aboutQuery).toContain(field);
     }
+  });
+});
+
+describe("getAboutForSitemap", () => {
+  it("requests only the singleton's last-edited time", () => {
+    expect(aboutForSitemapQuery).toContain("_updatedAt");
+  });
+
+  it("returns the fetched last-edited time", async () => {
+    fetchMock.mockResolvedValueOnce({ _updatedAt: "2026-01-01T00:00:00.000Z" });
+
+    const result = await getAboutForSitemap();
+
+    expect(fetchMock).toHaveBeenCalledWith(aboutForSitemapQuery);
+    expect(result).toEqual({ _updatedAt: "2026-01-01T00:00:00.000Z" });
   });
 });
 
