@@ -39,17 +39,17 @@ export function ExperienceSection({ entries }: { entries: ExperienceEntry[] }) {
                 className={`${roleIndex === entry.roles.length - 1 ? "border-grey-200 dark:border-grey-800 border-b" : ""}`}
               >
                 <td
-                  className={`type-body pb-sm text-left font-medium ${roleIndex === 0 ? "pt-xl" : "pt-sm"}`}
+                  className={`type-body pb-sm text-left font-normal ${roleIndex === 0 ? "pt-xl" : "pt-sm"}`}
                 >
                   {roleIndex === 0 ? entry.company : ""}
                 </td>
                 <td
-                  className={`type-body pb-sm text-left font-medium ${roleIndex === 0 ? "pt-xl border-grey-200 dark:border-grey-800 border-b" : "pt-sm"}`}
+                  className={`type-body pb-sm text-left font-normal ${roleIndex === 0 ? "pt-xl border-grey-200 dark:border-grey-800 border-b" : "pt-sm"}`}
                 >
                   {role.title}
                 </td>
                 <td
-                  className={`type-body pb-sm text-left font-medium ${roleIndex === 0 ? "pt-xl border-grey-200 dark:border-grey-800 border-b" : "pt-sm"}`}
+                  className={`type-body pb-sm text-left font-normal ${roleIndex === 0 ? "pt-xl border-grey-200 dark:border-grey-800 border-b" : "pt-sm"}`}
                 >
                   {formatPeriod(role)}
                 </td>

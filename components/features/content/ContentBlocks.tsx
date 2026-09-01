@@ -83,7 +83,7 @@ function TextBlockView({ block }: { block: TextBlock }) {
     </h2>
   ) : null;
   const body = (
-    <div className="gap-sm type-body text-foreground flex flex-col font-medium">
+    <div className="gap-sm type-body text-foreground flex flex-col font-normal">
       <PortableText value={block.content} components={portableTextComponents} />
     </div>
   );
