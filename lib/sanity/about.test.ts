@@ -42,6 +42,21 @@ describe("aboutQuery Site SEO Defaults", () => {
   });
 });
 
+describe("aboutQuery homepage SEO", () => {
+  it("selects the embedded seo projection", () => {
+    for (const field of [
+      "seo {",
+      "metaTitle",
+      "metaDescription",
+      "ogImage",
+      "ogImageAlt",
+      "noIndex",
+    ]) {
+      expect(aboutQuery).toContain(field);
+    }
+  });
+});
+
 describe("getAbout", () => {
   it("passes the Site SEO Defaults values through from the fetch", async () => {
     const about = {
@@ -57,6 +72,25 @@ describe("getAbout", () => {
     const result = await getAbout();
 
     expect(fetchMock).toHaveBeenCalledWith(aboutQuery);
+    expect(result).toEqual(about);
+  });
+
+  it("passes the embedded homepage seo object through from the fetch", async () => {
+    const about = {
+      _id: "about",
+      name: "Matt Chan",
+      seo: {
+        metaTitle: "Matt Chan — Design Engineer",
+        metaDescription: "Homepage description",
+        ogImage: { _type: "image", asset: { _ref: "image-home" } },
+        ogImageAlt: "Portrait of Matt Chan",
+        noIndex: false,
+      },
+    };
+    fetchMock.mockResolvedValueOnce(about);
+
+    const result = await getAbout();
+
     expect(result).toEqual(about);
   });
 });

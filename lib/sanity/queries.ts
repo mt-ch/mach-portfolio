@@ -178,6 +178,13 @@ export const aboutQuery = defineQuery(`
     email,
     socialLinks,
     howIWork,
+    seo {
+      metaTitle,
+      metaDescription,
+      ogImage,
+      ogImageAlt,
+      noIndex
+    },
     siteName,
     titleTemplate,
     defaultMetaDescription,
