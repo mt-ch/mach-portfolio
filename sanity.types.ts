@@ -685,7 +685,7 @@ export type ExperienceEntryByIdQueryResult = {
 
 // Source: lib/sanity/queries.ts
 // Variable: aboutQuery
-// Query: *[_type == "about"][0] {    _id,    name,    headline,    bio,    whatIDo[] {      _key,      title,      description    },    logo,    footerText,    "resumeUrl": resumeFile.asset->url,    email,    socialLinks,    howIWork,    siteName,    titleTemplate,    defaultMetaDescription,    defaultOgImage  }
+// Query: *[_type == "about"][0] {    _id,    name,    headline,    bio,    whatIDo[] {      _key,      title,      description    },    logo,    footerText,    "resumeUrl": resumeFile.asset->url,    email,    socialLinks,    howIWork,    seo {      metaTitle,      metaDescription,      ogImage,      ogImageAlt,      noIndex    },    siteName,    titleTemplate,    defaultMetaDescription,    defaultOgImage  }
 export type AboutQueryResult = {
   _id: string;
   name: string;
@@ -737,6 +737,19 @@ export type AboutQueryResult = {
         _key: string;
       } & TextBlock)
   > | null;
+  seo: {
+    metaTitle: string | null;
+    metaDescription: string | null;
+    ogImage: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      _type: "image";
+    } | null;
+    ogImageAlt: string | null;
+    noIndex: boolean | null;
+  } | null;
   siteName: string | null;
   titleTemplate: string | null;
   defaultMetaDescription: string | null;
@@ -761,6 +774,6 @@ declare module "@sanity/client" {
     '\n  *[_type == "project" && _id == $id][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectForIndexByIdQueryResult;
     '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceQueryResult;
     '\n  *[_type == "experience" && _id == $id][0] {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceEntryByIdQueryResult;
-    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    whatIDo[] {\n      _key,\n      title,\n      description\n    },\n    logo,\n    footerText,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks,\n    howIWork,\n    siteName,\n    titleTemplate,\n    defaultMetaDescription,\n    defaultOgImage\n  }\n': AboutQueryResult;
+    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    whatIDo[] {\n      _key,\n      title,\n      description\n    },\n    logo,\n    footerText,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks,\n    howIWork,\n    seo {\n      metaTitle,\n      metaDescription,\n      ogImage,\n      ogImageAlt,\n      noIndex\n    },\n    siteName,\n    titleTemplate,\n    defaultMetaDescription,\n    defaultOgImage\n  }\n': AboutQueryResult;
   }
 }

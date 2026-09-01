@@ -24,6 +24,7 @@ const about: About = {
     },
   ],
   howIWork: null,
+  seo: null,
   siteName: null,
   titleTemplate: null,
   defaultMetaDescription: null,

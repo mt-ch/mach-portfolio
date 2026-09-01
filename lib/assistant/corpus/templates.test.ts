@@ -17,6 +17,7 @@ function makeAbout(overrides: Partial<About> = {}): About {
     email: "matt@example.com",
     socialLinks: null,
     howIWork: null,
+    seo: null,
     siteName: null,
     titleTemplate: null,
     defaultMetaDescription: null,

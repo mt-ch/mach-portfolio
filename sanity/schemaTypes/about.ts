@@ -6,6 +6,10 @@ export const about = defineType({
   type: "document",
   groups: [
     {
+      name: "seo",
+      title: "SEO",
+    },
+    {
       name: "seoDefaults",
       title: "Site SEO Defaults",
     },
@@ -117,6 +121,14 @@ export const about = defineType({
           ],
         },
       ],
+    }),
+    defineField({
+      name: "seo",
+      title: "SEO",
+      description:
+        "Per-page SEO for the homepage (/). Blank fields fall back to the Site SEO Defaults below.",
+      type: "seo",
+      group: "seo",
     }),
     defineField({
       name: "siteName",
