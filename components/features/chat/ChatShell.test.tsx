@@ -4,6 +4,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeProvider } from "@/components/features/theme/ThemeProvider";
 
+// The suite exercises the real toggle/drawer behaviour, so it forces the
+// feature on; the "disabled" block flips this to false per-test.
+const config = vi.hoisted(() => ({ askEnabled: true }));
+vi.mock("@/lib/assistant/config", () => ({
+  get ASK_ENABLED() {
+    return config.askEnabled;
+  },
+}));
+
 import { ChatShell } from "./ChatShell";
 
 // ChatShell renders the ThemeToggle, which reads theme from context, so
@@ -48,6 +57,7 @@ describe("ChatShell", () => {
     window.sessionStorage.clear();
     window.localStorage.clear();
     document.documentElement.classList.remove("dark");
+    config.askEnabled = true;
   });
 
   it("shows the toggle button when the drawer is closed", () => {
@@ -139,5 +149,27 @@ describe("ChatShell", () => {
     renderShell();
 
     expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeInTheDocument();
+  });
+
+  describe("when Ask is disabled", () => {
+    it("renders no chat entry point", () => {
+      config.askEnabled = false;
+      stubMedia({ desktop: true, dark: false });
+      renderShell();
+
+      expect(screen.queryByRole("button", { name: "Open chat" })).not.toBeInTheDocument();
+    });
+
+    it("still renders a theme toggle that switches the theme", async () => {
+      config.askEnabled = false;
+      stubMedia({ desktop: true, dark: false });
+      const user = userEvent.setup();
+      renderShell();
+
+      await user.click(screen.getByRole("button", { name: "Switch to dark mode" }));
+
+      expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeInTheDocument();
+      expect(document.documentElement.classList.contains("dark")).toBe(true);
+    });
   });
 });

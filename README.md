@@ -33,7 +33,7 @@ Both send the same `{_id, _type}` shape; the route always refetches the document
 - `components/` — three buckets only: `ui/` (generic/presentational), `layout/` (site chrome), `features/` (`home/`, `project/`, `chat/`, `theme/`)
 - `sanity/` — Studio config, schema types (Project, Experience, About), desk structure
 - `lib/sanity/` — the only module that talks to the Sanity client; typed fetch functions (`getProjects`, `getProject`, `getExperience`, `getAbout`) consumed by pages and components
-- `lib/assistant/` — the Q&A chatbot: `chat/`, `corpus/` (chunking/embedding/vector-store pipeline — see `pnpm backfill`), `guardrails/`
+- `lib/assistant/` — the Q&A chatbot: `chat/`, `corpus/` (chunking/embedding/vector-store pipeline — see `pnpm backfill`), `guardrails/`. Currently hidden from the site behind `ASK_ENABLED` in `lib/assistant/config.ts` while the experience is refined — see `docs/adr/0013-ask-temporarily-disabled.md`
 - `lib/theme/` — shared theme constants read by both the pre-hydration `<script>` and the theme hook
 - `app/api/revalidate` — signed webhook endpoint that triggers on-demand ISR on publish
 - `app/api/reindex` — signed webhook endpoint that keeps the vector index in sync with Sanity publish/delete events
