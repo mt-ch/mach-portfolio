@@ -7,6 +7,11 @@ type WebhookPayload = {
   slug?: { current?: string } | string;
 };
 
+type RevalidationTarget = {
+  path: string;
+  type?: "page" | "layout";
+};
+
 function slugFromPayload(payload: WebhookPayload): string | undefined {
   if (!payload.slug) return undefined;
   return typeof payload.slug === "string" ? payload.slug : payload.slug.current;
@@ -29,29 +34,46 @@ export async function POST(request: Request) {
   }
 
   const payload = JSON.parse(body) as WebhookPayload;
-  const paths = pathsForPayload(payload);
+  const targets = targetsForPayload(payload);
 
-  for (const path of paths) {
-    revalidatePath(path);
+  for (const target of targets) {
+    if (target.type) {
+      revalidatePath(target.path, target.type);
+    } else {
+      revalidatePath(target.path);
+    }
   }
 
-  return NextResponse.json({ revalidated: true, paths });
+  return NextResponse.json({
+    revalidated: true,
+    paths: targets.map((target) => target.path),
+  });
 }
 
-function pathsForPayload(payload: WebhookPayload): string[] {
+function targetsForPayload(payload: WebhookPayload): RevalidationTarget[] {
   switch (payload._type) {
     case "project": {
-      const paths = ["/", "/projects", "/sitemap.xml"];
+      const targets: RevalidationTarget[] = [
+        { path: "/" },
+        { path: "/projects" },
+        { path: "/sitemap.xml" },
+      ];
       const slug = slugFromPayload(payload);
-      if (slug) paths.push(`/projects/${slug}`);
-      return paths;
+      if (slug) targets.push({ path: `/projects/${slug}` });
+      return targets;
     }
     case "experience":
-      return ["/"];
+      return [{ path: "/" }];
     case "about":
-      // The homepage's sitemap entry is dated from the about doc's
-      // `_updatedAt`, so an about edit must refresh /sitemap.xml too.
-      return ["/", "/sitemap.xml"];
+      // The about doc carries Site SEO Defaults, which feed every project
+      // page's metadata as well as the homepage's dated sitemap entry, so an
+      // about edit must refresh the homepage, all project pages, and the
+      // sitemap.
+      return [
+        { path: "/" },
+        { path: "/projects/[slug]", type: "page" },
+        { path: "/sitemap.xml" },
+      ];
     default:
       return [];
   }

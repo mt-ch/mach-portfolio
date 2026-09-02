@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const revalidatePathMock = vi.fn();
 vi.mock("next/cache", () => ({
-  revalidatePath: (path: string) => revalidatePathMock(path),
+  revalidatePath: (...args: unknown[]) => revalidatePathMock(...args),
 }));
 
 const { POST } = await import("./route");
@@ -68,15 +68,16 @@ describe("POST /api/revalidate", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/sitemap.xml");
   });
 
-  it("revalidates the overview and the sitemap for a validly-signed about payload", async () => {
+  it("revalidates the overview, all project pages, and the sitemap for a validly-signed about payload", async () => {
     const body = JSON.stringify({ _type: "about" });
     const signature = await sign(body);
 
     const response = await POST(makeRequest(body, signature));
 
     expect(response.status).toBe(200);
-    expect(revalidatePathMock).toHaveBeenCalledTimes(2);
+    expect(revalidatePathMock).toHaveBeenCalledTimes(3);
     expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/projects/[slug]", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/sitemap.xml");
   });
 });
