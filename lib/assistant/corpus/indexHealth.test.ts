@@ -6,11 +6,20 @@ const { getVectorCountMock } = vi.hoisted(() => ({
 
 vi.mock("./vectorStore", () => ({ getVectorCount: getVectorCountMock }));
 
+// Every case except the "disabled" one asserts the real, enabled behaviour.
+const config = vi.hoisted(() => ({ askEnabled: true }));
+vi.mock("../config", () => ({
+  get ASK_ENABLED() {
+    return config.askEnabled;
+  },
+}));
+
 const { checkIndexHealth } = await import("./indexHealth");
 
 describe("checkIndexHealth", () => {
   beforeEach(() => {
     getVectorCountMock.mockReset();
+    config.askEnabled = true;
   });
 
   it("resolves without throwing when the index is populated", async () => {
@@ -23,6 +32,13 @@ describe("checkIndexHealth", () => {
     getVectorCountMock.mockResolvedValue(0);
 
     await expect(checkIndexHealth()).rejects.toThrow(/empty/i);
+  });
+
+  it("skips the vector-store read entirely when the assistant is disabled", async () => {
+    config.askEnabled = false;
+
+    await expect(checkIndexHealth()).resolves.toBeUndefined();
+    expect(getVectorCountMock).not.toHaveBeenCalled();
   });
 
   it("propagates a vector-store read failure as-is rather than reporting it as empty", async () => {
