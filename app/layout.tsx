@@ -3,24 +3,59 @@ import localFont from "next/font/local";
 
 import type { Metadata, Viewport } from "next";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { ThemeProvider } from "@/components/features/theme/ThemeProvider";
 import { getAbout } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
 import { SITE_URL } from "@/lib/seo/siteUrl";
-import { DARK_CLASS, PREFERS_DARK_QUERY, THEME_STORAGE_KEY } from "@/lib/theme/constants";
+import {
+  DARK_CLASS,
+  PREFERS_DARK_QUERY,
+  THEME_STORAGE_KEY,
+} from "@/lib/theme/constants";
 import "./globals.scss";
 
 const openSauceOne = localFont({
   variable: "--font-open-sauce-one",
   src: [
-    { path: "./fonts/OpenSauceOne-Regular.woff2", style: "normal", weight: "400" },
-    { path: "./fonts/OpenSauceOne-Italic.woff2", style: "italic", weight: "400" },
-    { path: "./fonts/OpenSauceOne-Medium.woff2", style: "normal", weight: "500" },
-    { path: "./fonts/OpenSauceOne-MediumItalic.woff2", style: "italic", weight: "500" },
-    { path: "./fonts/OpenSauceOne-SemiBold.woff2", style: "normal", weight: "600" },
-    { path: "./fonts/OpenSauceOne-SemiBoldItalic.woff2", style: "italic", weight: "600" },
+    {
+      path: "./fonts/OpenSauceOne-Regular.woff2",
+      style: "normal",
+      weight: "400",
+    },
+    {
+      path: "./fonts/OpenSauceOne-Italic.woff2",
+      style: "italic",
+      weight: "400",
+    },
+    {
+      path: "./fonts/OpenSauceOne-Medium.woff2",
+      style: "normal",
+      weight: "500",
+    },
+    {
+      path: "./fonts/OpenSauceOne-MediumItalic.woff2",
+      style: "italic",
+      weight: "500",
+    },
+    {
+      path: "./fonts/OpenSauceOne-SemiBold.woff2",
+      style: "normal",
+      weight: "600",
+    },
+    {
+      path: "./fonts/OpenSauceOne-SemiBoldItalic.woff2",
+      style: "italic",
+      weight: "600",
+    },
     { path: "./fonts/OpenSauceOne-Bold.woff2", style: "normal", weight: "700" },
-    { path: "./fonts/OpenSauceOne-BoldItalic.woff2", style: "italic", weight: "700" },
+    {
+      path: "./fonts/OpenSauceOne-BoldItalic.woff2",
+      style: "italic",
+      weight: "700",
+    },
   ],
   display: "swap",
 });
@@ -104,12 +139,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${openSauceOne.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${openSauceOne.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="h-full overflow-hidden">
         <ThemeProvider>{children}</ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
