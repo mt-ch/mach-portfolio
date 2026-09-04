@@ -6,11 +6,20 @@ import type {
   FeaturedProjectsQueryResult,
   ProjectBySlugQueryResult,
   ProjectsQueryResult,
+  SanityImageDimensions,
 } from "@/sanity.types";
 
 export type ProjectListItem = ProjectsQueryResult[number];
 export type FeaturedProjectListItem = FeaturedProjectsQueryResult[number];
 export type ProjectDetail = NonNullable<ProjectBySlugQueryResult>;
+
+// The low-quality image placeholder and intrinsic dimensions attached to a
+// cover image or Image Block image by the `asset->metadata { lqip, dimensions }`
+// projection. Mirrors what `sanity typegen` emits for that projection.
+export interface SanityImageAssetMetadata {
+  lqip: string | null;
+  dimensions: SanityImageDimensions | null;
+}
 
 // Hand-typed (rather than via sanity.types.ts) since typegen requires a live
 // Sanity project connection this repo's local/CI environments don't have.
@@ -19,7 +28,7 @@ export interface OtherProjectListItem {
   title: string;
   slug: { current: string };
   summary: string;
-  coverImage: SanityImage | null;
+  coverImage: (SanityImage & { metadata: SanityImageAssetMetadata | null }) | null;
   order: number | null;
 }
 

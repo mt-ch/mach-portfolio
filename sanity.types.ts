@@ -22,6 +22,21 @@ export type SanityImageAssetReference = {
   [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
 };
 
+export type Seo = {
+  _type: "seo";
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImage?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  ogImageAlt?: string;
+  noIndex?: boolean;
+};
+
 export type ImageBlock = {
   _type: "imageBlock";
   image: {
@@ -65,7 +80,36 @@ export type TextBlock = {
     _type: "block";
     _key: string;
   }>;
-  layout?: "one-column" | "two-column-split" | "two-column-left" | "two-column-right";
+  layout?:
+    "one-column" | "two-column-split" | "two-column-left" | "two-column-right";
+};
+
+export type KnowledgeBaseEntry = {
+  _id: string;
+  _type: "knowledgeBaseEntry";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title: string;
+  body: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  tags?: Array<string>;
 };
 
 export type SanityFileAssetReference = {
@@ -121,12 +165,31 @@ export type About = {
     _type: "file";
   };
   email: string;
+  howIWork?: Array<
+    | ({
+        _key: string;
+      } & TextBlock)
+    | ({
+        _key: string;
+      } & ImageBlock)
+  >;
   socialLinks?: Array<{
     platform: string;
     url: string;
     _type: "socialLink";
     _key: string;
   }>;
+  seo?: Seo;
+  siteName?: string;
+  titleTemplate?: string;
+  defaultMetaDescription?: string;
+  defaultOgImage?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
 };
 
 export type SanityImageCrop = {
@@ -145,32 +208,6 @@ export type SanityImageHotspot = {
   width: number;
 };
 
-export type ExperienceRoleObject = {
-  _type: "role";
-  _key: string;
-  title: string;
-  startDate: string;
-  endDate?: string;
-  summary?: Array<{
-    children?: Array<{
-      marks?: Array<string>;
-      text?: string;
-      _type: "span";
-      _key: string;
-    }>;
-    style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
-    listItem?: "bullet" | "number";
-    markDefs?: Array<{
-      href?: string;
-      _type: "link";
-      _key: string;
-    }>;
-    level?: number;
-    _type: "block";
-    _key: string;
-  }>;
-};
-
 export type Experience = {
   _id: string;
   _type: "experience";
@@ -187,7 +224,31 @@ export type Experience = {
     _type: "image";
   };
   order: number;
-  roles: Array<ExperienceRoleObject>;
+  roles: Array<{
+    title: string;
+    startDate: string;
+    endDate?: string;
+    summary?: Array<{
+      children?: Array<{
+        marks?: Array<string>;
+        text?: string;
+        _type: "span";
+        _key: string;
+      }>;
+      style?: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
+      listItem?: "bullet" | "number";
+      markDefs?: Array<{
+        href?: string;
+        _type: "link";
+        _key: string;
+      }>;
+      level?: number;
+      _type: "block";
+      _key: string;
+    }>;
+    _type: "role";
+    _key: string;
+  }>;
 };
 
 export type Project = {
@@ -200,6 +261,8 @@ export type Project = {
   slug: Slug;
   summary: string;
   heroText?: string;
+  headerBackgroundColor?: Color;
+  headerForegroundColor?: Color;
   story?: Array<
     | ({
         _key: string;
@@ -257,12 +320,46 @@ export type Project = {
   featured?: boolean;
   order: number;
   dateCompleted?: string;
+  seo?: Seo;
+};
+
+export type Color = {
+  _type: "color";
+  hex?: string;
+  alpha?: number;
+  hsl?: HslaColor;
+  hsv?: HsvaColor;
+  rgb?: RgbaColor;
 };
 
 export type Slug = {
   _type: "slug";
   current: string;
   source?: string;
+};
+
+export type RgbaColor = {
+  _type: "rgbaColor";
+  r?: number;
+  g?: number;
+  b?: number;
+  a?: number;
+};
+
+export type HsvaColor = {
+  _type: "hsvaColor";
+  h?: number;
+  s?: number;
+  v?: number;
+  a?: number;
+};
+
+export type HslaColor = {
+  _type: "hslaColor";
+  h?: number;
+  s?: number;
+  l?: number;
+  a?: number;
 };
 
 export type SanityImagePaletteSwatch = {
@@ -364,15 +461,21 @@ export type Geopoint = {
 
 export type AllSanitySchemaTypes =
   | SanityImageAssetReference
+  | Seo
   | ImageBlock
   | TextBlock
+  | KnowledgeBaseEntry
   | SanityFileAssetReference
   | About
   | SanityImageCrop
   | SanityImageHotspot
   | Experience
   | Project
+  | Color
   | Slug
+  | RgbaColor
+  | HsvaColor
+  | HslaColor
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
@@ -384,7 +487,7 @@ export type AllSanitySchemaTypes =
 
 // Source: lib/sanity/queries.ts
 // Variable: featuredProjectsQuery
-// Query: *[_type == "project" && featured == true] | order(order asc) {    _id,    title,    slug,    summary,    coverPrimary,    coverSecondary,    coverMobile,    coverLayout,    order  }
+// Query: *[_type == "project" && featured == true] | order(order asc) {    _id,    title,    slug,    summary,    coverPrimary {      ...,      "metadata": asset->metadata { lqip, dimensions }    },    coverSecondary {      ...,      "metadata": asset->metadata { lqip, dimensions }    },    coverMobile {      ...,      "metadata": asset->metadata { lqip, dimensions }    },    coverLayout,    order  }
 export type FeaturedProjectsQueryResult = Array<{
   _id: string;
   title: string;
@@ -396,6 +499,10 @@ export type FeaturedProjectsQueryResult = Array<{
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
   } | null;
   coverSecondary: {
     asset?: SanityImageAssetReference;
@@ -403,6 +510,10 @@ export type FeaturedProjectsQueryResult = Array<{
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
   } | null;
   coverMobile: {
     asset?: SanityImageAssetReference;
@@ -410,6 +521,10 @@ export type FeaturedProjectsQueryResult = Array<{
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
   } | null;
   coverLayout: "left-dominant" | "right-dominant" | null;
   order: number;
@@ -454,7 +569,7 @@ export type ProjectsQueryResult = Array<{
 
 // Source: lib/sanity/queries.ts
 // Variable: otherProjectsQuery
-// Query: *[_type == "project" && _id != $currentId] | order(order asc) [0...3] {    _id,    title,    slug,    summary,    coverImage,    order  }
+// Query: *[_type == "project" && _id != $currentId] | order(order asc) [0...2] {    _id,    title,    slug,    summary,    coverImage {      ...,      "metadata": asset->metadata { lqip, dimensions }    },    order  }
 export type OtherProjectsQueryResult = Array<{
   _id: string;
   title: string;
@@ -466,46 +581,17 @@ export type OtherProjectsQueryResult = Array<{
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
   } | null;
   order: number;
 }>;
 
-export type Color = {
-  _type: "color";
-  hex?: string;
-  alpha?: number;
-  hsl?: HslaColor;
-  hsv?: HsvaColor;
-  rgb?: RgbaColor;
-};
-
-export type HslaColor = {
-  _type: "hslaColor";
-  h?: number;
-  s?: number;
-  l?: number;
-  a?: number;
-};
-
-export type HsvaColor = {
-  _type: "hsvaColor";
-  h?: number;
-  s?: number;
-  v?: number;
-  a?: number;
-};
-
-export type RgbaColor = {
-  _type: "rgbaColor";
-  r?: number;
-  g?: number;
-  b?: number;
-  a?: number;
-};
-
 // Source: lib/sanity/queries.ts
 // Variable: projectBySlugQuery
-// Query: *[_type == "project" && slug.current == $slug][0] {    _id,    title,    slug,    summary,    heroText,    headerBackgroundColor,    headerForegroundColor,    story,    coverImage,    techStack,    skills,    impact,    role,    links,    featured,    order,    dateCompleted,    seo {      metaTitle,      metaDescription,      ogImage,      ogImageAlt,      noIndex    }  }
+// Query: *[_type == "project" && slug.current == $slug][0] {    _id,    title,    slug,    summary,    heroText,    headerBackgroundColor,    headerForegroundColor,    story[] {      ...,      _type == "imageBlock" => {        ...,        image {          ...,          "metadata": asset->metadata { lqip, dimensions }        },        secondImage {          ...,          "metadata": asset->metadata { lqip, dimensions }        }      }    },    coverImage {      ...,      "metadata": asset->metadata { lqip, dimensions }    },    techStack,    skills,    impact,    role,    links,    featured,    order,    dateCompleted,    seo {      metaTitle,      metaDescription,      ogImage,      ogImageAlt,      noIndex    }  }
 export type ProjectBySlugQueryResult = {
   _id: string;
   title: string;
@@ -515,12 +601,65 @@ export type ProjectBySlugQueryResult = {
   headerBackgroundColor: Color | null;
   headerForegroundColor: Color | null;
   story: Array<
-    | ({
+    | {
         _key: string;
-      } & ImageBlock)
-    | ({
+        _type: "imageBlock";
+        image: {
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          _type: "image";
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        };
+        secondImage: {
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          _type: "image";
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        } | null;
+        caption?: string;
+        layout: "full" | "inset" | "pair";
+      }
+    | {
         _key: string;
-      } & TextBlock)
+        _type: "textBlock";
+        heading?: string;
+        content: Array<{
+          children?: Array<{
+            marks?: Array<string>;
+            text?: string;
+            _type: "span";
+            _key: string;
+          }>;
+          style?:
+            "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+          listItem?: "bullet" | "number";
+          markDefs?: Array<{
+            href?: string;
+            _type: "link";
+            _key: string;
+          }>;
+          level?: number;
+          _type: "block";
+          _key: string;
+        }>;
+        layout?:
+          | "one-column"
+          | "two-column-left"
+          | "two-column-right"
+          | "two-column-split";
+      }
   > | null;
   coverImage: {
     asset?: SanityImageAssetReference;
@@ -528,6 +667,10 @@ export type ProjectBySlugQueryResult = {
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     _type: "image";
+    metadata: {
+      lqip: string | null;
+      dimensions: SanityImageDimensions | null;
+    } | null;
   } | null;
   techStack: Array<string> | null;
   skills: Array<
@@ -566,12 +709,21 @@ export type ProjectBySlugQueryResult = {
 
 // Source: lib/sanity/queries.ts
 // Variable: projectsForIndexQuery
-// Query: *[_type == "project"] {    _id,    title,    slug,    summary,    story,    techStack,    skills,    impact,    dateCompleted  }
+// Query: *[_type == "project"] {    _id,    title,    slug,    summary,    heroText,    role,    coverImage,    story,    techStack,    skills,    impact,    dateCompleted  }
 export type ProjectsForIndexQueryResult = Array<{
   _id: string;
   title: string;
   slug: Slug;
   summary: string;
+  heroText: string | null;
+  role: string | null;
+  coverImage: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
   story: Array<
     | ({
         _key: string;
@@ -594,13 +746,34 @@ export type ProjectsForIndexQueryResult = Array<{
 }>;
 
 // Source: lib/sanity/queries.ts
+// Variable: projectsForSitemapQuery
+// Query: *[_type == "project"] | order(order asc) {    _id,    slug,    _updatedAt,    seo {      noIndex    }  }
+export type ProjectsForSitemapQueryResult = Array<{
+  _id: string;
+  slug: Slug;
+  _updatedAt: string;
+  seo: {
+    noIndex: boolean | null;
+  } | null;
+}>;
+
+// Source: lib/sanity/queries.ts
 // Variable: projectForIndexByIdQuery
-// Query: *[_type == "project" && _id == $id][0] {    _id,    title,    slug,    summary,    story,    techStack,    skills,    impact,    dateCompleted  }
+// Query: *[_type == "project" && _id == $id][0] {    _id,    title,    slug,    summary,    heroText,    role,    coverImage,    story,    techStack,    skills,    impact,    dateCompleted  }
 export type ProjectForIndexByIdQueryResult = {
   _id: string;
   title: string;
   slug: Slug;
   summary: string;
+  heroText: string | null;
+  role: string | null;
+  coverImage: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
   story: Array<
     | ({
         _key: string;
@@ -622,12 +795,95 @@ export type ProjectForIndexByIdQueryResult = {
   dateCompleted: string | null;
 } | null;
 
-export type ExperienceQueryRole = {
-  _key: string;
+// Source: lib/sanity/queries.ts
+// Variable: experienceQuery
+// Query: *[_type == "experience"] | order(order asc) {    _id,    company,    companyUrl,    logo,    order,    roles[] {      _key,      title,      startDate,      endDate,      summary    }  }
+export type ExperienceQueryResult = Array<{
+  _id: string;
+  company: string;
+  companyUrl: string | null;
+  logo: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  order: number;
+  roles: Array<{
+    _key: string;
+    title: string;
+    startDate: string;
+    endDate: string | null;
+    summary: Array<{
+      children?: Array<{
+        marks?: Array<string>;
+        text?: string;
+        _type: "span";
+        _key: string;
+      }>;
+      style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+      listItem?: "bullet" | "number";
+      markDefs?: Array<{
+        href?: string;
+        _type: "link";
+        _key: string;
+      }>;
+      level?: number;
+      _type: "block";
+      _key: string;
+    }> | null;
+  }>;
+}>;
+
+// Source: lib/sanity/queries.ts
+// Variable: experienceEntryByIdQuery
+// Query: *[_type == "experience" && _id == $id][0] {    _id,    company,    companyUrl,    logo,    order,    roles[] {      _key,      title,      startDate,      endDate,      summary    }  }
+export type ExperienceEntryByIdQueryResult = {
+  _id: string;
+  company: string;
+  companyUrl: string | null;
+  logo: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  order: number;
+  roles: Array<{
+    _key: string;
+    title: string;
+    startDate: string;
+    endDate: string | null;
+    summary: Array<{
+      children?: Array<{
+        marks?: Array<string>;
+        text?: string;
+        _type: "span";
+        _key: string;
+      }>;
+      style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+      listItem?: "bullet" | "number";
+      markDefs?: Array<{
+        href?: string;
+        _type: "link";
+        _key: string;
+      }>;
+      level?: number;
+      _type: "block";
+      _key: string;
+    }> | null;
+  }>;
+} | null;
+
+// Source: lib/sanity/queries.ts
+// Variable: knowledgeEntryByIdQuery
+// Query: *[_type == "knowledgeBaseEntry" && _id == $id][0] {    _id,    title,    body,    tags  }
+export type KnowledgeEntryByIdQueryResult = {
+  _id: string;
   title: string;
-  startDate: string;
-  endDate: string | null;
-  summary: Array<{
+  body: Array<{
     children?: Array<{
       marks?: Array<string>;
       text?: string;
@@ -644,48 +900,47 @@ export type ExperienceQueryRole = {
     level?: number;
     _type: "block";
     _key: string;
-  }> | null;
-};
+  }>;
+  tags: Array<string> | null;
+} | null;
 
 // Source: lib/sanity/queries.ts
-// Variable: experienceQuery
-// Query: *[_type == "experience"] | order(order asc) {    _id,    company,    companyUrl,    logo,    order,    roles[] { title, startDate, endDate, summary }  }
-export type ExperienceQueryResult = Array<{
+// Variable: knowledgeEntriesForIndexQuery
+// Query: *[_type == "knowledgeBaseEntry"] {    _id,    title,    body,    tags  }
+export type KnowledgeEntriesForIndexQueryResult = Array<{
   _id: string;
-  company: string;
-  companyUrl: string | null;
-  logo: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  } | null;
-  order: number;
-  roles: Array<ExperienceQueryRole> | null;
+  title: string;
+  body: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  tags: Array<string> | null;
 }>;
 
 // Source: lib/sanity/queries.ts
-// Variable: experienceEntryByIdQuery
-// Query: *[_type == "experience" && _id == $id][0] {    _id,    company,    companyUrl,    logo,    order,    roles[] { title, startDate, endDate, summary }  }
-export type ExperienceEntryByIdQueryResult = {
-  _id: string;
-  company: string;
-  companyUrl: string | null;
-  logo: {
-    asset?: SanityImageAssetReference;
-    media?: unknown;
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  } | null;
-  order: number;
-  roles: Array<ExperienceQueryRole> | null;
+// Variable: aboutForSitemapQuery
+// Query: *[_type == "about"][0] {    _updatedAt  }
+export type AboutForSitemapQueryResult = {
+  _updatedAt: string;
 } | null;
 
 // Source: lib/sanity/queries.ts
 // Variable: aboutQuery
-// Query: *[_type == "about"][0] {    _id,    name,    headline,    bio,    whatIDo[] {      _key,      title,      description    },    logo,    footerText,    "resumeUrl": resumeFile.asset->url,    email,    socialLinks,    howIWork,    seo {      metaTitle,      metaDescription,      ogImage,      ogImageAlt,      noIndex    },    siteName,    titleTemplate,    defaultMetaDescription,    defaultOgImage  }
+// Query: *[_type == "about"][0] {    _id,    name,    headline,    bio,    whatIDo[] {      _key,      title,      description    },    logo,    footerText,    "resumeUrl": resumeFile.asset->url,    email,    socialLinks,    howIWork[] {      ...,      _type == "imageBlock" => {        ...,        image {          ...,          "metadata": asset->metadata { lqip, dimensions }        },        secondImage {          ...,          "metadata": asset->metadata { lqip, dimensions }        }      }    },    seo {      metaTitle,      metaDescription,      ogImage,      ogImageAlt,      noIndex    },    siteName,    titleTemplate,    defaultMetaDescription,    defaultOgImage  }
 export type AboutQueryResult = {
   _id: string;
   name: string;
@@ -730,12 +985,65 @@ export type AboutQueryResult = {
     _key: string;
   }> | null;
   howIWork: Array<
-    | ({
+    | {
         _key: string;
-      } & ImageBlock)
-    | ({
+        _type: "imageBlock";
+        image: {
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          _type: "image";
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        };
+        secondImage: {
+          asset?: SanityImageAssetReference;
+          media?: unknown;
+          hotspot?: SanityImageHotspot;
+          crop?: SanityImageCrop;
+          alt: string;
+          _type: "image";
+          metadata: {
+            lqip: string | null;
+            dimensions: SanityImageDimensions | null;
+          } | null;
+        } | null;
+        caption?: string;
+        layout: "full" | "inset" | "pair";
+      }
+    | {
         _key: string;
-      } & TextBlock)
+        _type: "textBlock";
+        heading?: string;
+        content: Array<{
+          children?: Array<{
+            marks?: Array<string>;
+            text?: string;
+            _type: "span";
+            _key: string;
+          }>;
+          style?:
+            "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
+          listItem?: "bullet" | "number";
+          markDefs?: Array<{
+            href?: string;
+            _type: "link";
+            _key: string;
+          }>;
+          level?: number;
+          _type: "block";
+          _key: string;
+        }>;
+        layout?:
+          | "one-column"
+          | "two-column-left"
+          | "two-column-right"
+          | "two-column-split";
+      }
   > | null;
   seo: {
     metaTitle: string | null;
@@ -766,14 +1074,18 @@ export type AboutQueryResult = {
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n  *[_type == "project" && featured == true] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverPrimary,\n    coverSecondary,\n    coverMobile,\n    coverLayout,\n    order\n  }\n': FeaturedProjectsQueryResult;
+    '\n  *[_type == "project" && featured == true] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverPrimary {\n      ...,\n      "metadata": asset->metadata { lqip, dimensions }\n    },\n    coverSecondary {\n      ...,\n      "metadata": asset->metadata { lqip, dimensions }\n    },\n    coverMobile {\n      ...,\n      "metadata": asset->metadata { lqip, dimensions }\n    },\n    coverLayout,\n    order\n  }\n': FeaturedProjectsQueryResult;
     '\n  *[_type == "project"] | order(order asc) {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted\n  }\n': ProjectsQueryResult;
-    '\n  *[_type == "project" && _id != $currentId] | order(order asc) [0...3] {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage,\n    order\n  }\n': OtherProjectsQueryResult;
-    '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    headerBackgroundColor,\n    headerForegroundColor,\n    story,\n    coverImage,\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted,\n    seo {\n      metaTitle,\n      metaDescription,\n      ogImage,\n      ogImageAlt,\n      noIndex\n    }\n  }\n': ProjectBySlugQueryResult;
-    '\n  *[_type == "project"] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectsForIndexQueryResult;
-    '\n  *[_type == "project" && _id == $id][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectForIndexByIdQueryResult;
-    '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceQueryResult;
-    '\n  *[_type == "experience" && _id == $id][0] {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceEntryByIdQueryResult;
-    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    whatIDo[] {\n      _key,\n      title,\n      description\n    },\n    logo,\n    footerText,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks,\n    howIWork,\n    seo {\n      metaTitle,\n      metaDescription,\n      ogImage,\n      ogImageAlt,\n      noIndex\n    },\n    siteName,\n    titleTemplate,\n    defaultMetaDescription,\n    defaultOgImage\n  }\n': AboutQueryResult;
+    '\n  *[_type == "project" && _id != $currentId] | order(order asc) [0...2] {\n    _id,\n    title,\n    slug,\n    summary,\n    coverImage {\n      ...,\n      "metadata": asset->metadata { lqip, dimensions }\n    },\n    order\n  }\n': OtherProjectsQueryResult;
+    '\n  *[_type == "project" && slug.current == $slug][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    headerBackgroundColor,\n    headerForegroundColor,\n    story[] {\n      ...,\n      _type == "imageBlock" => {\n        ...,\n        image {\n          ...,\n          "metadata": asset->metadata { lqip, dimensions }\n        },\n        secondImage {\n          ...,\n          "metadata": asset->metadata { lqip, dimensions }\n        }\n      }\n    },\n    coverImage {\n      ...,\n      "metadata": asset->metadata { lqip, dimensions }\n    },\n    techStack,\n    skills,\n    impact,\n    role,\n    links,\n    featured,\n    order,\n    dateCompleted,\n    seo {\n      metaTitle,\n      metaDescription,\n      ogImage,\n      ogImageAlt,\n      noIndex\n    }\n  }\n': ProjectBySlugQueryResult;
+    '\n  *[_type == "project"] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    role,\n    coverImage,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectsForIndexQueryResult;
+    '\n  *[_type == "project"] | order(order asc) {\n    _id,\n    slug,\n    _updatedAt,\n    seo {\n      noIndex\n    }\n  }\n': ProjectsForSitemapQueryResult;
+    '\n  *[_type == "project" && _id == $id][0] {\n    _id,\n    title,\n    slug,\n    summary,\n    heroText,\n    role,\n    coverImage,\n    story,\n    techStack,\n    skills,\n    impact,\n    dateCompleted\n  }\n': ProjectForIndexByIdQueryResult;
+    '\n  *[_type == "experience"] | order(order asc) {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      _key,\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceQueryResult;
+    '\n  *[_type == "experience" && _id == $id][0] {\n    _id,\n    company,\n    companyUrl,\n    logo,\n    order,\n    roles[] {\n      _key,\n      title,\n      startDate,\n      endDate,\n      summary\n    }\n  }\n': ExperienceEntryByIdQueryResult;
+    '\n  *[_type == "knowledgeBaseEntry" && _id == $id][0] {\n    _id,\n    title,\n    body,\n    tags\n  }\n': KnowledgeEntryByIdQueryResult;
+    '\n  *[_type == "knowledgeBaseEntry"] {\n    _id,\n    title,\n    body,\n    tags\n  }\n': KnowledgeEntriesForIndexQueryResult;
+    '\n  *[_type == "about"][0] {\n    _updatedAt\n  }\n': AboutForSitemapQueryResult;
+    '\n  *[_type == "about"][0] {\n    _id,\n    name,\n    headline,\n    bio,\n    whatIDo[] {\n      _key,\n      title,\n      description\n    },\n    logo,\n    footerText,\n    "resumeUrl": resumeFile.asset->url,\n    email,\n    socialLinks,\n    howIWork[] {\n      ...,\n      _type == "imageBlock" => {\n        ...,\n        image {\n          ...,\n          "metadata": asset->metadata { lqip, dimensions }\n        },\n        secondImage {\n          ...,\n          "metadata": asset->metadata { lqip, dimensions }\n        }\n      }\n    },\n    seo {\n      metaTitle,\n      metaDescription,\n      ogImage,\n      ogImageAlt,\n      noIndex\n    },\n    siteName,\n    titleTemplate,\n    defaultMetaDescription,\n    defaultOgImage\n  }\n': AboutQueryResult;
   }
 }
