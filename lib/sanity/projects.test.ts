@@ -35,6 +35,19 @@ describe("getFeaturedProjects", () => {
     );
     expect(result).toEqual(projects);
   });
+
+  it("projects image metadata (lqip + dimensions) on every cover image", async () => {
+    fetchMock.mockResolvedValueOnce([]);
+
+    await getFeaturedProjects();
+
+    for (const field of ["metadata", "lqip", "dimensions"]) {
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining(field));
+    }
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("asset->metadata { lqip, dimensions }"),
+    );
+  });
 });
 
 describe("getProjects", () => {
@@ -102,6 +115,22 @@ describe("getProject", () => {
     expect(result).toEqual(project);
   });
 
+  it("projects image metadata (lqip + dimensions) on the cover image and Story Image Blocks", async () => {
+    fetchMock.mockResolvedValueOnce(null);
+
+    await getProject("a");
+
+    for (const field of ["metadata", "lqip", "dimensions"]) {
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining(field), {
+        slug: "a",
+      });
+    }
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("asset->metadata { lqip, dimensions }"),
+      { slug: "a" },
+    );
+  });
+
   it("returns null when no project matches the slug", async () => {
     fetchMock.mockResolvedValueOnce(null);
 
@@ -130,6 +159,22 @@ describe("getOtherProjects", () => {
       { currentId: "1" },
     );
     expect(result).toEqual(projects);
+  });
+
+  it("projects image metadata (lqip + dimensions) on the cover image", async () => {
+    fetchMock.mockResolvedValueOnce([]);
+
+    await getOtherProjects("1");
+
+    for (const field of ["metadata", "lqip", "dimensions"]) {
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining(field), {
+        currentId: "1",
+      });
+    }
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("asset->metadata { lqip, dimensions }"),
+      { currentId: "1" },
+    );
   });
 });
 

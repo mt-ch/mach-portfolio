@@ -57,6 +57,15 @@ describe("aboutQuery homepage SEO", () => {
   });
 });
 
+describe("aboutQuery howIWork Image Blocks", () => {
+  it("projects image metadata (lqip + dimensions) on Image Block images", () => {
+    for (const field of ["metadata", "lqip", "dimensions"]) {
+      expect(aboutQuery).toContain(field);
+    }
+    expect(aboutQuery).toContain("asset->metadata { lqip, dimensions }");
+  });
+});
+
 describe("getAboutForSitemap", () => {
   it("requests only the singleton's last-edited time", () => {
     expect(aboutForSitemapQuery).toContain("_updatedAt");

@@ -43,6 +43,7 @@ function imageBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[n
         _type: "reference",
       },
       alt: "Primary alt",
+      metadata: null,
     },
     secondImage: null,
     ...overrides,
@@ -158,6 +159,7 @@ describe("ContentBlocks", () => {
           _type: "reference",
         },
         alt: "Secondary alt",
+        metadata: null,
       },
     });
 
@@ -223,7 +225,10 @@ describe("ContentBlocks", () => {
 
   it("renders no extra visible content for an Image Block with no assets", () => {
     const text = textBlock({ _key: "first" });
-    const empty = imageBlock({ _key: "empty", image: { _type: "image", asset: undefined, alt: "" } });
+    const empty = imageBlock({
+      _key: "empty",
+      image: { _type: "image", asset: undefined, alt: "", metadata: null },
+    });
 
     const { container: withEmpty } = render(<ContentBlocks blocks={[text, empty]} />);
     const { container: withoutEmpty } = render(<ContentBlocks blocks={[text]} />);

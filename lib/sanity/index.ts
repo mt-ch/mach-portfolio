@@ -26,5 +26,6 @@ export type {
   ProjectForIndex,
   ProjectListItem,
   ProjectSitemapItem,
+  SanityImageAssetMetadata,
   TextContentBlock,
 } from "./types";

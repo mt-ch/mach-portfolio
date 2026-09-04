@@ -1,14 +1,34 @@
 import { defineQuery } from "groq";
 
+// Attaches the Sanity image asset's low-quality placeholder and intrinsic
+// dimensions to an image projection, so render paths can add blur-up
+// placeholders and layout-shift-free sizing. `asset` (the reference) is left
+// untouched so `urlFor` keeps working. Inlined per query rather than shared as
+// an interpolated fragment because `sanity typegen` resolves the projection
+// only when it appears literally inside `defineQuery`.
+//   <image field> {
+//     ...,
+//     "metadata": asset->metadata { lqip, dimensions }
+//   }
+
 export const featuredProjectsQuery = defineQuery(`
   *[_type == "project" && featured == true] | order(order asc) {
     _id,
     title,
     slug,
     summary,
-    coverPrimary,
-    coverSecondary,
-    coverMobile,
+    coverPrimary {
+      ...,
+      "metadata": asset->metadata { lqip, dimensions }
+    },
+    coverSecondary {
+      ...,
+      "metadata": asset->metadata { lqip, dimensions }
+    },
+    coverMobile {
+      ...,
+      "metadata": asset->metadata { lqip, dimensions }
+    },
     coverLayout,
     order
   }
@@ -38,7 +58,10 @@ export const otherProjectsQuery = defineQuery(`
     title,
     slug,
     summary,
-    coverImage,
+    coverImage {
+      ...,
+      "metadata": asset->metadata { lqip, dimensions }
+    },
     order
   }
 `);
@@ -52,8 +75,24 @@ export const projectBySlugQuery = defineQuery(`
     heroText,
     headerBackgroundColor,
     headerForegroundColor,
-    story,
-    coverImage,
+    story[] {
+      ...,
+      _type == "imageBlock" => {
+        ...,
+        image {
+          ...,
+          "metadata": asset->metadata { lqip, dimensions }
+        },
+        secondImage {
+          ...,
+          "metadata": asset->metadata { lqip, dimensions }
+        }
+      }
+    },
+    coverImage {
+      ...,
+      "metadata": asset->metadata { lqip, dimensions }
+    },
     techStack,
     skills,
     impact,
@@ -133,6 +172,7 @@ export const experienceQuery = defineQuery(`
     logo,
     order,
     roles[] {
+      _key,
       title,
       startDate,
       endDate,
@@ -149,6 +189,7 @@ export const experienceEntryByIdQuery = defineQuery(`
     logo,
     order,
     roles[] {
+      _key,
       title,
       startDate,
       endDate,
@@ -199,7 +240,20 @@ export const aboutQuery = defineQuery(`
     "resumeUrl": resumeFile.asset->url,
     email,
     socialLinks,
-    howIWork,
+    howIWork[] {
+      ...,
+      _type == "imageBlock" => {
+        ...,
+        image {
+          ...,
+          "metadata": asset->metadata { lqip, dimensions }
+        },
+        secondImage {
+          ...,
+          "metadata": asset->metadata { lqip, dimensions }
+        }
+      }
+    },
     seo {
       metaTitle,
       metaDescription,
