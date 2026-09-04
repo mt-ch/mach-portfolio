@@ -39,7 +39,7 @@ describe("SiteFooter", () => {
     expect(
       screen.getByText(/for collaborations and full time roles/),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Email me" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Email" })).toHaveAttribute(
       "href",
       "mailto:matt@example.com",
     );
@@ -59,7 +59,7 @@ describe("SiteFooter", () => {
     expect(
       screen.queryByText(/for collaborations and full time roles/),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Email me" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Email" })).toBeInTheDocument();
   });
 
   it("renders every line of a multi-line footerText", () => {
