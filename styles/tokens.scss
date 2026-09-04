@@ -70,6 +70,9 @@
 
   /* Layout */
   --layout-page-x: #{fluid-space(20, 48)};
+  /* Bounded reading column for the Project Story (text + images). Featured
+   * Project rows and other full-bleed layouts deliberately ignore this. */
+  --layout-story-max-width: 1200px;
   --layout-section-y: #{fluid-space(72, 128)};
   --layout-grid-gap: #{fluid-space(16, 32)};
 
@@ -216,6 +219,7 @@
   --spacing-6xl: var(--space-6xl);
 
   --spacing-page-x: var(--layout-page-x);
+  --container-story: var(--layout-story-max-width);
   --spacing-section-y: var(--layout-section-y);
   --spacing-grid-gap: var(--layout-grid-gap);
 
