@@ -23,13 +23,13 @@ export function OtherProjects({
             data-cursor-label="View Project"
             data-cursor-icon="eye"
           >
-            <div className="aspect-3/2 h-124 w-full max-w-full">
+            <div className="aspect-3/2 w-full max-w-full">
               <div className="relative h-full w-full overflow-hidden">
                 <CoverImage
                   image={project.coverImage}
                   alt=""
                   ratio="3:2"
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
             </div>

@@ -6,9 +6,17 @@ import type { OtherProjectListItem } from "@/lib/sanity";
 import { OtherProjects } from "./OtherProjects";
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt: string }) => (
+  default: ({
+    src,
+    alt,
+    sizes,
+  }: {
+    src: string;
+    alt: string;
+    sizes?: string;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} />
+    <img src={src} alt={alt} data-sizes={sizes} />
   ),
 }));
 
@@ -18,7 +26,11 @@ const projects: OtherProjectListItem[] = [
     title: "Pertemps",
     slug: { current: "pertemps" },
     summary: "Recruitment reimagined",
-    coverImage: null,
+    coverImage: {
+      asset: { _ref: "image-abc-100x100-png", _type: "reference" },
+      _type: "image",
+      metadata: null,
+    },
     order: 1,
   },
   {
@@ -78,5 +90,24 @@ describe("OtherProjects", () => {
     expect(
       screen.getByRole("heading", { name: "Other Projects" }),
     ).toBeInTheDocument();
+  });
+
+  it("requests an image sized for its real two-up-on-desktop width", () => {
+    render(<OtherProjects projects={projects.slice(0, 1)} />);
+
+    expect(screen.getByRole("presentation")).toHaveAttribute(
+      "data-sizes",
+      "(max-width: 768px) 100vw, 50vw",
+    );
+  });
+
+  it("uses a pure 3:2 aspect-ratio frame with no fixed pixel height", () => {
+    render(<OtherProjects projects={projects.slice(0, 1)} />);
+
+    const frame = screen
+      .getByRole("presentation")
+      .parentElement?.parentElement as HTMLElement;
+    expect(frame.className).toContain("aspect-3/2");
+    expect(frame.className).not.toMatch(/\bh-\d/);
   });
 });
