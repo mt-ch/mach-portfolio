@@ -3,7 +3,14 @@ import type { FeaturedProjectListItem } from "@/lib/sanity";
 import { CoverImage } from "@/components/ui/CoverImage";
 import { TransitionLink } from "@/components/features/transition/TransitionLink";
 
-export function FeaturedProjectRow({ project }: { project: FeaturedProjectListItem }) {
+export function FeaturedProjectRow({
+  project,
+  priority = false,
+}: {
+  project: FeaturedProjectListItem;
+  /** Load-priority hint for the first row's cover, the probable LCP image. */
+  priority?: boolean;
+}) {
   const href = `/projects/${project.slug.current}`;
   const layout = project.coverLayout ?? "left-dominant";
   const isRightDominant = layout === "right-dominant";
@@ -17,9 +24,15 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
       data-cursor-label="View Project"
       data-cursor-icon="eye"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-3/2 h-124 w-full max-w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-4/3 lg:aspect-3/2 w-full max-w-full">
         <div className="relative h-full w-full overflow-hidden lg:hidden">
-          <CoverImage image={project.coverMobile} alt="" ratio="3:2" sizes="100vw" />
+          <CoverImage
+            image={project.coverMobile}
+            alt=""
+            ratio="4:3"
+            sizes="100vw"
+            priority={priority}
+          />
         </div>
         {isRightDominant ? (
           <>
@@ -29,6 +42,7 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
                 alt=""
                 ratio="3:2"
                 sizes="(max-width: 768px) 0vw, 66vw"
+                priority={priority}
               />
             </div>
             <div className="relative hidden h-full w-full overflow-hidden lg:block">
@@ -56,6 +70,7 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
                 alt=""
                 ratio="3:2"
                 sizes="(max-width: 768px) 0vw, 66vw"
+                priority={priority}
               />
             </div>
           </>
