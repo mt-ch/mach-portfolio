@@ -17,6 +17,8 @@ type CoverImageProps = {
   /** The responsive `sizes` hint for this caller's real rendered width. */
   sizes: string;
   className?: string;
+  /** Load-priority hint for the probable LCP image (e.g. the first row's cover). */
+  priority?: boolean;
 };
 
 function hasImageAsset(image: CoverImageAsset | null | undefined): boolean {
@@ -29,6 +31,7 @@ export function CoverImage({
   ratio,
   sizes,
   className = "h-full w-full object-cover",
+  priority = false,
 }: CoverImageProps) {
   if (!hasImageAsset(image)) {
     return <div className={`bg-grey-100 ${className}`} />;
@@ -46,6 +49,7 @@ export function CoverImage({
       height={height}
       sizes={sizes}
       className={className}
+      priority={priority}
       {...(lqip ? { placeholder: "blur" as const, blurDataURL: lqip } : {})}
     />
   );

@@ -94,8 +94,12 @@ export default async function Home() {
         <HeroSection about={about} />
         {projects.length > 0 && (
           <div className="gap-xl lg:px-md relative flex flex-col">
-            {projects.map((project) => (
-              <FeaturedProjectRow key={project._id} project={project} />
+            {projects.map((project, index) => (
+              <FeaturedProjectRow
+                key={project._id}
+                project={project}
+                priority={index === 0}
+              />
             ))}
           </div>
         )}
