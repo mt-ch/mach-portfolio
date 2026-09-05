@@ -15,7 +15,7 @@ export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefine
   if (!hasRenderableBlocks(blocks)) return null;
 
   return (
-    <div className="mx-auto w-full max-w-story">
+    <div className="w-full">
       <ContentBlocks blocks={blocks} />
     </div>
   );
