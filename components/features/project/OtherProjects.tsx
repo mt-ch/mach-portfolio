@@ -25,7 +25,12 @@ export function OtherProjects({
           >
             <div className="aspect-3/2 h-124 w-full max-w-full">
               <div className="relative h-full w-full overflow-hidden">
-                <CoverImage image={project.coverImage} alt="" />
+                <CoverImage
+                  image={project.coverImage}
+                  alt=""
+                  ratio="3:2"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
               </div>
             </div>
             <h2 className="type-body px-md font-medium lg:px-0">
