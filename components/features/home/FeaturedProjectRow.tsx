@@ -19,24 +19,44 @@ export function FeaturedProjectRow({ project }: { project: FeaturedProjectListIt
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-3/2 h-124 w-full max-w-full">
         <div className="relative h-full w-full overflow-hidden lg:hidden">
-          <CoverImage image={project.coverMobile} alt="" sizes="100vw" />
+          <CoverImage image={project.coverMobile} alt="" ratio="3:2" sizes="100vw" />
         </div>
         {isRightDominant ? (
           <>
             <div className="relative col-span-2 hidden h-full w-full overflow-hidden lg:block">
-              <CoverImage image={project.coverSecondary} alt="" sizes="(max-width: 768px) 0vw, 66vw" />
+              <CoverImage
+                image={project.coverSecondary}
+                alt=""
+                ratio="3:2"
+                sizes="(max-width: 768px) 0vw, 66vw"
+              />
             </div>
             <div className="relative hidden h-full w-full overflow-hidden lg:block">
-              <CoverImage image={project.coverPrimary} alt="" sizes="(max-width: 768px) 0vw, 33vw" />
+              <CoverImage
+                image={project.coverPrimary}
+                alt=""
+                ratio="3:2"
+                sizes="(max-width: 768px) 0vw, 33vw"
+              />
             </div>
           </>
         ) : (
           <>
             <div className="relative hidden h-full w-full overflow-hidden lg:block">
-              <CoverImage image={project.coverPrimary} alt="" sizes="(max-width: 768px) 0vw, 33vw" />
+              <CoverImage
+                image={project.coverPrimary}
+                alt=""
+                ratio="3:2"
+                sizes="(max-width: 768px) 0vw, 33vw"
+              />
             </div>
             <div className="relative col-span-2 hidden h-full w-full overflow-hidden lg:block">
-              <CoverImage image={project.coverSecondary} alt="" sizes="(max-width: 768px) 0vw, 66vw" />
+              <CoverImage
+                image={project.coverSecondary}
+                alt=""
+                ratio="3:2"
+                sizes="(max-width: 768px) 0vw, 66vw"
+              />
             </div>
           </>
         )}
