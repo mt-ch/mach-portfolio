@@ -118,21 +118,41 @@ describe("resolveImageBlock — sizes string", () => {
 });
 
 describe("resolveImageBlock — max-height guard", () => {
-  it("does not apply the guard to a landscape image", () => {
+  it("applies the guard to a landscape image resolved to `full`", () => {
     expect(
       resolveImageBlock({ authoredLayout: "full", aspectRatio: 1.5 })
         .applyMaxHeightGuard,
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  it("applies the guard to a portrait image", () => {
+  it("applies the guard to a `full` image even when aspect ratio is unknown", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "full" }).applyMaxHeightGuard,
+    ).toBe(true);
+  });
+
+  it("applies the guard to a portrait image routed from `full` to `inset`", () => {
     expect(
       resolveImageBlock({ authoredLayout: "full", aspectRatio: 0.6 })
         .applyMaxHeightGuard,
     ).toBe(true);
   });
 
-  it("flips exactly at the portrait threshold", () => {
+  it("does not apply the guard to a landscape `inset` image", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "inset", aspectRatio: 1.5 })
+        .applyMaxHeightGuard,
+    ).toBe(false);
+  });
+
+  it("applies the guard to a portrait `inset` image", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "inset", aspectRatio: 0.6 })
+        .applyMaxHeightGuard,
+    ).toBe(true);
+  });
+
+  it("flips exactly at the portrait threshold for `inset`", () => {
     const justBelow = resolveImageBlock({
       authoredLayout: "inset",
       aspectRatio: PORTRAIT_ASPECT_RATIO_THRESHOLD - 0.01,
@@ -145,9 +165,16 @@ describe("resolveImageBlock — max-height guard", () => {
     expect(atThreshold.applyMaxHeightGuard).toBe(false);
   });
 
-  it("does not apply the guard when aspect ratio is unknown", () => {
+  it("does not apply the guard to an `inset` image when aspect ratio is unknown", () => {
     expect(
       resolveImageBlock({ authoredLayout: "inset" }).applyMaxHeightGuard,
+    ).toBe(false);
+  });
+
+  it("does not apply the guard to a `pair`", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "pair", aspectRatio: 0.6 })
+        .applyMaxHeightGuard,
     ).toBe(false);
   });
 });

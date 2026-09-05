@@ -6,8 +6,9 @@
 
 /**
  * A target aspect-ratio token an editor crops toward. `16:9`, `4:3` and `4:5`
- * are the documented Image Block targets; `3:2` is the fixed shape of composed
- * frames (homepage Featured Project rows, Other Projects cards).
+ * are the documented Image Block targets; `16:9` doubles as the fixed shape of
+ * the homepage Featured Project row's desktop columns, `3:2` as the fixed
+ * shape of the Other Projects cards.
  */
 export type RatioToken = "16:9" | "4:3" | "4:5" | "3:2";
 
@@ -20,9 +21,11 @@ export type ImageDimensions = { width: number; height: number };
  * hardcoded `1200x800` / `1600x1000` that used to live in the components.
  */
 const RATIO_DIMENSIONS: Record<RatioToken, ImageDimensions> = {
-  // Composed frames render close to full-bleed; ~2400px covers a large desktop.
+  // Other Projects cards render close to full-bleed; ~2400px covers a large desktop.
   "3:2": { width: 2400, height: 1600 },
-  // Story `full` images cap at the ~1200px reading column; 2x for retina.
+  // Story `full` images cap at the ~1200px reading column; the Featured
+  // Project row's desktop columns render close to full-bleed. 2x either way
+  // for retina.
   "16:9": { width: 2400, height: 1350 },
   "4:3": { width: 2400, height: 1800 },
   // Portrait images render at the narrower inset width (~672px); a smaller
@@ -79,9 +82,13 @@ export type ResolvedImageBlock = {
    */
   objectFit: "cover" | "contain";
   /**
-   * Whether the ~85vh max-height guard applies, keeping tall images within
-   * roughly one viewport. Flips at {@link PORTRAIT_ASPECT_RATIO_THRESHOLD}:
-   * landscape images never approach the ceiling, portrait ones can.
+   * Whether the ~85vh max-height guard applies, keeping a single image within
+   * roughly one viewport. Applies whenever the resolved layout is `full` — at
+   * the ~1200px reading column width, even a moderately-landscape screenshot
+   * (aspect ratio near 1) can otherwise render tall enough to dominate the
+   * screen — and to any portrait image (aspect ratio below
+   * {@link PORTRAIT_ASPECT_RATIO_THRESHOLD}), including one routed to the
+   * narrower `inset` width.
    */
   applyMaxHeightGuard: boolean;
   /** The responsive `sizes` string for the resolved layout. */
@@ -127,7 +134,7 @@ export function resolveImageBlock({
     layout,
     forcedRatio: null,
     objectFit: "contain",
-    applyMaxHeightGuard: portrait,
+    applyMaxHeightGuard: layout === "full" || portrait,
     sizes: LAYOUT_SIZES[layout],
   };
 }
