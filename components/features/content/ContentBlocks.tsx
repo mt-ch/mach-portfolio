@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 
+import { dimensionsForRatio, resolveImageBlock } from "@/lib/image/imageLayout";
 import type { ProjectDetail } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
 
@@ -124,52 +125,121 @@ const LAYOUT_CONTAINER_CLASS: Record<Layout, string> = {
   pair: "grid grid-cols-1 gap-sm sm:grid-cols-2",
 };
 
-const LAYOUT_ASPECT_CLASS: Record<Layout, string> = {
-  full: "aspect-16/9",
-  inset: "aspect-4/3",
-  pair: "aspect-4/3",
-};
+type BlockImageValue = NonNullable<ImageBlock["image"] | ImageBlock["secondImage"]>;
 
-const LAYOUT_SIZES: Record<Layout, string> = {
-  full: "100vw",
-  inset: "(max-width: 1024px) 100vw, 672px",
-  pair: "(max-width: 640px) 100vw, 50vw",
-};
+// The image field's own `crop` (fractions of the original asset the editor
+// kept) applied to the asset's pre-crop pixel dimensions, giving the pixel
+// size — and therefore ratio — the image actually renders at.
+// `metadata.dimensions.aspectRatio` is the *pre*-crop ratio, so it isn't
+// usable here, and the fetched `src` (built via a bare `urlFor(image).url()`)
+// is cropped to this same rectangle, so this must be what's passed as the
+// intrinsic width/height too or the reserved box won't match the real image.
+function postCropDimensions(
+  image: BlockImageValue,
+): { width: number; height: number } | undefined {
+  const dimensions = image.metadata?.dimensions;
+  if (!dimensions) return undefined;
+
+  const crop = image.crop;
+  const width = crop ? dimensions.width * (1 - crop.left - crop.right) : dimensions.width;
+  const height = crop ? dimensions.height * (1 - crop.top - crop.bottom) : dimensions.height;
+  if (width <= 0 || height <= 0) return undefined;
+
+  return { width: Math.round(width), height: Math.round(height) };
+}
 
 function BlockImage({
   image,
-  layout,
+  forcedRatio,
+  objectFit,
+  applyMaxHeightGuard,
+  sizes,
 }: {
-  image: ImageBlock["image"] | ImageBlock["secondImage"];
-  layout: Layout;
+  image: BlockImageValue;
+  forcedRatio: ReturnType<typeof resolveImageBlock>["forcedRatio"];
+  objectFit: ReturnType<typeof resolveImageBlock>["objectFit"];
+  applyMaxHeightGuard: boolean;
+  sizes: string;
 }) {
-  if (!image?.asset) return null;
+  const lqip = image.metadata?.lqip ?? undefined;
 
-  const src = urlFor(image).width(1600).height(1000).fit("crop").url();
+  if (forcedRatio) {
+    const { width, height } = dimensionsForRatio(forcedRatio);
+    const src = urlFor(image).width(width).height(height).fit("crop").url();
+
+    return (
+      <div className="relative aspect-4/3 overflow-hidden">
+        <Image
+          src={src}
+          alt={image.alt}
+          fill
+          sizes={sizes}
+          placeholder={lqip ? "blur" : "empty"}
+          blurDataURL={lqip}
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
+  // No forced width/height/crop: the URL builder call preserves whatever crop
+  // rectangle the editor stored in Studio, and the image renders at its
+  // natural post-crop ratio.
+  const src = urlFor(image).url();
+  const dimensions = postCropDimensions(image) ?? { width: 1200, height: 1200 };
+
+  const widthClass = applyMaxHeightGuard
+    ? "h-auto w-auto max-h-[85vh] max-w-full"
+    : "h-auto w-full";
 
   return (
-    <div className={`relative overflow-hidden ${LAYOUT_ASPECT_CLASS[layout]}`}>
+    <div className={applyMaxHeightGuard ? "flex justify-center" : undefined}>
       <Image
         src={src}
         alt={image.alt}
-        fill
-        sizes={LAYOUT_SIZES[layout]}
-        className="object-cover"
+        width={dimensions.width}
+        height={dimensions.height}
+        sizes={sizes}
+        placeholder={lqip ? "blur" : "empty"}
+        blurDataURL={lqip}
+        className={`${widthClass} ${objectFit === "cover" ? "object-cover" : "object-contain"}`}
       />
     </div>
   );
 }
 
 function ImageBlockView({ block }: { block: ImageBlock }) {
-  const { layout, caption, image, secondImage } = block;
-  const showPair = layout === "pair" && image?.asset && secondImage?.asset;
+  const { layout: authoredLayout, caption, image, secondImage } = block;
+  const showPair = authoredLayout === "pair" && image?.asset && secondImage?.asset;
 
   if (!image?.asset && !secondImage?.asset) return null;
 
+  const imageDimensions = image?.asset ? postCropDimensions(image) : undefined;
+  const resolved = resolveImageBlock({
+    authoredLayout,
+    aspectRatio: imageDimensions ? imageDimensions.width / imageDimensions.height : undefined,
+  });
+
   return (
-    <figure className={LAYOUT_CONTAINER_CLASS[layout]}>
-      <BlockImage image={image} layout={layout} />
-      {showPair && <BlockImage image={secondImage} layout={layout} />}
+    <figure className={LAYOUT_CONTAINER_CLASS[resolved.layout]}>
+      {image?.asset && (
+        <BlockImage
+          image={image}
+          forcedRatio={resolved.forcedRatio}
+          objectFit={resolved.objectFit}
+          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
+          sizes={resolved.sizes}
+        />
+      )}
+      {showPair && secondImage?.asset && (
+        <BlockImage
+          image={secondImage}
+          forcedRatio={resolved.forcedRatio}
+          objectFit={resolved.objectFit}
+          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
+          sizes={resolved.sizes}
+        />
+      )}
       {caption && (
         <figcaption className="type-caption text-grey-300 mt-xs">
           {caption}
