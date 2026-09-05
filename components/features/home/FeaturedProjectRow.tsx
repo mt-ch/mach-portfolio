@@ -24,7 +24,7 @@ export function FeaturedProjectRow({
       data-cursor-label="View Project"
       data-cursor-icon="eye"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-4/3 lg:aspect-3/2 w-full max-w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-4/3 lg:aspect-16/9 lg:max-h-[85vh] w-full max-w-full">
         <div className="relative h-full w-full overflow-hidden lg:hidden">
           <CoverImage
             image={project.coverMobile}
@@ -40,7 +40,7 @@ export function FeaturedProjectRow({
               <CoverImage
                 image={project.coverSecondary}
                 alt=""
-                ratio="3:2"
+                ratio="16:9"
                 sizes="(max-width: 768px) 0vw, 66vw"
                 priority={priority}
               />
@@ -49,7 +49,7 @@ export function FeaturedProjectRow({
               <CoverImage
                 image={project.coverPrimary}
                 alt=""
-                ratio="3:2"
+                ratio="16:9"
                 sizes="(max-width: 768px) 0vw, 33vw"
               />
             </div>
@@ -60,7 +60,7 @@ export function FeaturedProjectRow({
               <CoverImage
                 image={project.coverPrimary}
                 alt=""
-                ratio="3:2"
+                ratio="16:9"
                 sizes="(max-width: 768px) 0vw, 33vw"
               />
             </div>
@@ -68,7 +68,7 @@ export function FeaturedProjectRow({
               <CoverImage
                 image={project.coverSecondary}
                 alt=""
-                ratio="3:2"
+                ratio="16:9"
                 sizes="(max-width: 768px) 0vw, 66vw"
                 priority={priority}
               />
