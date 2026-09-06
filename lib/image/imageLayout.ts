@@ -41,10 +41,11 @@ export function dimensionsForRatio(token: RatioToken): ImageDimensions {
 }
 
 /**
- * The aspect-ratio boundary (width / height) below which an image counts as
- * "portrait": it is routed to the inset width even when authored full, and it
- * gets the max-height guard. A single named constant so tuning it during visual
- * review is a one-line change. 4:3 (~1.33) stays above it; 4:5 (0.8) and phone
+ * The aspect-ratio boundary (width / height) below which an `inset` image
+ * counts as "portrait" and gets the max-height guard (so a tall screenshot
+ * shown uncropped at the narrower inset width still fits within roughly one
+ * viewport). A single named constant so tuning it during visual review is a
+ * one-line change. 4:3 (~1.33) stays above it; 4:5 (0.8) and phone
  * screenshots fall below.
  */
 export const PORTRAIT_ASPECT_RATIO_THRESHOLD = 0.9;
@@ -67,7 +68,12 @@ export type ResolveImageBlockInput = {
 };
 
 export type ResolvedImageBlock = {
-  /** The layout to render at after portrait routing. */
+  /**
+   * The layout to render at — always the authored layout; there is no
+   * automatic routing between layouts. `full` and `pair` are both forced-crop
+   * composed frames, so a portrait screenshot authored `full` still renders
+   * full-bleed at the shared ratio rather than being narrowed to `inset`.
+   */
   layout: EffectiveImageLayout;
   /**
    * A ratio the images must be cropped to, overriding their intrinsic ratio.
@@ -85,11 +91,12 @@ export type ResolvedImageBlock = {
   objectFit: "cover" | "contain";
   /**
    * Whether the max-height guard applies (rendered via the
-   * `--layout-max-bleed-height` CSS token). Applies to `full` and `pair`
+   * `--layout-max-bleed-height` CSS token for `full`/`pair`, and a fixed
+   * `85vh` for a portrait `inset`). Applies to `full` and `pair`
    * unconditionally (full-bleed composed frames, exposed to the same "huge on
-   * a big monitor" problem as the homepage row) and to any portrait image
-   * (aspect ratio below {@link PORTRAIT_ASPECT_RATIO_THRESHOLD}) routed to the
-   * narrower `inset` width.
+   * a big monitor" problem as the homepage row) and to `inset` only when the
+   * image is portrait (aspect ratio below
+   * {@link PORTRAIT_ASPECT_RATIO_THRESHOLD}).
    */
   applyMaxHeightGuard: boolean;
   /** The responsive `sizes` string for the resolved layout. */
@@ -128,11 +135,7 @@ export function resolveImageBlock({
     };
   }
 
-  const portrait = isPortrait(aspectRatio);
-  const layout: EffectiveImageLayout =
-    authoredLayout === "full" && portrait ? "inset" : authoredLayout;
-
-  if (layout === "full") {
+  if (authoredLayout === "full") {
     return {
       layout: "full",
       forcedRatio: FULL_AND_PAIR_FORCED_RATIO,
@@ -143,10 +146,10 @@ export function resolveImageBlock({
   }
 
   return {
-    layout,
+    layout: "inset",
     forcedRatio: null,
     objectFit: "contain",
-    applyMaxHeightGuard: portrait,
-    sizes: LAYOUT_SIZES[layout],
+    applyMaxHeightGuard: isPortrait(aspectRatio),
+    sizes: LAYOUT_SIZES.inset,
   };
 }

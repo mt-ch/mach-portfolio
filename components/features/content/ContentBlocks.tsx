@@ -126,18 +126,33 @@ function TextBlockView({ block }: { block: TextBlock }) {
 const LAYOUT_CONTAINER_CLASS: Record<Layout, string> = {
   full: "w-full",
   inset: "mx-auto w-full max-w-2xl",
-  pair: "grid grid-cols-1 gap-sm sm:grid-cols-2",
+  pair: "w-full",
 };
 
 type BlockImageValue = NonNullable<ImageBlock["image"] | ImageBlock["secondImage"]>;
 
 // Tailwind aspect-ratio utility for each `RatioToken`, used to shape the
-// `fill`-image wrapper when a layout forces a ratio (`full`, `pair`).
+// `fill`-image wrapper when a layout forces a ratio (`full`, `pair`). Used
+// unprefixed on `full` (single image = the whole block) and as each `pair`
+// panel's own mobile-only ratio (stacked, so each panel reads like its own
+// `full` block there).
 const FORCED_RATIO_ASPECT_CLASS: Record<RatioToken, string> = {
   "16:9": "aspect-16/9",
   "4:3": "aspect-4/3",
   "4:5": "aspect-4/5",
   "3:2": "aspect-3/2",
+};
+
+// The `sm:`-prefixed counterpart, applied to the `pair` frame as a whole at
+// desktop so the *entire* two-image row — not each individual panel — matches
+// a `full` block's ratio and height. Kept as a static lookup (rather than
+// building `sm:${...}` at render time) so Tailwind's class scanner can see
+// every literal class name; a dynamically-concatenated one wouldn't generate.
+const FORCED_RATIO_SM_ASPECT_CLASS: Record<RatioToken, string> = {
+  "16:9": "sm:aspect-16/9",
+  "4:3": "sm:aspect-4/3",
+  "4:5": "sm:aspect-4/5",
+  "3:2": "sm:aspect-3/2",
 };
 
 // The image field's own `crop` (fractions of the original asset the editor
@@ -161,52 +176,57 @@ function postCropDimensions(
   return { width: Math.round(width), height: Math.round(height) };
 }
 
-function BlockImage({
+// `full` (single image = the whole block) and each `pair` panel: cropped via
+// `fill`/`object-cover` to a forced ratio. The class list controls where that
+// ratio and the max-height guard actually apply — see the two call sites.
+function ForcedRatioImage({
   image,
   forcedRatio,
+  sizes,
+  className,
+}: {
+  image: BlockImageValue;
+  forcedRatio: RatioToken;
+  sizes: string;
+  className: string;
+}) {
+  const lqip = image.metadata?.lqip ?? undefined;
+  const { width, height } = dimensionsForRatio(forcedRatio);
+  const src = urlFor(image).width(width).height(height).fit("crop").url();
+
+  return (
+    <div className={className}>
+      <Image
+        src={src}
+        alt={image.alt}
+        fill
+        sizes={sizes}
+        placeholder={lqip ? "blur" : "empty"}
+        blurDataURL={lqip}
+        className="object-cover"
+      />
+    </div>
+  );
+}
+
+// `inset` only: the URL builder call preserves whatever crop rectangle the
+// editor stored in Studio, and the image renders at its natural post-crop
+// ratio (no forced width/height/crop). The max-height guard here only ever
+// fires for a portrait image capped at the narrower ~672px inset width — a
+// fixed 85vh is plenty there and deliberately separate from the full-bleed
+// `--layout-max-bleed-height` token, which guards much wider frames.
+function IntrinsicImage({
+  image,
   objectFit,
   applyMaxHeightGuard,
   sizes,
 }: {
   image: BlockImageValue;
-  forcedRatio: ReturnType<typeof resolveImageBlock>["forcedRatio"];
-  objectFit: ReturnType<typeof resolveImageBlock>["objectFit"];
+  objectFit: "cover" | "contain";
   applyMaxHeightGuard: boolean;
   sizes: string;
 }) {
   const lqip = image.metadata?.lqip ?? undefined;
-
-  if (forcedRatio) {
-    const { width, height } = dimensionsForRatio(forcedRatio);
-    const src = urlFor(image).width(width).height(height).fit("crop").url();
-    const guardClass = applyMaxHeightGuard
-      ? "max-h-[var(--layout-max-bleed-height)]"
-      : "";
-
-    return (
-      <div
-        className={`relative overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[forcedRatio]} ${guardClass}`}
-      >
-        <Image
-          src={src}
-          alt={image.alt}
-          fill
-          sizes={sizes}
-          placeholder={lqip ? "blur" : "empty"}
-          blurDataURL={lqip}
-          className="object-cover"
-        />
-      </div>
-    );
-  }
-
-  // No forced width/height/crop: the URL builder call preserves whatever crop
-  // rectangle the editor stored in Studio, and the image renders at its
-  // natural post-crop ratio. Only reachable for `inset` (`full`/`pair` always
-  // take the forcedRatio branch above), so the guard here only ever fires for
-  // a portrait image capped at the narrower ~672px inset width — a fixed 85vh
-  // is plenty there and deliberately separate from the full-bleed
-  // `--layout-max-bleed-height` token, which guards much wider frames.
   const src = urlFor(image).url();
   const dimensions = postCropDimensions(image) ?? { width: 1200, height: 1200 };
 
@@ -242,21 +262,50 @@ function ImageBlockView({ block }: { block: ImageBlock }) {
     aspectRatio: imageDimensions ? imageDimensions.width / imageDimensions.height : undefined,
   });
 
+  const guardClass = resolved.applyMaxHeightGuard
+    ? "max-h-[var(--layout-max-bleed-height)]"
+    : "";
+
   return (
     <figure className={LAYOUT_CONTAINER_CLASS[resolved.layout]}>
-      {image?.asset && (
-        <BlockImage
+      {resolved.forcedRatio && resolved.layout === "full" && image?.asset && (
+        <ForcedRatioImage
           image={image}
           forcedRatio={resolved.forcedRatio}
-          objectFit={resolved.objectFit}
-          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
           sizes={resolved.sizes}
+          className={`relative w-full overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[resolved.forcedRatio]} ${guardClass}`}
         />
       )}
-      {showPair && secondImage?.asset && (
-        <BlockImage
-          image={secondImage}
-          forcedRatio={resolved.forcedRatio}
+      {resolved.forcedRatio && resolved.layout === "pair" && (
+        // The frame — not each panel — carries the ratio and the guard at
+        // `sm:` and up, so the *entire* two-image row matches a `full`
+        // block's shape and height instead of each half-width panel getting
+        // its own (much shorter) 16:9. Below `sm:` the panels stack, so each
+        // one gets its own ratio/guard back, same as a standalone `full`.
+        <div
+          className={`flex flex-col gap-sm overflow-hidden sm:flex-row ${FORCED_RATIO_SM_ASPECT_CLASS[resolved.forcedRatio]} ${resolved.applyMaxHeightGuard ? "sm:max-h-[var(--layout-max-bleed-height)]" : ""}`}
+        >
+          {image?.asset && (
+            <ForcedRatioImage
+              image={image}
+              forcedRatio={resolved.forcedRatio}
+              sizes={resolved.sizes}
+              className={`relative overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[resolved.forcedRatio]} ${guardClass} sm:aspect-auto sm:max-h-none sm:flex-1`}
+            />
+          )}
+          {showPair && secondImage?.asset && (
+            <ForcedRatioImage
+              image={secondImage}
+              forcedRatio={resolved.forcedRatio}
+              sizes={resolved.sizes}
+              className={`relative overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[resolved.forcedRatio]} ${guardClass} sm:aspect-auto sm:max-h-none sm:flex-1`}
+            />
+          )}
+        </div>
+      )}
+      {!resolved.forcedRatio && image?.asset && (
+        <IntrinsicImage
+          image={image}
           objectFit={resolved.objectFit}
           applyMaxHeightGuard={resolved.applyMaxHeightGuard}
           sizes={resolved.sizes}

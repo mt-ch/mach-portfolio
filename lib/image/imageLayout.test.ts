@@ -26,13 +26,13 @@ describe("dimensionsForRatio", () => {
   });
 });
 
-describe("resolveImageBlock — portrait routing", () => {
-  it("collapses a portrait image authored `full` to `inset`", () => {
+describe("resolveImageBlock — layout is always the authored layout", () => {
+  it("keeps a portrait image authored `full` as `full`", () => {
     const resolved = resolveImageBlock({
       authoredLayout: "full",
       aspectRatio: 0.8,
     });
-    expect(resolved.layout).toBe("inset");
+    expect(resolved.layout).toBe("full");
   });
 
   it("keeps a landscape image authored `full` as `full`", () => {
@@ -43,25 +43,18 @@ describe("resolveImageBlock — portrait routing", () => {
     expect(resolved.layout).toBe("full");
   });
 
-  it("keeps a 4:3 image authored `full` as `full` (above the threshold)", () => {
-    const resolved = resolveImageBlock({
-      authoredLayout: "full",
-      aspectRatio: 4 / 3,
-    });
-    expect(resolved.layout).toBe("full");
-  });
-
   it("takes the authored layout at face value when aspect ratio is unknown", () => {
     const resolved = resolveImageBlock({ authoredLayout: "full" });
     expect(resolved.layout).toBe("full");
   });
 
-  it("leaves an authored `inset` image as `inset`", () => {
-    const resolved = resolveImageBlock({
-      authoredLayout: "inset",
-      aspectRatio: 0.8,
-    });
-    expect(resolved.layout).toBe("inset");
+  it("leaves an authored `inset` image as `inset` regardless of ratio", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "inset", aspectRatio: 0.8 }).layout,
+    ).toBe("inset");
+    expect(
+      resolveImageBlock({ authoredLayout: "inset", aspectRatio: 16 / 9 }).layout,
+    ).toBe("inset");
   });
 });
 
@@ -116,10 +109,10 @@ describe("resolveImageBlock — sizes string", () => {
     ).toBe("(max-width: 1024px) 100vw, 672px");
   });
 
-  it("returns the inset sizes for a portrait image routed from `full` to `inset`", () => {
+  it("returns the full-bleed sizes for a portrait image authored `full`", () => {
     expect(
       resolveImageBlock({ authoredLayout: "full", aspectRatio: 0.8 }).sizes,
-    ).toBe("(max-width: 1024px) 100vw, 672px");
+    ).toBe("100vw");
   });
 
   it("returns the pair sizes for a `pair`", () => {
@@ -143,7 +136,7 @@ describe("resolveImageBlock — max-height guard", () => {
     ).toBe(true);
   });
 
-  it("applies the guard to a portrait image routed from `full` to `inset`", () => {
+  it("applies the guard to a portrait image authored `full`", () => {
     expect(
       resolveImageBlock({ authoredLayout: "full", aspectRatio: 0.6 })
         .applyMaxHeightGuard,

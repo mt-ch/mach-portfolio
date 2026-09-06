@@ -6,7 +6,7 @@ function imageField(name: string, title: string, required: boolean) {
     title,
     type: "image",
     description:
-      "Crop toward one of the target ratios: landscape 16:9, standard 4:3, or portrait 4:5. The site renders your crop as-is at its natural ratio (no forced centre-crop), so what you frame here is what visitors see.",
+      "Crop toward one of the target ratios: landscape 16:9, standard 4:3, or portrait 4:5. Full and Pair layouts crop to a fixed 16:9 frame — your hotspot controls what stays in view. Inset renders your crop as-is at its natural ratio, uncropped.",
     options: { hotspot: true },
     fields: [
       defineField({
