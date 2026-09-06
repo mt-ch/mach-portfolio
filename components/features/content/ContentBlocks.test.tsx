@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { dimensionsForRatio } from "@/lib/image/imageLayout";
 import type { ProjectDetail } from "@/lib/sanity";
+import { urlFor } from "@/lib/sanity/image";
 
 import { ContentBlocks } from "./ContentBlocks";
 
@@ -13,6 +15,7 @@ vi.mock("next/image", () => ({
 }));
 
 type StoryBlocks = NonNullable<ProjectDetail["story"]>;
+type ImageStoryBlock = Extract<StoryBlocks[number], { _type: "imageBlock" }>;
 
 function textBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[number] {
   return {
@@ -30,7 +33,7 @@ function textBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[nu
   } as StoryBlocks[number];
 }
 
-function imageBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[number] {
+function imageBlock(overrides: Partial<ImageStoryBlock> = {}): ImageStoryBlock {
   return {
     _type: "imageBlock",
     _key: "image-1",
@@ -47,7 +50,7 @@ function imageBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[n
     },
     secondImage: null,
     ...overrides,
-  } as StoryBlocks[number];
+  } as ImageStoryBlock;
 }
 
 describe("ContentBlocks", () => {
@@ -147,6 +150,34 @@ describe("ContentBlocks", () => {
     const images = screen.getAllByRole("img");
     expect(images).toHaveLength(1);
     expect(images[0]).toHaveAttribute("alt", "Primary alt");
+  });
+
+  it("requests Sanity dimensions matching the block's selected aspect ratio", () => {
+    const block = imageBlock({ layout: "full", aspectRatio: "4:3" });
+    const { width, height } = dimensionsForRatio("4:3");
+    const expectedSrc = urlFor(block.image!)
+      .width(width)
+      .height(height)
+      .fit("crop")
+      .url();
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    expect(screen.getByRole("img")).toHaveAttribute("src", expectedSrc);
+  });
+
+  it("falls back to the 16:9 default when no aspect ratio is set on the block", () => {
+    const block = imageBlock({ layout: "full", aspectRatio: undefined });
+    const { width, height } = dimensionsForRatio("16:9");
+    const expectedSrc = urlFor(block.image!)
+      .width(width)
+      .height(height)
+      .fit("crop")
+      .url();
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    expect(screen.getByRole("img")).toHaveAttribute("src", expectedSrc);
   });
 
   it("renders a pair-layout Image Block with two images, each with its own alt text", () => {

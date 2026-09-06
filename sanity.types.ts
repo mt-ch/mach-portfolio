@@ -57,6 +57,7 @@ export type ImageBlock = {
   };
   caption?: string;
   layout: "full" | "inset" | "pair";
+  aspectRatio?: "16:9" | "4:3" | "3:2" | "4:5";
 };
 
 export type TextBlock = {
@@ -630,6 +631,7 @@ export type ProjectBySlugQueryResult = {
         } | null;
         caption?: string;
         layout: "full" | "inset" | "pair";
+        aspectRatio?: "16:9" | "4:3" | "3:2" | "4:5";
       }
     | {
         _key: string;
@@ -1014,6 +1016,7 @@ export type AboutQueryResult = {
         } | null;
         caption?: string;
         layout: "full" | "inset" | "pair";
+        aspectRatio?: "16:9" | "4:3" | "3:2" | "4:5";
       }
     | {
         _key: string;

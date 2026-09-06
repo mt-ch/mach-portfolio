@@ -6,7 +6,7 @@ function imageField(name: string, title: string, required: boolean) {
     title,
     type: "image",
     description:
-      "Crop toward one of the target ratios: landscape 16:9, standard 4:3, or portrait 4:5. Full and Pair layouts crop to a fixed 16:9 frame — your hotspot controls what stays in view. Inset renders your crop as-is at its natural ratio, uncropped.",
+      "Crop toward one of the target ratios: landscape 16:9, standard 4:3, or portrait 4:5. Full and Pair layouts crop to the block's Aspect ratio setting below — your hotspot controls what stays in view. Inset renders your crop as-is at its natural ratio, uncropped.",
     options: { hotspot: true },
     fields: [
       defineField({
@@ -53,6 +53,25 @@ export const imageBlock = defineType({
           }
           return true;
         }),
+    }),
+    defineField({
+      name: "aspectRatio",
+      title: "Aspect ratio",
+      type: "string",
+      description:
+        "The fixed ratio Full and Pair crop to (object-cover — your hotspot controls what stays in view). Has no effect on Inset, which always renders your crop as-is, uncropped.",
+      options: {
+        list: [
+          { title: "Landscape (16:9)", value: "16:9" },
+          { title: "Standard (4:3)", value: "4:3" },
+          { title: "Wide (3:2)", value: "3:2" },
+          { title: "Portrait (4:5)", value: "4:5" },
+        ],
+        layout: "radio",
+      },
+      initialValue: "16:9",
+      hidden: ({ parent }) =>
+        (parent as { layout?: string } | undefined)?.layout === "inset",
     }),
   ],
   preview: {

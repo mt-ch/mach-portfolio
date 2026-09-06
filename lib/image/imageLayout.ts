@@ -5,10 +5,11 @@
 // place instead of being scattered across components.
 
 /**
- * A target aspect-ratio token an editor crops toward. `16:9`, `4:3` and `4:5`
- * are the documented Image Block targets; `16:9` doubles as the fixed shape of
- * the homepage Featured Project row's desktop columns and of Project Story
- * `full`/`pair` images, `3:2` as the fixed shape of the Other Projects cards.
+ * A target aspect-ratio token. `16:9` is the fixed shape of the homepage
+ * Featured Project row's desktop columns and the default for Project Story
+ * `full`/`pair` images; `3:2` is the fixed shape of the Other Projects cards.
+ * All four values are also the editor-facing choices for a Story `full`/
+ * `pair` Image Block's "Aspect ratio" Studio field.
  */
 export type RatioToken = "16:9" | "4:3" | "4:5" | "3:2";
 
@@ -65,6 +66,13 @@ export type ResolveImageBlockInput = {
    * which case the authored layout is taken at face value.
    */
   aspectRatio?: number;
+  /**
+   * The ratio token the editor chose in Studio for a `full`/`pair` block.
+   * Ignored for `inset`, which always renders intrinsic. Defaults to
+   * {@link FULL_AND_PAIR_FORCED_RATIO} ("16:9") when unset — either the block
+   * predates this field, or the Studio default was left in place.
+   */
+  ratio?: RatioToken;
 };
 
 export type ResolvedImageBlock = {
@@ -77,10 +85,11 @@ export type ResolvedImageBlock = {
   layout: EffectiveImageLayout;
   /**
    * A ratio the images must be cropped to, overriding their intrinsic ratio.
-   * `full` and `pair` both force `16:9` (composed, full-bleed frames, cropped
-   * the same way the homepage Featured Project row is); `inset` stays
-   * intrinsic (`null`), since it exists specifically to show tall/portrait
-   * screenshots uncropped.
+   * `full` and `pair` both force whatever ratio was passed as {@link
+   * ResolveImageBlockInput.ratio} (composed, full-bleed frames, cropped the
+   * same way the homepage Featured Project row is); `inset` stays intrinsic
+   * (`null`), since it exists specifically to show tall/portrait screenshots
+   * uncropped.
    */
   forcedRatio: RatioToken | null;
   /**
@@ -110,7 +119,9 @@ const LAYOUT_SIZES: Record<EffectiveImageLayout, string> = {
   pair: "(max-width: 640px) 100vw, 50vw",
 };
 
-// The shared forced ratio for `full` and `pair` — see {@link ResolvedImageBlock.forcedRatio}.
+// The default forced ratio for `full`/`pair` when a block predates the
+// Studio "Aspect ratio" field or was left at its default. Also the fixed
+// shape of the homepage Featured Project row's desktop columns.
 const FULL_AND_PAIR_FORCED_RATIO: RatioToken = "16:9";
 
 function isPortrait(aspectRatio: number | undefined): boolean {
@@ -124,11 +135,12 @@ function isPortrait(aspectRatio: number | undefined): boolean {
 export function resolveImageBlock({
   authoredLayout,
   aspectRatio,
+  ratio = FULL_AND_PAIR_FORCED_RATIO,
 }: ResolveImageBlockInput): ResolvedImageBlock {
   if (authoredLayout === "pair") {
     return {
       layout: "pair",
-      forcedRatio: FULL_AND_PAIR_FORCED_RATIO,
+      forcedRatio: ratio,
       objectFit: "cover",
       applyMaxHeightGuard: true,
       sizes: LAYOUT_SIZES.pair,
@@ -138,7 +150,7 @@ export function resolveImageBlock({
   if (authoredLayout === "full") {
     return {
       layout: "full",
-      forcedRatio: FULL_AND_PAIR_FORCED_RATIO,
+      forcedRatio: ratio,
       objectFit: "cover",
       applyMaxHeightGuard: true,
       sizes: LAYOUT_SIZES.full,

@@ -257,7 +257,7 @@ function IntrinsicImage({
 }
 
 function ImageBlockView({ block }: { block: ImageBlock }) {
-  const { layout: authoredLayout, caption, image, secondImage } = block;
+  const { layout: authoredLayout, caption, image, secondImage, aspectRatio } = block;
   const showPair =
     authoredLayout === "pair" && image?.asset && secondImage?.asset;
 
@@ -269,6 +269,7 @@ function ImageBlockView({ block }: { block: ImageBlock }) {
     aspectRatio: imageDimensions
       ? imageDimensions.width / imageDimensions.height
       : undefined,
+    ratio: aspectRatio,
   });
 
   const guardClass = resolved.applyMaxHeightGuard

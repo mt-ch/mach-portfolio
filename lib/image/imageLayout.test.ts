@@ -94,6 +94,24 @@ describe("resolveImageBlock — forced-ratio treatment", () => {
       "contain",
     );
   });
+
+  it("uses an editor-selected ratio for `full` instead of the 16:9 default", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "full", ratio: "4:3" }).forcedRatio,
+    ).toBe("4:3");
+  });
+
+  it("uses an editor-selected ratio for `pair` instead of the 16:9 default", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "pair", ratio: "4:5" }).forcedRatio,
+    ).toBe("4:5");
+  });
+
+  it("ignores a selected ratio for `inset`", () => {
+    expect(
+      resolveImageBlock({ authoredLayout: "inset", ratio: "4:3" }).forcedRatio,
+    ).toBeNull();
+  });
 });
 
 describe("resolveImageBlock — sizes string", () => {
