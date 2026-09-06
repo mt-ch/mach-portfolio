@@ -1,12 +1,19 @@
 import { defineField, defineType } from "sanity";
 
+const ASPECT_RATIO_OPTIONS = [
+  { title: "Landscape (16:9)", value: "16:9" },
+  { title: "Standard (4:3)", value: "4:3" },
+  { title: "Wide (3:2)", value: "3:2" },
+  { title: "Portrait (4:5)", value: "4:5" },
+];
+
 function imageField(name: string, title: string, required: boolean) {
   return defineField({
     name,
     title,
     type: "image",
     description:
-      "Crop toward one of the target ratios: landscape 16:9, standard 4:3, or portrait 4:5. Full and Pair layouts crop to the block's Aspect ratio setting below — your hotspot controls what stays in view. Inset renders your crop as-is at its natural ratio, uncropped.",
+      "Crop toward one of the target ratios: landscape 16:9, standard 4:3, or portrait 4:5. In a Full or Pair layout this image crops (object-cover) to its own Aspect ratio setting below — your hotspot controls what stays in view. In an Inset layout this setting is ignored and the image renders your crop as-is, uncropped.",
     options: { hotspot: true },
     fields: [
       defineField({
@@ -14,6 +21,30 @@ function imageField(name: string, title: string, required: boolean) {
         title: "Alt text",
         type: "string",
         validation: (rule) => rule.required(),
+      }),
+      defineField({
+        name: "aspectRatio",
+        title: "Aspect ratio",
+        description:
+          "Only used by Full and Pair layouts (ignored by Inset). Set independently per image and per breakpoint, so a pair's two images — or the same image on mobile vs. desktop — can crop differently.",
+        type: "object",
+        options: { collapsible: true, collapsed: true },
+        fields: [
+          defineField({
+            name: "desktop",
+            title: "Desktop",
+            type: "string",
+            options: { list: ASPECT_RATIO_OPTIONS, layout: "radio" },
+            initialValue: "16:9",
+          }),
+          defineField({
+            name: "mobile",
+            title: "Mobile",
+            type: "string",
+            options: { list: ASPECT_RATIO_OPTIONS, layout: "radio" },
+            initialValue: "16:9",
+          }),
+        ],
       }),
     ],
     validation: required ? (rule) => rule.required() : undefined,
@@ -53,25 +84,6 @@ export const imageBlock = defineType({
           }
           return true;
         }),
-    }),
-    defineField({
-      name: "aspectRatio",
-      title: "Aspect ratio",
-      type: "string",
-      description:
-        "The fixed ratio Full and Pair crop to (object-cover — your hotspot controls what stays in view). Has no effect on Inset, which always renders your crop as-is, uncropped.",
-      options: {
-        list: [
-          { title: "Landscape (16:9)", value: "16:9" },
-          { title: "Standard (4:3)", value: "4:3" },
-          { title: "Wide (3:2)", value: "3:2" },
-          { title: "Portrait (4:5)", value: "4:5" },
-        ],
-        layout: "radio",
-      },
-      initialValue: "16:9",
-      hidden: ({ parent }) =>
-        (parent as { layout?: string } | undefined)?.layout === "inset",
     }),
   ],
   preview: {

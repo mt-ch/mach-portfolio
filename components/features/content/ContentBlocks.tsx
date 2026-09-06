@@ -2,9 +2,11 @@ import Image from "next/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 
 import {
-  dimensionsForRatio,
+  dimensionsForResponsiveRatio,
+  resolveForcedRatio,
   resolveImageBlock,
   type RatioToken,
+  type ResponsiveRatio,
 } from "@/lib/image/imageLayout";
 import type { ProjectDetail } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
@@ -126,18 +128,15 @@ function TextBlockView({ block }: { block: TextBlock }) {
 const LAYOUT_CONTAINER_CLASS: Record<Layout, string> = {
   full: "w-full",
   inset: "mx-auto w-full max-w-2xl",
-  pair: "w-full",
+  pair: "grid grid-cols-1 gap-sm sm:grid-cols-2",
 };
 
 type BlockImageValue = NonNullable<
   ImageBlock["image"] | ImageBlock["secondImage"]
 >;
 
-// Tailwind aspect-ratio utility for each `RatioToken`, used to shape the
-// `fill`-image wrapper when a layout forces a ratio (`full`, `pair`). Used
-// unprefixed on `full` (single image = the whole block) and as each `pair`
-// panel's own mobile-only ratio (stacked, so each panel reads like its own
-// `full` block there).
+// Tailwind aspect-ratio utility for each `RatioToken`, applied unprefixed as
+// an image's mobile ratio.
 const FORCED_RATIO_ASPECT_CLASS: Record<RatioToken, string> = {
   "16:9": "aspect-16/9",
   "4:3": "aspect-4/3",
@@ -145,9 +144,9 @@ const FORCED_RATIO_ASPECT_CLASS: Record<RatioToken, string> = {
   "3:2": "aspect-3/2",
 };
 
-// The `sm:`-prefixed counterpart, applied to the `pair` frame as a whole at
-// desktop so the *entire* two-image row — not each individual panel — matches
-// a `full` block's ratio and height. Kept as a static lookup (rather than
+// The `sm:`-prefixed counterpart, applied as an image's desktop ratio — set
+// independently from its mobile ratio, since each image carries its own
+// per-breakpoint Studio selection. Kept as a static lookup (rather than
 // building `sm:${...}` at render time) so Tailwind's class scanner can see
 // every literal class name; a dynamically-concatenated one wouldn't generate.
 const FORCED_RATIO_SM_ASPECT_CLASS: Record<RatioToken, string> = {
@@ -183,25 +182,33 @@ function postCropDimensions(
 }
 
 // `full` (single image = the whole block) and each `pair` panel: cropped via
-// `fill`/`object-cover` to a forced ratio. The class list controls where that
-// ratio and the max-height guard actually apply — see the two call sites.
+// `fill`/`object-cover` to the image's own responsive ratio — a `pair`'s two
+// images (or the same image on mobile vs. desktop) can each crop differently.
+// The Sanity-side crop is requested tall enough for whichever breakpoint's
+// ratio is taller (see `dimensionsForResponsiveRatio`); the other breakpoint
+// then re-crops that same fetched image further via CSS `object-cover`.
 function ForcedRatioImage({
   image,
-  forcedRatio,
+  responsiveRatio,
+  applyMaxHeightGuard,
   sizes,
-  className,
 }: {
   image: BlockImageValue;
-  forcedRatio: RatioToken;
+  responsiveRatio: ResponsiveRatio;
+  applyMaxHeightGuard: boolean;
   sizes: string;
-  className: string;
 }) {
   const lqip = image.metadata?.lqip ?? undefined;
-  const { width, height } = dimensionsForRatio(forcedRatio);
+  const { width, height } = dimensionsForResponsiveRatio(responsiveRatio);
   const src = urlFor(image).width(width).height(height).fit("crop").url();
+  const guardClass = applyMaxHeightGuard
+    ? "max-h-[var(--layout-max-bleed-height)]"
+    : "";
 
   return (
-    <div className={className}>
+    <div
+      className={`relative w-full overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[responsiveRatio.mobile]} ${FORCED_RATIO_SM_ASPECT_CLASS[responsiveRatio.desktop]} ${guardClass}`}
+    >
       <Image
         src={src}
         alt={image.alt}
@@ -257,63 +264,45 @@ function IntrinsicImage({
 }
 
 function ImageBlockView({ block }: { block: ImageBlock }) {
-  const { layout: authoredLayout, caption, image, secondImage, aspectRatio } = block;
+  const { layout: authoredLayout, caption, image, secondImage } = block;
   const showPair =
     authoredLayout === "pair" && image?.asset && secondImage?.asset;
 
   if (!image?.asset && !secondImage?.asset) return null;
 
-  const imageDimensions = image?.asset ? postCropDimensions(image) : undefined;
+  // Only `inset` uses the intrinsic ratio (for its own portrait guard) —
+  // `full`/`pair` force a ratio regardless, so skip the metadata/crop math
+  // for the common case.
+  const imageDimensions =
+    authoredLayout === "inset" && image?.asset
+      ? postCropDimensions(image)
+      : undefined;
   const resolved = resolveImageBlock({
     authoredLayout,
     aspectRatio: imageDimensions
       ? imageDimensions.width / imageDimensions.height
       : undefined,
-    ratio: aspectRatio,
   });
-
-  const guardClass = resolved.applyMaxHeightGuard
-    ? "max-h-[var(--layout-max-bleed-height)]"
-    : "";
 
   return (
     <figure className={LAYOUT_CONTAINER_CLASS[resolved.layout]}>
-      {resolved.forcedRatio && resolved.layout === "full" && image?.asset && (
+      {resolved.forcesRatio && image?.asset && (
         <ForcedRatioImage
           image={image}
-          forcedRatio={resolved.forcedRatio}
+          responsiveRatio={resolveForcedRatio(image.aspectRatio)}
+          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
           sizes={resolved.sizes}
-          className={`relative w-full overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[resolved.forcedRatio]} ${guardClass}`}
         />
       )}
-      {resolved.forcedRatio && resolved.layout === "pair" && (
-        // The frame — not each panel — carries the ratio and the guard at
-        // `sm:` and up, so the *entire* two-image row matches a `full`
-        // block's shape and height instead of each half-width panel getting
-        // its own (much shorter) 16:9. Below `sm:` the panels stack, so each
-        // one gets its own ratio/guard back, same as a standalone `full`.
-        <div
-          className={`gap-sm flex w-full flex-col overflow-hidden sm:flex-row ${FORCED_RATIO_SM_ASPECT_CLASS[resolved.forcedRatio]} ${resolved.applyMaxHeightGuard ? "sm:max-h-[var(--layout-max-bleed-height)]" : ""}`}
-        >
-          {image?.asset && (
-            <ForcedRatioImage
-              image={image}
-              forcedRatio={resolved.forcedRatio}
-              sizes={resolved.sizes}
-              className={`relative overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[resolved.forcedRatio]} ${guardClass} sm:aspect-auto sm:max-h-none sm:flex-1`}
-            />
-          )}
-          {showPair && secondImage?.asset && (
-            <ForcedRatioImage
-              image={secondImage}
-              forcedRatio={resolved.forcedRatio}
-              sizes={resolved.sizes}
-              className={`relative overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[resolved.forcedRatio]} ${guardClass} sm:aspect-auto sm:max-h-none sm:flex-1`}
-            />
-          )}
-        </div>
+      {resolved.forcesRatio && showPair && secondImage?.asset && (
+        <ForcedRatioImage
+          image={secondImage}
+          responsiveRatio={resolveForcedRatio(secondImage.aspectRatio)}
+          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
+          sizes={resolved.sizes}
+        />
       )}
-      {!resolved.forcedRatio && image?.asset && (
+      {!resolved.forcesRatio && image?.asset && (
         <IntrinsicImage
           image={image}
           objectFit={resolved.objectFit}

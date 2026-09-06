@@ -152,8 +152,14 @@ describe("ContentBlocks", () => {
     expect(images[0]).toHaveAttribute("alt", "Primary alt");
   });
 
-  it("requests Sanity dimensions matching the block's selected aspect ratio", () => {
-    const block = imageBlock({ layout: "full", aspectRatio: "4:3" });
+  it("requests Sanity dimensions matching the image's own desktop aspect ratio", () => {
+    const block = imageBlock({
+      layout: "full",
+      image: {
+        ...imageBlock().image,
+        aspectRatio: { desktop: "4:3", mobile: "16:9" },
+      },
+    });
     const { width, height } = dimensionsForRatio("4:3");
     const expectedSrc = urlFor(block.image!)
       .width(width)
@@ -166,8 +172,8 @@ describe("ContentBlocks", () => {
     expect(screen.getByRole("img")).toHaveAttribute("src", expectedSrc);
   });
 
-  it("falls back to the 16:9 default when no aspect ratio is set on the block", () => {
-    const block = imageBlock({ layout: "full", aspectRatio: undefined });
+  it("falls back to the 16:9 default when no aspect ratio is set on the image", () => {
+    const block = imageBlock({ layout: "full" });
     const { width, height } = dimensionsForRatio("16:9");
     const expectedSrc = urlFor(block.image!)
       .width(width)
@@ -200,6 +206,44 @@ describe("ContentBlocks", () => {
     expect(images).toHaveLength(2);
     expect(images[0]).toHaveAttribute("alt", "Primary alt");
     expect(images[1]).toHaveAttribute("alt", "Secondary alt");
+  });
+
+  it("lets each image in a pair crop to its own independently-selected aspect ratio", () => {
+    const block = imageBlock({
+      layout: "pair",
+      image: {
+        ...imageBlock().image,
+        aspectRatio: { desktop: "4:3", mobile: "4:3" },
+      },
+      secondImage: {
+        _type: "image",
+        asset: {
+          _ref: "image-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-2000x3000-jpg",
+          _type: "reference",
+        },
+        alt: "Secondary alt",
+        metadata: null,
+        aspectRatio: { desktop: "3:2", mobile: "3:2" },
+      },
+    });
+    const firstDims = dimensionsForRatio("4:3");
+    const secondDims = dimensionsForRatio("3:2");
+    const expectedFirstSrc = urlFor(block.image!)
+      .width(firstDims.width)
+      .height(firstDims.height)
+      .fit("crop")
+      .url();
+    const expectedSecondSrc = urlFor(block.secondImage!)
+      .width(secondDims.width)
+      .height(secondDims.height)
+      .fit("crop")
+      .url();
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    const images = screen.getAllByRole("img");
+    expect(images[0]).toHaveAttribute("src", expectedFirstSrc);
+    expect(images[1]).toHaveAttribute("src", expectedSecondSrc);
   });
 
   it("renders a caption when present and omits it when absent", () => {

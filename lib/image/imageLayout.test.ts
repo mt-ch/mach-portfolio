@@ -4,6 +4,8 @@ import {
   PORTRAIT_ASPECT_RATIO_THRESHOLD,
   type RatioToken,
   dimensionsForRatio,
+  dimensionsForResponsiveRatio,
+  resolveForcedRatio,
   resolveImageBlock,
 } from "./imageLayout";
 
@@ -59,34 +61,36 @@ describe("resolveImageBlock — layout is always the authored layout", () => {
 });
 
 describe("resolveImageBlock — forced-ratio treatment", () => {
-  it("forces 16:9 with object-cover for a `pair`", () => {
+  it("forces a ratio with object-cover for a `pair`", () => {
     const resolved = resolveImageBlock({
       authoredLayout: "pair",
       aspectRatio: 2,
     });
     expect(resolved).toMatchObject({
       layout: "pair",
-      forcedRatio: "16:9",
+      forcesRatio: true,
       objectFit: "cover",
       applyMaxHeightGuard: true,
     });
   });
 
-  it("forces 16:9 with object-cover for a resolved `full`", () => {
+  it("forces a ratio with object-cover for a resolved `full`", () => {
     const resolved = resolveImageBlock({
       authoredLayout: "full",
       aspectRatio: 4 / 3,
     });
     expect(resolved).toMatchObject({
       layout: "full",
-      forcedRatio: "16:9",
+      forcesRatio: true,
       objectFit: "cover",
       applyMaxHeightGuard: true,
     });
   });
 
   it("does not force a ratio for `inset`", () => {
-    expect(resolveImageBlock({ authoredLayout: "inset" }).forcedRatio).toBeNull();
+    expect(resolveImageBlock({ authoredLayout: "inset" }).forcesRatio).toBe(
+      false,
+    );
   });
 
   it("renders `inset` images with object-contain", () => {
@@ -94,23 +98,77 @@ describe("resolveImageBlock — forced-ratio treatment", () => {
       "contain",
     );
   });
+});
 
-  it("uses an editor-selected ratio for `full` instead of the 16:9 default", () => {
-    expect(
-      resolveImageBlock({ authoredLayout: "full", ratio: "4:3" }).forcedRatio,
-    ).toBe("4:3");
+describe("resolveForcedRatio — per-image, per-breakpoint ratio", () => {
+  it("defaults both breakpoints to 16:9 when unset", () => {
+    expect(resolveForcedRatio(undefined)).toEqual({
+      mobile: "16:9",
+      desktop: "16:9",
+    });
+    expect(resolveForcedRatio(null)).toEqual({
+      mobile: "16:9",
+      desktop: "16:9",
+    });
   });
 
-  it("uses an editor-selected ratio for `pair` instead of the 16:9 default", () => {
-    expect(
-      resolveImageBlock({ authoredLayout: "pair", ratio: "4:5" }).forcedRatio,
-    ).toBe("4:5");
+  it("uses the editor's selection for both breakpoints when fully set", () => {
+    expect(resolveForcedRatio({ mobile: "4:5", desktop: "3:2" })).toEqual({
+      mobile: "4:5",
+      desktop: "3:2",
+    });
   });
 
-  it("ignores a selected ratio for `inset`", () => {
+  it("defaults only the unset breakpoint when partially set", () => {
+    expect(resolveForcedRatio({ desktop: "4:3" })).toEqual({
+      mobile: "16:9",
+      desktop: "4:3",
+    });
+    expect(resolveForcedRatio({ mobile: "4:3" })).toEqual({
+      mobile: "4:3",
+      desktop: "16:9",
+    });
+  });
+});
+
+describe("dimensionsForResponsiveRatio", () => {
+  it("uses the fixed full-bleed width regardless of ratio", () => {
     expect(
-      resolveImageBlock({ authoredLayout: "inset", ratio: "4:3" }).forcedRatio,
-    ).toBeNull();
+      dimensionsForResponsiveRatio({ mobile: "16:9", desktop: "16:9" }).width,
+    ).toBe(2400);
+    expect(
+      dimensionsForResponsiveRatio({ mobile: "4:5", desktop: "4:5" }).width,
+    ).toBe(2400);
+  });
+
+  it("matches dimensionsForRatio's height when both breakpoints agree", () => {
+    expect(
+      dimensionsForResponsiveRatio({ mobile: "4:3", desktop: "4:3" }),
+    ).toEqual(dimensionsForRatio("4:3"));
+  });
+
+  it("uses the taller breakpoint's height when desktop is wider than mobile", () => {
+    // desktop 16:9 alone would need less height than a 4:5 mobile crop —
+    // fetching only the desktop dimensions would under-provision mobile.
+    const dimensions = dimensionsForResponsiveRatio({
+      mobile: "4:5",
+      desktop: "16:9",
+    });
+    expect(dimensions.height).toBe(dimensionsForResponsiveRatio({
+      mobile: "4:5",
+      desktop: "4:5",
+    }).height);
+  });
+
+  it("uses the taller breakpoint's height when mobile is wider than desktop", () => {
+    const dimensions = dimensionsForResponsiveRatio({
+      mobile: "16:9",
+      desktop: "4:5",
+    });
+    expect(dimensions.height).toBe(dimensionsForResponsiveRatio({
+      mobile: "4:5",
+      desktop: "4:5",
+    }).height);
   });
 });
 

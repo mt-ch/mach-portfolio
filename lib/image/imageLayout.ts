@@ -8,8 +8,8 @@
  * A target aspect-ratio token. `16:9` is the fixed shape of the homepage
  * Featured Project row's desktop columns and the default for Project Story
  * `full`/`pair` images; `3:2` is the fixed shape of the Other Projects cards.
- * All four values are also the editor-facing choices for a Story `full`/
- * `pair` Image Block's "Aspect ratio" Studio field.
+ * All four values are also the editor-facing choices for each image's
+ * per-breakpoint "Aspect ratio" Studio field on a `full`/`pair` Image Block.
  */
 export type RatioToken = "16:9" | "4:3" | "4:5" | "3:2";
 
@@ -66,13 +66,6 @@ export type ResolveImageBlockInput = {
    * which case the authored layout is taken at face value.
    */
   aspectRatio?: number;
-  /**
-   * The ratio token the editor chose in Studio for a `full`/`pair` block.
-   * Ignored for `inset`, which always renders intrinsic. Defaults to
-   * {@link FULL_AND_PAIR_FORCED_RATIO} ("16:9") when unset — either the block
-   * predates this field, or the Studio default was left in place.
-   */
-  ratio?: RatioToken;
 };
 
 export type ResolvedImageBlock = {
@@ -84,14 +77,13 @@ export type ResolvedImageBlock = {
    */
   layout: EffectiveImageLayout;
   /**
-   * A ratio the images must be cropped to, overriding their intrinsic ratio.
-   * `full` and `pair` both force whatever ratio was passed as {@link
-   * ResolveImageBlockInput.ratio} (composed, full-bleed frames, cropped the
-   * same way the homepage Featured Project row is); `inset` stays intrinsic
-   * (`null`), since it exists specifically to show tall/portrait screenshots
-   * uncropped.
+   * Whether this layout force-crops its image(s) to a ratio (`object-cover`)
+   * rather than showing their intrinsic ratio. True for `full` and `pair` —
+   * each image then supplies its own {@link ResponsiveRatio} (see {@link
+   * resolveForcedRatio}), since the ratio is set per image, not per block.
+   * False for `inset`, which always renders intrinsic.
    */
-  forcedRatio: RatioToken | null;
+  forcesRatio: boolean;
   /**
    * How the image sits in its box. `cover` crops to fill (`full` and `pair`);
    * `contain` shows the whole image (`inset`, so the max-height guard can
@@ -119,11 +111,6 @@ const LAYOUT_SIZES: Record<EffectiveImageLayout, string> = {
   pair: "(max-width: 640px) 100vw, 50vw",
 };
 
-// The default forced ratio for `full`/`pair` when a block predates the
-// Studio "Aspect ratio" field or was left at its default. Also the fixed
-// shape of the homepage Featured Project row's desktop columns.
-const FULL_AND_PAIR_FORCED_RATIO: RatioToken = "16:9";
-
 function isPortrait(aspectRatio: number | undefined): boolean {
   return aspectRatio !== undefined && aspectRatio < PORTRAIT_ASPECT_RATIO_THRESHOLD;
 }
@@ -135,12 +122,11 @@ function isPortrait(aspectRatio: number | undefined): boolean {
 export function resolveImageBlock({
   authoredLayout,
   aspectRatio,
-  ratio = FULL_AND_PAIR_FORCED_RATIO,
 }: ResolveImageBlockInput): ResolvedImageBlock {
   if (authoredLayout === "pair") {
     return {
       layout: "pair",
-      forcedRatio: ratio,
+      forcesRatio: true,
       objectFit: "cover",
       applyMaxHeightGuard: true,
       sizes: LAYOUT_SIZES.pair,
@@ -150,7 +136,7 @@ export function resolveImageBlock({
   if (authoredLayout === "full") {
     return {
       layout: "full",
-      forcedRatio: ratio,
+      forcesRatio: true,
       objectFit: "cover",
       applyMaxHeightGuard: true,
       sizes: LAYOUT_SIZES.full,
@@ -159,9 +145,69 @@ export function resolveImageBlock({
 
   return {
     layout: "inset",
-    forcedRatio: null,
+    forcesRatio: false,
     objectFit: "contain",
     applyMaxHeightGuard: isPortrait(aspectRatio),
     sizes: LAYOUT_SIZES.inset,
   };
+}
+
+/**
+ * The forced ratio for a `full`/`pair` image, per breakpoint. Set
+ * independently on each image (a `pair`'s two images can crop differently,
+ * and each can crop differently on mobile vs. desktop) via the image's own
+ * Studio "Aspect ratio" field.
+ */
+export type ResponsiveRatio = { mobile: RatioToken; desktop: RatioToken };
+
+/**
+ * Falls back to `16:9` on both breakpoints — either the image predates the
+ * Studio "Aspect ratio" field, or a breakpoint was left unset.
+ */
+export const DEFAULT_RESPONSIVE_RATIO: ResponsiveRatio = {
+  mobile: "16:9",
+  desktop: "16:9",
+};
+
+/**
+ * Resolves an image's authored (possibly partial) Studio ratio selection into
+ * a complete {@link ResponsiveRatio}, defaulting each unset breakpoint to
+ * {@link DEFAULT_RESPONSIVE_RATIO}. Only meaningful when {@link
+ * ResolvedImageBlock.forcesRatio} is true.
+ */
+export function resolveForcedRatio(
+  ratio: Partial<ResponsiveRatio> | null | undefined,
+): ResponsiveRatio {
+  return {
+    mobile: ratio?.mobile ?? DEFAULT_RESPONSIVE_RATIO.mobile,
+    desktop: ratio?.desktop ?? DEFAULT_RESPONSIVE_RATIO.desktop,
+  };
+}
+
+// The full-bleed fetch width for a `full`/`pair` image, independent of a
+// ratio token's own `RATIO_DIMENSIONS` width — that width was tuned for the
+// token's usual surface (e.g. `4:5`'s narrower inset column), not necessarily
+// this full-bleed context, where every token needs the same wide baseline.
+const FORCED_RATIO_FETCH_WIDTH = 2400;
+
+function ratioValue(token: RatioToken): number {
+  const { width, height } = RATIO_DIMENSIONS[token];
+  return width / height;
+}
+
+/**
+ * Dimensions to request from Sanity for a `full`/`pair` image with a
+ * {@link ResponsiveRatio}: a fixed full-bleed width, and a height tall enough
+ * to satisfy whichever breakpoint's ratio is taller — so, say, a portrait
+ * mobile crop is never fetched shorter than it needs to render at just
+ * because the desktop ratio happens to be wider.
+ */
+export function dimensionsForResponsiveRatio(
+  ratio: ResponsiveRatio,
+): ImageDimensions {
+  const height = Math.max(
+    FORCED_RATIO_FETCH_WIDTH / ratioValue(ratio.desktop),
+    FORCED_RATIO_FETCH_WIDTH / ratioValue(ratio.mobile),
+  );
+  return { width: FORCED_RATIO_FETCH_WIDTH, height: Math.round(height) };
 }
