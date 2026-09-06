@@ -18,13 +18,13 @@ export function FeaturedProjectRow({
   return (
     <TransitionLink
       href={href}
-      className="inline-flex flex-col gap-md"
+      className="gap-md inline-flex flex-col"
       aria-label={`${project.title}: ${project.summary}`}
       data-cursor="label"
       data-cursor-label="View Project"
       data-cursor-icon="eye"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-4/3 lg:aspect-16/9 lg:max-h-[var(--layout-max-bleed-height)] w-full max-w-full">
+      <div className="gap-sm grid aspect-4/3 w-full max-w-full grid-cols-1 lg:aspect-16/9 lg:max-h-[var(--layout-max-bleed-height-featured-project)] lg:grid-cols-3">
         <div className="relative h-full w-full overflow-hidden lg:hidden">
           <CoverImage
             image={project.coverMobile}
@@ -76,8 +76,11 @@ export function FeaturedProjectRow({
           </>
         )}
       </div>
-      <h2 className="type-body font-medium px-md lg:px-0">
-        [{project.title}] <span className="text-grey-500 dark:text-grey-400">{project.summary}</span>
+      <h2 className="type-body px-md font-medium lg:px-0">
+        [{project.title}]{" "}
+        <span className="text-grey-500 dark:text-grey-400">
+          {project.summary}
+        </span>
       </h2>
     </TransitionLink>
   );

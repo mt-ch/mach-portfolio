@@ -129,7 +129,9 @@ const LAYOUT_CONTAINER_CLASS: Record<Layout, string> = {
   pair: "w-full",
 };
 
-type BlockImageValue = NonNullable<ImageBlock["image"] | ImageBlock["secondImage"]>;
+type BlockImageValue = NonNullable<
+  ImageBlock["image"] | ImageBlock["secondImage"]
+>;
 
 // Tailwind aspect-ratio utility for each `RatioToken`, used to shape the
 // `fill`-image wrapper when a layout forces a ratio (`full`, `pair`). Used
@@ -169,8 +171,12 @@ function postCropDimensions(
   if (!dimensions) return undefined;
 
   const crop = image.crop;
-  const width = crop ? dimensions.width * (1 - crop.left - crop.right) : dimensions.width;
-  const height = crop ? dimensions.height * (1 - crop.top - crop.bottom) : dimensions.height;
+  const width = crop
+    ? dimensions.width * (1 - crop.left - crop.right)
+    : dimensions.width;
+  const height = crop
+    ? dimensions.height * (1 - crop.top - crop.bottom)
+    : dimensions.height;
   if (width <= 0 || height <= 0) return undefined;
 
   return { width: Math.round(width), height: Math.round(height) };
@@ -252,14 +258,17 @@ function IntrinsicImage({
 
 function ImageBlockView({ block }: { block: ImageBlock }) {
   const { layout: authoredLayout, caption, image, secondImage } = block;
-  const showPair = authoredLayout === "pair" && image?.asset && secondImage?.asset;
+  const showPair =
+    authoredLayout === "pair" && image?.asset && secondImage?.asset;
 
   if (!image?.asset && !secondImage?.asset) return null;
 
   const imageDimensions = image?.asset ? postCropDimensions(image) : undefined;
   const resolved = resolveImageBlock({
     authoredLayout,
-    aspectRatio: imageDimensions ? imageDimensions.width / imageDimensions.height : undefined,
+    aspectRatio: imageDimensions
+      ? imageDimensions.width / imageDimensions.height
+      : undefined,
   });
 
   const guardClass = resolved.applyMaxHeightGuard
@@ -283,7 +292,7 @@ function ImageBlockView({ block }: { block: ImageBlock }) {
         // its own (much shorter) 16:9. Below `sm:` the panels stack, so each
         // one gets its own ratio/guard back, same as a standalone `full`.
         <div
-          className={`flex flex-col gap-sm overflow-hidden sm:flex-row ${FORCED_RATIO_SM_ASPECT_CLASS[resolved.forcedRatio]} ${resolved.applyMaxHeightGuard ? "sm:max-h-[var(--layout-max-bleed-height)]" : ""}`}
+          className={`gap-sm flex w-full flex-col overflow-hidden sm:flex-row ${FORCED_RATIO_SM_ASPECT_CLASS[resolved.forcedRatio]} ${resolved.applyMaxHeightGuard ? "sm:max-h-[var(--layout-max-bleed-height)]" : ""}`}
         >
           {image?.asset && (
             <ForcedRatioImage
