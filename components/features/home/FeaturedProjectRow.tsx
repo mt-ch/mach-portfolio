@@ -24,7 +24,7 @@ export function FeaturedProjectRow({
       data-cursor-label="View Project"
       data-cursor-icon="eye"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-4/3 lg:aspect-16/9 lg:max-h-[85vh] w-full max-w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-sm aspect-4/3 lg:aspect-16/9 lg:max-h-[var(--layout-max-bleed-height)] w-full max-w-full">
         <div className="relative h-full w-full overflow-hidden lg:hidden">
           <CoverImage
             image={project.coverMobile}

@@ -7,8 +7,8 @@
 /**
  * A target aspect-ratio token an editor crops toward. `16:9`, `4:3` and `4:5`
  * are the documented Image Block targets; `16:9` doubles as the fixed shape of
- * the homepage Featured Project row's desktop columns, `3:2` as the fixed
- * shape of the Other Projects cards.
+ * the homepage Featured Project row's desktop columns and of Project Story
+ * `full`/`pair` images, `3:2` as the fixed shape of the Other Projects cards.
  */
 export type RatioToken = "16:9" | "4:3" | "4:5" | "3:2";
 
@@ -23,9 +23,8 @@ export type ImageDimensions = { width: number; height: number };
 const RATIO_DIMENSIONS: Record<RatioToken, ImageDimensions> = {
   // Other Projects cards render close to full-bleed; ~2400px covers a large desktop.
   "3:2": { width: 2400, height: 1600 },
-  // Story `full` images cap at the ~1200px reading column; the Featured
-  // Project row's desktop columns render close to full-bleed. 2x either way
-  // for retina.
+  // Shared by the Featured Project row's desktop columns and Project Story
+  // `full`/`pair` images — all three render close to full-bleed. 2x for retina.
   "16:9": { width: 2400, height: 1350 },
   "4:3": { width: 2400, height: 1800 },
   // Portrait images render at the narrower inset width (~672px); a smaller
@@ -72,22 +71,24 @@ export type ResolvedImageBlock = {
   layout: EffectiveImageLayout;
   /**
    * A ratio the images must be cropped to, overriding their intrinsic ratio.
-   * Only `pair` forces one (both images to 4:3); `null` everywhere else.
+   * `full` and `pair` both force `16:9` (composed, full-bleed frames, cropped
+   * the same way the homepage Featured Project row is); `inset` stays
+   * intrinsic (`null`), since it exists specifically to show tall/portrait
+   * screenshots uncropped.
    */
   forcedRatio: RatioToken | null;
   /**
-   * How the image sits in its box. `cover` crops to fill (paired images);
-   * `contain` shows the whole image (everything else, so the max-height guard
-   * can letterbox tall images).
+   * How the image sits in its box. `cover` crops to fill (`full` and `pair`);
+   * `contain` shows the whole image (`inset`, so the max-height guard can
+   * letterbox tall images instead of cropping them).
    */
   objectFit: "cover" | "contain";
   /**
-   * Whether the ~85vh max-height guard applies, keeping a single image within
-   * roughly one viewport. Applies whenever the resolved layout is `full` — at
-   * the ~1200px reading column width, even a moderately-landscape screenshot
-   * (aspect ratio near 1) can otherwise render tall enough to dominate the
-   * screen — and to any portrait image (aspect ratio below
-   * {@link PORTRAIT_ASPECT_RATIO_THRESHOLD}), including one routed to the
+   * Whether the max-height guard applies (rendered via the
+   * `--layout-max-bleed-height` CSS token). Applies to `full` and `pair`
+   * unconditionally (full-bleed composed frames, exposed to the same "huge on
+   * a big monitor" problem as the homepage row) and to any portrait image
+   * (aspect ratio below {@link PORTRAIT_ASPECT_RATIO_THRESHOLD}) routed to the
    * narrower `inset` width.
    */
   applyMaxHeightGuard: boolean;
@@ -96,13 +97,14 @@ export type ResolvedImageBlock = {
 };
 
 const LAYOUT_SIZES: Record<EffectiveImageLayout, string> = {
-  // Bounded by the ~1200px story reading column.
-  full: "(max-width: 1200px) 100vw, 1200px",
+  // No longer bounded by a reading column — full-bleed like the rest of the site.
+  full: "100vw",
   inset: "(max-width: 1024px) 100vw, 672px",
   pair: "(max-width: 640px) 100vw, 50vw",
 };
 
-const PAIR_FORCED_RATIO: RatioToken = "4:3";
+// The shared forced ratio for `full` and `pair` — see {@link ResolvedImageBlock.forcedRatio}.
+const FULL_AND_PAIR_FORCED_RATIO: RatioToken = "16:9";
 
 function isPortrait(aspectRatio: number | undefined): boolean {
   return aspectRatio !== undefined && aspectRatio < PORTRAIT_ASPECT_RATIO_THRESHOLD;
@@ -119,9 +121,9 @@ export function resolveImageBlock({
   if (authoredLayout === "pair") {
     return {
       layout: "pair",
-      forcedRatio: PAIR_FORCED_RATIO,
+      forcedRatio: FULL_AND_PAIR_FORCED_RATIO,
       objectFit: "cover",
-      applyMaxHeightGuard: false,
+      applyMaxHeightGuard: true,
       sizes: LAYOUT_SIZES.pair,
     };
   }
@@ -130,11 +132,21 @@ export function resolveImageBlock({
   const layout: EffectiveImageLayout =
     authoredLayout === "full" && portrait ? "inset" : authoredLayout;
 
+  if (layout === "full") {
+    return {
+      layout: "full",
+      forcedRatio: FULL_AND_PAIR_FORCED_RATIO,
+      objectFit: "cover",
+      applyMaxHeightGuard: true,
+      sizes: LAYOUT_SIZES.full,
+    };
+  }
+
   return {
     layout,
     forcedRatio: null,
     objectFit: "contain",
-    applyMaxHeightGuard: layout === "full" || portrait,
+    applyMaxHeightGuard: portrait,
     sizes: LAYOUT_SIZES[layout],
   };
 }

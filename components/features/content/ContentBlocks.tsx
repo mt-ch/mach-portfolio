@@ -1,7 +1,11 @@
 import Image from "next/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 
-import { dimensionsForRatio, resolveImageBlock } from "@/lib/image/imageLayout";
+import {
+  dimensionsForRatio,
+  resolveImageBlock,
+  type RatioToken,
+} from "@/lib/image/imageLayout";
 import type { ProjectDetail } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
 
@@ -127,6 +131,15 @@ const LAYOUT_CONTAINER_CLASS: Record<Layout, string> = {
 
 type BlockImageValue = NonNullable<ImageBlock["image"] | ImageBlock["secondImage"]>;
 
+// Tailwind aspect-ratio utility for each `RatioToken`, used to shape the
+// `fill`-image wrapper when a layout forces a ratio (`full`, `pair`).
+const FORCED_RATIO_ASPECT_CLASS: Record<RatioToken, string> = {
+  "16:9": "aspect-16/9",
+  "4:3": "aspect-4/3",
+  "4:5": "aspect-4/5",
+  "3:2": "aspect-3/2",
+};
+
 // The image field's own `crop` (fractions of the original asset the editor
 // kept) applied to the asset's pre-crop pixel dimensions, giving the pixel
 // size — and therefore ratio — the image actually renders at.
@@ -166,9 +179,14 @@ function BlockImage({
   if (forcedRatio) {
     const { width, height } = dimensionsForRatio(forcedRatio);
     const src = urlFor(image).width(width).height(height).fit("crop").url();
+    const guardClass = applyMaxHeightGuard
+      ? "max-h-[var(--layout-max-bleed-height)]"
+      : "";
 
     return (
-      <div className="relative aspect-4/3 overflow-hidden">
+      <div
+        className={`relative overflow-hidden ${FORCED_RATIO_ASPECT_CLASS[forcedRatio]} ${guardClass}`}
+      >
         <Image
           src={src}
           alt={image.alt}
@@ -184,7 +202,11 @@ function BlockImage({
 
   // No forced width/height/crop: the URL builder call preserves whatever crop
   // rectangle the editor stored in Studio, and the image renders at its
-  // natural post-crop ratio.
+  // natural post-crop ratio. Only reachable for `inset` (`full`/`pair` always
+  // take the forcedRatio branch above), so the guard here only ever fires for
+  // a portrait image capped at the narrower ~672px inset width — a fixed 85vh
+  // is plenty there and deliberately separate from the full-bleed
+  // `--layout-max-bleed-height` token, which guards much wider frames.
   const src = urlFor(image).url();
   const dimensions = postCropDimensions(image) ?? { width: 1200, height: 1200 };
 

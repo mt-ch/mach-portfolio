@@ -33,10 +33,8 @@ describe("ProjectStory", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("wraps the story in a centred, bounded reading column", () => {
-    const { container } = render(<ProjectStory blocks={[textBlock]} />);
-    const wrapper = container.firstElementChild;
-    expect(wrapper).toHaveClass("mx-auto", "w-full", "max-w-story");
+  it("renders the story's blocks", () => {
+    render(<ProjectStory blocks={[textBlock]} />);
     expect(screen.getByText("Hello world.")).toBeInTheDocument();
   });
 });

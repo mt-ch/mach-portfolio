@@ -8,15 +8,10 @@ type StoryBlocks = NonNullable<ProjectDetail["story"]>;
 
 // The Project Story is a Content Block array; rendering is delegated to the
 // shared ContentBlocks renderer so Project detail pages and other block
-// consumers share one path. The Story is bounded to a reading column
-// (--layout-story-max-width) and centred here rather than inside the shared
-// renderer, so the homepage "How I work" section stays full-width.
+// consumers share one path. Renders full-bleed-with-gutter, same as the rest
+// of the page — no reading-column max-width.
 export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefined }) {
   if (!hasRenderableBlocks(blocks)) return null;
 
-  return (
-    <div className="mx-auto w-full max-w-story">
-      <ContentBlocks blocks={blocks} />
-    </div>
-  );
+  return <ContentBlocks blocks={blocks} />;
 }

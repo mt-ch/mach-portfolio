@@ -65,37 +65,49 @@ describe("resolveImageBlock — portrait routing", () => {
   });
 });
 
-describe("resolveImageBlock — pair treatment", () => {
-  it("forces 4:3 with object-cover for a `pair`", () => {
+describe("resolveImageBlock — forced-ratio treatment", () => {
+  it("forces 16:9 with object-cover for a `pair`", () => {
     const resolved = resolveImageBlock({
       authoredLayout: "pair",
       aspectRatio: 2,
     });
     expect(resolved).toMatchObject({
       layout: "pair",
-      forcedRatio: "4:3",
+      forcedRatio: "16:9",
       objectFit: "cover",
-      applyMaxHeightGuard: false,
+      applyMaxHeightGuard: true,
     });
   });
 
-  it("does not force a ratio for non-pair layouts", () => {
-    expect(resolveImageBlock({ authoredLayout: "full" }).forcedRatio).toBeNull();
+  it("forces 16:9 with object-cover for a resolved `full`", () => {
+    const resolved = resolveImageBlock({
+      authoredLayout: "full",
+      aspectRatio: 4 / 3,
+    });
+    expect(resolved).toMatchObject({
+      layout: "full",
+      forcedRatio: "16:9",
+      objectFit: "cover",
+      applyMaxHeightGuard: true,
+    });
+  });
+
+  it("does not force a ratio for `inset`", () => {
     expect(resolveImageBlock({ authoredLayout: "inset" }).forcedRatio).toBeNull();
   });
 
-  it("renders non-pair images with object-contain", () => {
-    expect(resolveImageBlock({ authoredLayout: "full" }).objectFit).toBe(
+  it("renders `inset` images with object-contain", () => {
+    expect(resolveImageBlock({ authoredLayout: "inset" }).objectFit).toBe(
       "contain",
     );
   });
 });
 
 describe("resolveImageBlock — sizes string", () => {
-  it("returns the story-column sizes for a resolved `full`", () => {
+  it("returns the full-bleed sizes for a resolved `full`", () => {
     expect(
       resolveImageBlock({ authoredLayout: "full", aspectRatio: 16 / 9 }).sizes,
-    ).toBe("(max-width: 1200px) 100vw, 1200px");
+    ).toBe("100vw");
   });
 
   it("returns the inset sizes for a resolved `inset`", () => {
@@ -171,10 +183,10 @@ describe("resolveImageBlock — max-height guard", () => {
     ).toBe(false);
   });
 
-  it("does not apply the guard to a `pair`", () => {
+  it("applies the guard to a `pair`", () => {
     expect(
       resolveImageBlock({ authoredLayout: "pair", aspectRatio: 0.6 })
         .applyMaxHeightGuard,
-    ).toBe(false);
+    ).toBe(true);
   });
 });
