@@ -3,15 +3,12 @@
 // Smooth-scroll feel is retuned from here and nowhere else; no component
 // hardcodes a duration or easing. Mirrors lib/theme and lib/transition.
 
-// Lenis is left on its own defaults with one small nudge above them: a
-// slightly longer settle than the library default so the scroll reads as
-// considered rather than 1:1, still subtle enough not to feel floaty.
-// Tuned by eye — see docs/adr/0014-motion-system.md.
-export const SMOOTH_SCROLL_DURATION_S = 1.05;
-
-// Ease-out cubic: quick to respond, gentle to rest. Paired with
-// SMOOTH_SCROLL_DURATION_S as Lenis's `duration`/`easing`.
-export const smoothScrollEasing = (t: number): number => 1 - Math.pow(1 - t, 3);
+// Lenis `lerp`: the fraction of the remaining distance closed each frame.
+// Higher = less smoothing. Lenis's default is 0.1; we run higher so the
+// scroll only just takes the edge off native input rather than gliding —
+// the site owner's call is "almost native". Tuned by eye — see
+// docs/adr/0014-motion-system.md.
+export const SMOOTH_SCROLL_LERP = 0.2;
 
 // The narrow-viewport boundary the motion system uses, deliberately
 // distinct from the chat drawer's 640px `sm` breakpoint: the reference

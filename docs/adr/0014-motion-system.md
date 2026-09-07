@@ -63,10 +63,11 @@ either way; Lenis does not smooth touch (v1.1+).
 `ScrollTrigger` in sync with the smoothed position for the scroll-reveal work
 that follows. `ScrollTrigger.refresh()` runs after each route commit.
 
-**Feel is a token, tuned by eye.** `SMOOTH_SCROLL_DURATION_S` /
-`smoothScrollEasing` in `lib/motion/constants.ts` — Lenis defaults with a
-small nudge to a slightly longer settle. Not asserted by any test; verified
-manually.
+**Feel is a token, tuned by eye.** `SMOOTH_SCROLL_LERP` in
+`lib/motion/constants.ts` — run above Lenis's default `lerp` (0.1) so the
+scroll only just takes the edge off native input rather than gliding; the
+site owner's brief settled on "almost native". Not asserted by any test;
+verified manually.
 
 **History.** This reinstates the Lenis integration added in PR #93 and
 reverted in PR #94 (feature no longer wanted at the time), now on the shared

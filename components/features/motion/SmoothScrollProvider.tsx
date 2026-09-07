@@ -9,7 +9,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { getScrollContainer } from "@/components/features/transition/PageTransitionProvider";
-import { SMOOTH_SCROLL_DURATION_S, smoothScrollEasing } from "@/lib/motion/constants";
+import { SMOOTH_SCROLL_LERP } from "@/lib/motion/constants";
 import { useMotionEnvironment } from "@/lib/motion/environment";
 import { resolveSmoothScroll } from "@/lib/motion/resolveSmoothScroll";
 
@@ -51,8 +51,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     const lenis = new Lenis({
       wrapper,
       content: wrapper,
-      duration: SMOOTH_SCROLL_DURATION_S,
-      easing: smoothScrollEasing,
+      lerp: SMOOTH_SCROLL_LERP,
     });
     lenisRef.current = lenis;
 
