@@ -152,29 +152,33 @@ describe("ContentBlocks", () => {
     expect(images[0]).toHaveAttribute("alt", "Primary alt");
   });
 
-  it("requests Sanity dimensions matching the image's own desktop aspect ratio", () => {
+  it("falls back to full-image rendering for a legacy layout value instead of disappearing", () => {
+    // `inset` no longer exists as an authorable option, but a document from
+    // before its removal could still have it stored.
     const block = imageBlock({
-      layout: "full",
-      image: {
-        ...imageBlock().image,
-        aspectRatio: { desktop: "4:3", mobile: "16:9" },
-      },
+      layout: "inset" as unknown as ImageStoryBlock["layout"],
     });
-    const { width, height } = dimensionsForRatio("4:3");
-    const expectedSrc = urlFor(block.image!)
-      .width(width)
-      .height(height)
-      .fit("crop")
-      .url();
 
     render(<ContentBlocks blocks={[block]} />);
 
-    expect(screen.getByRole("img")).toHaveAttribute("src", expectedSrc);
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("alt", "Primary alt");
   });
 
-  it("falls back to the 16:9 default when no aspect ratio is set on the image", () => {
+  it("falls back to full-image rendering for a pair block missing its second image", () => {
+    const block = imageBlock({ layout: "pair", secondImage: null });
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("alt", "Primary alt");
+  });
+
+  it("requests Sanity dimensions matching the fixed 3:2 content-block ratio", () => {
     const block = imageBlock({ layout: "full" });
-    const { width, height } = dimensionsForRatio("16:9");
+    const { width, height } = dimensionsForRatio("3:2");
     const expectedSrc = urlFor(block.image!)
       .width(width)
       .height(height)
@@ -208,13 +212,9 @@ describe("ContentBlocks", () => {
     expect(images[1]).toHaveAttribute("alt", "Secondary alt");
   });
 
-  it("lets each image in a pair crop to its own independently-selected aspect ratio", () => {
+  it("requests the same fixed 3:2 dimensions for both images in a pair", () => {
     const block = imageBlock({
       layout: "pair",
-      image: {
-        ...imageBlock().image,
-        aspectRatio: { desktop: "4:3", mobile: "4:3" },
-      },
       secondImage: {
         _type: "image",
         asset: {
@@ -223,19 +223,17 @@ describe("ContentBlocks", () => {
         },
         alt: "Secondary alt",
         metadata: null,
-        aspectRatio: { desktop: "3:2", mobile: "3:2" },
       },
     });
-    const firstDims = dimensionsForRatio("4:3");
-    const secondDims = dimensionsForRatio("3:2");
+    const { width, height } = dimensionsForRatio("3:2");
     const expectedFirstSrc = urlFor(block.image!)
-      .width(firstDims.width)
-      .height(firstDims.height)
+      .width(width)
+      .height(height)
       .fit("crop")
       .url();
     const expectedSecondSrc = urlFor(block.secondImage!)
-      .width(secondDims.width)
-      .height(secondDims.height)
+      .width(width)
+      .height(height)
       .fit("crop")
       .url();
 

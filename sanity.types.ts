@@ -45,10 +45,6 @@ export type ImageBlock = {
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     alt: string;
-    aspectRatio?: {
-      desktop?: "16:9" | "4:3" | "3:2" | "4:5";
-      mobile?: "16:9" | "4:3" | "3:2" | "4:5";
-    };
     _type: "image";
   };
   secondImage?: {
@@ -57,14 +53,10 @@ export type ImageBlock = {
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
     alt: string;
-    aspectRatio?: {
-      desktop?: "16:9" | "4:3" | "3:2" | "4:5";
-      mobile?: "16:9" | "4:3" | "3:2" | "4:5";
-    };
     _type: "image";
   };
   caption?: string;
-  layout: "full" | "inset" | "pair";
+  layout: "full" | "pair";
 };
 
 export type TextBlock = {
@@ -618,10 +610,6 @@ export type ProjectBySlugQueryResult = {
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
           alt: string;
-          aspectRatio?: {
-            desktop?: "16:9" | "4:3" | "3:2" | "4:5";
-            mobile?: "16:9" | "4:3" | "3:2" | "4:5";
-          };
           _type: "image";
           metadata: {
             lqip: string | null;
@@ -634,10 +622,6 @@ export type ProjectBySlugQueryResult = {
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
           alt: string;
-          aspectRatio?: {
-            desktop?: "16:9" | "4:3" | "3:2" | "4:5";
-            mobile?: "16:9" | "4:3" | "3:2" | "4:5";
-          };
           _type: "image";
           metadata: {
             lqip: string | null;
@@ -645,7 +629,7 @@ export type ProjectBySlugQueryResult = {
           } | null;
         } | null;
         caption?: string;
-        layout: "full" | "inset" | "pair";
+        layout: "full" | "pair";
       }
     | {
         _key: string;
@@ -1010,10 +994,6 @@ export type AboutQueryResult = {
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
           alt: string;
-          aspectRatio?: {
-            desktop?: "16:9" | "4:3" | "3:2" | "4:5";
-            mobile?: "16:9" | "4:3" | "3:2" | "4:5";
-          };
           _type: "image";
           metadata: {
             lqip: string | null;
@@ -1026,10 +1006,6 @@ export type AboutQueryResult = {
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
           alt: string;
-          aspectRatio?: {
-            desktop?: "16:9" | "4:3" | "3:2" | "4:5";
-            mobile?: "16:9" | "4:3" | "3:2" | "4:5";
-          };
           _type: "image";
           metadata: {
             lqip: string | null;
@@ -1037,7 +1013,7 @@ export type AboutQueryResult = {
           } | null;
         } | null;
         caption?: string;
-        layout: "full" | "inset" | "pair";
+        layout: "full" | "pair";
       }
     | {
         _key: string;

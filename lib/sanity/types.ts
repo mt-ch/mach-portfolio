@@ -90,7 +90,7 @@ export interface ImageContentBlock {
   image?: { alt?: string };
   secondImage?: { alt?: string };
   caption?: string;
-  layout?: "full" | "inset" | "pair";
+  layout?: "full" | "pair";
 }
 
 export type ContentBlock = TextContentBlock | ImageContentBlock;
