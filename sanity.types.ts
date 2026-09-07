@@ -56,7 +56,7 @@ export type ImageBlock = {
     _type: "image";
   };
   caption?: string;
-  layout: "full" | "inset" | "pair";
+  layout: "full" | "pair";
 };
 
 export type TextBlock = {
@@ -629,7 +629,7 @@ export type ProjectBySlugQueryResult = {
           } | null;
         } | null;
         caption?: string;
-        layout: "full" | "inset" | "pair";
+        layout: "full" | "pair";
       }
     | {
         _key: string;
@@ -1013,7 +1013,7 @@ export type AboutQueryResult = {
           } | null;
         } | null;
         caption?: string;
-        layout: "full" | "inset" | "pair";
+        layout: "full" | "pair";
       }
     | {
         _key: string;

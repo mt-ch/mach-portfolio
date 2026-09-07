@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { dimensionsForRatio } from "@/lib/image/imageLayout";
 import type { ProjectDetail } from "@/lib/sanity";
+import { urlFor } from "@/lib/sanity/image";
 
 import { ContentBlocks } from "./ContentBlocks";
 
@@ -13,6 +15,7 @@ vi.mock("next/image", () => ({
 }));
 
 type StoryBlocks = NonNullable<ProjectDetail["story"]>;
+type ImageStoryBlock = Extract<StoryBlocks[number], { _type: "imageBlock" }>;
 
 function textBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[number] {
   return {
@@ -30,7 +33,7 @@ function textBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[nu
   } as StoryBlocks[number];
 }
 
-function imageBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[number] {
+function imageBlock(overrides: Partial<ImageStoryBlock> = {}): ImageStoryBlock {
   return {
     _type: "imageBlock",
     _key: "image-1",
@@ -47,7 +50,7 @@ function imageBlock(overrides: Partial<StoryBlocks[number]> = {}): StoryBlocks[n
     },
     secondImage: null,
     ...overrides,
-  } as StoryBlocks[number];
+  } as ImageStoryBlock;
 }
 
 describe("ContentBlocks", () => {
@@ -149,6 +152,44 @@ describe("ContentBlocks", () => {
     expect(images[0]).toHaveAttribute("alt", "Primary alt");
   });
 
+  it("falls back to full-image rendering for a legacy layout value instead of disappearing", () => {
+    // `inset` no longer exists as an authorable option, but a document from
+    // before its removal could still have it stored.
+    const block = imageBlock({
+      layout: "inset" as unknown as ImageStoryBlock["layout"],
+    });
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("alt", "Primary alt");
+  });
+
+  it("falls back to full-image rendering for a pair block missing its second image", () => {
+    const block = imageBlock({ layout: "pair", secondImage: null });
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(1);
+    expect(images[0]).toHaveAttribute("alt", "Primary alt");
+  });
+
+  it("requests Sanity dimensions matching the fixed 3:2 content-block ratio", () => {
+    const block = imageBlock({ layout: "full" });
+    const { width, height } = dimensionsForRatio("3:2");
+    const expectedSrc = urlFor(block.image!)
+      .width(width)
+      .height(height)
+      .fit("crop")
+      .url();
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    expect(screen.getByRole("img")).toHaveAttribute("src", expectedSrc);
+  });
+
   it("renders a pair-layout Image Block with two images, each with its own alt text", () => {
     const block = imageBlock({
       layout: "pair",
@@ -169,6 +210,38 @@ describe("ContentBlocks", () => {
     expect(images).toHaveLength(2);
     expect(images[0]).toHaveAttribute("alt", "Primary alt");
     expect(images[1]).toHaveAttribute("alt", "Secondary alt");
+  });
+
+  it("requests the same fixed 3:2 dimensions for both images in a pair", () => {
+    const block = imageBlock({
+      layout: "pair",
+      secondImage: {
+        _type: "image",
+        asset: {
+          _ref: "image-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-2000x3000-jpg",
+          _type: "reference",
+        },
+        alt: "Secondary alt",
+        metadata: null,
+      },
+    });
+    const { width, height } = dimensionsForRatio("3:2");
+    const expectedFirstSrc = urlFor(block.image!)
+      .width(width)
+      .height(height)
+      .fit("crop")
+      .url();
+    const expectedSecondSrc = urlFor(block.secondImage!)
+      .width(width)
+      .height(height)
+      .fit("crop")
+      .url();
+
+    render(<ContentBlocks blocks={[block]} />);
+
+    const images = screen.getAllByRole("img");
+    expect(images[0]).toHaveAttribute("src", expectedFirstSrc);
+    expect(images[1]).toHaveAttribute("src", expectedSecondSrc);
   });
 
   it("renders a caption when present and omits it when absent", () => {

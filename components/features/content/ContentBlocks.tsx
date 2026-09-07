@@ -1,7 +1,11 @@
 import Image from "next/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 
-import { dimensionsForRatio, resolveImageBlock } from "@/lib/image/imageLayout";
+import {
+  CONTENT_BLOCK_RATIO,
+  CONTENT_BLOCK_SIZES,
+  dimensionsForRatio,
+} from "@/lib/image/imageLayout";
 import type { ProjectDetail } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity/image";
 
@@ -15,7 +19,6 @@ type ContentBlockList = NonNullable<ProjectDetail["story"]>;
 type ContentBlockItem = ContentBlockList[number];
 type TextBlock = Extract<ContentBlockItem, { _type: "textBlock" }>;
 type ImageBlock = Extract<ContentBlockItem, { _type: "imageBlock" }>;
-type Layout = ImageBlock["layout"];
 type TextLayout = NonNullable<TextBlock["layout"]>;
 
 const portableTextComponents: PortableTextComponents = {
@@ -119,90 +122,37 @@ function TextBlockView({ block }: { block: TextBlock }) {
   );
 }
 
-const LAYOUT_CONTAINER_CLASS: Record<Layout, string> = {
-  full: "w-full",
-  inset: "mx-auto w-full max-w-2xl",
-  pair: "grid grid-cols-1 gap-sm sm:grid-cols-2",
-};
+type BlockImageValue = NonNullable<
+  ImageBlock["image"] | ImageBlock["secondImage"]
+>;
 
-type BlockImageValue = NonNullable<ImageBlock["image"] | ImageBlock["secondImage"]>;
-
-// The image field's own `crop` (fractions of the original asset the editor
-// kept) applied to the asset's pre-crop pixel dimensions, giving the pixel
-// size — and therefore ratio — the image actually renders at.
-// `metadata.dimensions.aspectRatio` is the *pre*-crop ratio, so it isn't
-// usable here, and the fetched `src` (built via a bare `urlFor(image).url()`)
-// is cropped to this same rectangle, so this must be what's passed as the
-// intrinsic width/height too or the reserved box won't match the real image.
-function postCropDimensions(
-  image: BlockImageValue,
-): { width: number; height: number } | undefined {
-  const dimensions = image.metadata?.dimensions;
-  if (!dimensions) return undefined;
-
-  const crop = image.crop;
-  const width = crop ? dimensions.width * (1 - crop.left - crop.right) : dimensions.width;
-  const height = crop ? dimensions.height * (1 - crop.top - crop.bottom) : dimensions.height;
-  if (width <= 0 || height <= 0) return undefined;
-
-  return { width: Math.round(width), height: Math.round(height) };
-}
-
-function BlockImage({
+// Every Story Image Block crops to the same fixed `CONTENT_BLOCK_RATIO`
+// (`object-cover`) at every breakpoint — a single image (`full`), or one
+// panel of a `pair`. The class list controls whether the ratio and the
+// max-height guard land here or on a shared wrapper — see `ImageBlockView`.
+function ForcedRatioImage({
   image,
-  forcedRatio,
-  objectFit,
-  applyMaxHeightGuard,
   sizes,
+  className,
 }: {
   image: BlockImageValue;
-  forcedRatio: ReturnType<typeof resolveImageBlock>["forcedRatio"];
-  objectFit: ReturnType<typeof resolveImageBlock>["objectFit"];
-  applyMaxHeightGuard: boolean;
   sizes: string;
+  className: string;
 }) {
   const lqip = image.metadata?.lqip ?? undefined;
-
-  if (forcedRatio) {
-    const { width, height } = dimensionsForRatio(forcedRatio);
-    const src = urlFor(image).width(width).height(height).fit("crop").url();
-
-    return (
-      <div className="relative aspect-4/3 overflow-hidden">
-        <Image
-          src={src}
-          alt={image.alt}
-          fill
-          sizes={sizes}
-          placeholder={lqip ? "blur" : "empty"}
-          blurDataURL={lqip}
-          className="object-cover"
-        />
-      </div>
-    );
-  }
-
-  // No forced width/height/crop: the URL builder call preserves whatever crop
-  // rectangle the editor stored in Studio, and the image renders at its
-  // natural post-crop ratio.
-  const src = urlFor(image).url();
-  const dimensions = postCropDimensions(image) ?? { width: 1200, height: 1200 };
-
-  const widthClass = applyMaxHeightGuard
-    ? "h-auto w-auto max-h-[85vh] max-w-full"
-    : "h-auto w-full";
+  const { width, height } = dimensionsForRatio(CONTENT_BLOCK_RATIO);
+  const src = urlFor(image).width(width).height(height).fit("crop").url();
 
   return (
-    <div className={applyMaxHeightGuard ? "flex justify-center" : undefined}>
+    <div className={className}>
       <Image
         src={src}
         alt={image.alt}
-        width={dimensions.width}
-        height={dimensions.height}
+        fill
         sizes={sizes}
         placeholder={lqip ? "blur" : "empty"}
         blurDataURL={lqip}
-        className={`${widthClass} ${objectFit === "cover" ? "object-cover" : "object-contain"}`}
+        className="object-cover"
       />
     </div>
   );
@@ -210,35 +160,44 @@ function BlockImage({
 
 function ImageBlockView({ block }: { block: ImageBlock }) {
   const { layout: authoredLayout, caption, image, secondImage } = block;
-  const showPair = authoredLayout === "pair" && image?.asset && secondImage?.asset;
 
   if (!image?.asset && !secondImage?.asset) return null;
 
-  const imageDimensions = image?.asset ? postCropDimensions(image) : undefined;
-  const resolved = resolveImageBlock({
-    authoredLayout,
-    aspectRatio: imageDimensions ? imageDimensions.width / imageDimensions.height : undefined,
-  });
+  // Only a genuine `pair` block with both assets renders as a pair —
+  // anything else (a lone image, or a `layout` value from before `inset` was
+  // removed) safely falls back to the full-bleed single-image treatment
+  // rather than disappearing.
+  const isPair =
+    authoredLayout === "pair" && !!image?.asset && !!secondImage?.asset;
+  const sizes = isPair ? CONTENT_BLOCK_SIZES.pair : CONTENT_BLOCK_SIZES.full;
 
   return (
-    <figure className={LAYOUT_CONTAINER_CLASS[resolved.layout]}>
-      {image?.asset && (
-        <BlockImage
+    <figure className="w-full">
+      {!isPair && image?.asset && (
+        <ForcedRatioImage
           image={image}
-          forcedRatio={resolved.forcedRatio}
-          objectFit={resolved.objectFit}
-          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
-          sizes={resolved.sizes}
+          sizes={sizes}
+          className="relative w-full aspect-3/2 max-h-[var(--layout-max-bleed-height)] overflow-hidden"
         />
       )}
-      {showPair && secondImage?.asset && (
-        <BlockImage
-          image={secondImage}
-          forcedRatio={resolved.forcedRatio}
-          objectFit={resolved.objectFit}
-          applyMaxHeightGuard={resolved.applyMaxHeightGuard}
-          sizes={resolved.sizes}
-        />
+      {isPair && image?.asset && secondImage?.asset && (
+        // The frame — not each panel — carries the ratio and the guard at
+        // `sm:` and up, so the *entire* two-image row matches a `full`
+        // block's shape and height instead of each half-width panel getting
+        // its own (much shorter) 3:2. Below `sm:` the panels stack, so each
+        // one gets its own ratio/guard back, same as a standalone `full`.
+        <div className="flex w-full flex-col gap-sm overflow-hidden sm:flex-row sm:aspect-3/2 sm:max-h-[var(--layout-max-bleed-height)]">
+          <ForcedRatioImage
+            image={image}
+            sizes={sizes}
+            className="relative aspect-3/2 max-h-[var(--layout-max-bleed-height)] overflow-hidden sm:aspect-auto sm:max-h-none sm:flex-1"
+          />
+          <ForcedRatioImage
+            image={secondImage}
+            sizes={sizes}
+            className="relative aspect-3/2 max-h-[var(--layout-max-bleed-height)] overflow-hidden sm:aspect-auto sm:max-h-none sm:flex-1"
+          />
+        </div>
       )}
       {caption && (
         <figcaption className="type-caption text-grey-300 mt-xs">
