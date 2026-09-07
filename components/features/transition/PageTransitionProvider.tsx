@@ -39,7 +39,7 @@ export const PAGE_COVERED_ATTR = "data-page-covered";
 // restoration does not reach this nested container.
 export const SCROLL_CONTAINER_ATTR = "data-scroll-container";
 
-function getScrollContainer(): HTMLElement | null {
+export function getScrollContainer(): HTMLElement | null {
   if (typeof document === "undefined") return null;
   return document.querySelector<HTMLElement>(`[${SCROLL_CONTAINER_ATTR}]`);
 }
