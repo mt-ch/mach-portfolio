@@ -70,11 +70,15 @@
 
   /* Layout */
   --layout-page-x: #{fluid-space(20, 48)};
-  /* Bounded reading column for the Project Story (text + images). Featured
-   * Project rows and other full-bleed layouts deliberately ignore this. */
-  --layout-story-max-width: 1200px;
   --layout-section-y: #{fluid-space(72, 128)};
   --layout-grid-gap: #{fluid-space(16, 32)};
+  /* Height ceiling for full-bleed composed frames (homepage Featured Project
+   * row; Project Story `full`/`pair` images) so none of them can grow past a
+   * sensible size on any screen: whichever of the two is smaller wins, so 70vh
+   * caps it on a shorter laptop screen, and the 640px hard limit takes over on
+   * a large or 4K monitor where 70vh alone would still be enormous. */
+  --layout-max-bleed-height: min(80vh, 740px);
+  --layout-max-bleed-height-featured-project: min(65vh, 640px);
 
   /* Radius */
   --radius-scale: 0;
@@ -219,7 +223,6 @@
   --spacing-6xl: var(--space-6xl);
 
   --spacing-page-x: var(--layout-page-x);
-  --container-story: var(--layout-story-max-width);
   --spacing-section-y: var(--layout-section-y);
   --spacing-grid-gap: var(--layout-grid-gap);
 

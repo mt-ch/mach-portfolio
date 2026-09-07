@@ -33,7 +33,7 @@ describe("ProjectStory", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("renders the story blocks when there are renderable blocks", () => {
+  it("renders the story's blocks", () => {
     render(<ProjectStory blocks={[textBlock]} />);
     expect(screen.getByText("Hello world.")).toBeInTheDocument();
   });
