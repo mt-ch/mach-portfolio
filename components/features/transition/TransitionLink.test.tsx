@@ -1,20 +1,33 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const startTransition = vi.fn();
+import type { MotionEnvironment } from "@/lib/motion/environment";
+
+const transitionPush = vi.fn();
+
+let env: MotionEnvironment = {
+  prefersReducedMotion: false,
+  supportsViewTransitions: true,
+  isNarrowViewport: false,
+};
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/projects/current",
 }));
 
-vi.mock("./PageTransitionProvider", () => ({
-  usePageTransition: () => ({ startTransition }),
+vi.mock("next-view-transitions", () => ({
+  useTransitionRouter: () => ({ push: transitionPush }),
+}));
+
+vi.mock("@/lib/motion/environment", () => ({
+  useMotionEnvironment: () => env,
 }));
 
 import { TransitionLink } from "./TransitionLink";
 
 beforeEach(() => {
-  startTransition.mockClear();
+  transitionPush.mockClear();
+  env = { prefersReducedMotion: false, supportsViewTransitions: true, isNarrowViewport: false };
 });
 
 describe("TransitionLink", () => {
@@ -24,24 +37,32 @@ describe("TransitionLink", () => {
     expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute("href", "/projects/next");
   });
 
-  it("intercepts a plain click to another in-site path and starts the transition", () => {
+  it("intercepts a plain in-site left-click and runs the view-transition navigation", () => {
     render(<TransitionLink href="/projects/next">Next</TransitionLink>);
 
     const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Next" }));
 
     expect(notCancelled).toBe(false);
-    expect(startTransition).toHaveBeenCalledWith("/projects/next");
+    expect(transitionPush).toHaveBeenCalledWith("/projects/next");
   });
 
-  it("ignores a click to the current path (query/hash-only change) and lets the link behave normally", () => {
-    render(
-      <TransitionLink href="/projects/current#gallery">Gallery</TransitionLink>,
-    );
+  it("lets next/link handle the navigation with no view transition when the mode is instant", () => {
+    env = { prefersReducedMotion: false, supportsViewTransitions: true, isNarrowViewport: true };
+    render(<TransitionLink href="/projects/next">Next</TransitionLink>);
+
+    const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Next" }));
+
+    expect(notCancelled).toBe(true);
+    expect(transitionPush).not.toHaveBeenCalled();
+  });
+
+  it("ignores a click to the current path (query/hash-only change)", () => {
+    render(<TransitionLink href="/projects/current#gallery">Gallery</TransitionLink>);
 
     const notCancelled = fireEvent.click(screen.getByRole("link", { name: "Gallery" }));
 
     expect(notCancelled).toBe(true);
-    expect(startTransition).not.toHaveBeenCalled();
+    expect(transitionPush).not.toHaveBeenCalled();
   });
 
   it("ignores a bare hash link", () => {
@@ -49,18 +70,16 @@ describe("TransitionLink", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "Top" }));
 
-    expect(startTransition).not.toHaveBeenCalled();
+    expect(transitionPush).not.toHaveBeenCalled();
   });
 
   it("passes external links straight through", () => {
-    render(
-      <TransitionLink href="https://example.com">External</TransitionLink>,
-    );
+    render(<TransitionLink href="https://example.com">External</TransitionLink>);
 
     const notCancelled = fireEvent.click(screen.getByRole("link", { name: "External" }));
 
     expect(notCancelled).toBe(true);
-    expect(startTransition).not.toHaveBeenCalled();
+    expect(transitionPush).not.toHaveBeenCalled();
   });
 
   it("passes new-tab links straight through", () => {
@@ -72,7 +91,7 @@ describe("TransitionLink", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "New tab" }));
 
-    expect(startTransition).not.toHaveBeenCalled();
+    expect(transitionPush).not.toHaveBeenCalled();
   });
 
   it("ignores modified clicks (new tab / new window intent)", () => {
@@ -80,7 +99,7 @@ describe("TransitionLink", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "Next" }), { metaKey: true });
 
-    expect(startTransition).not.toHaveBeenCalled();
+    expect(transitionPush).not.toHaveBeenCalled();
   });
 
   it("still runs a caller-supplied onClick handler", () => {
@@ -94,6 +113,6 @@ describe("TransitionLink", () => {
     fireEvent.click(screen.getByRole("link", { name: "Next" }));
 
     expect(onClick).toHaveBeenCalledOnce();
-    expect(startTransition).toHaveBeenCalledWith("/projects/next");
+    expect(transitionPush).toHaveBeenCalledWith("/projects/next");
   });
 });

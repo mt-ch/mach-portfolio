@@ -45,3 +45,72 @@ html.custom-cursor-active * {
     display: none !important;
   }
 }
+
+/* View-transition page push (docs/adr/0014-motion-system.md).
+ *
+ * Route-to-route navigation pushes the incoming page up over the outgoing
+ * one: the new page slides translateY(100% -> 0) while the old page drifts
+ * up and dims into a dark scrim shown in both themes. The whole page — nav,
+ * theme toggle, Ask launcher — rides the default `root` snapshot and moves
+ * as one plane. No clip-path. Feel is tokenised in styles/tokens.scss.
+ *
+ * `TransitionLink` never starts a View Transition when the mode resolves to
+ * "instant" (no support / reduce-motion / narrow), but `popstate`
+ * navigations are captured by next-view-transitions regardless — so the
+ * media query below neutralises the animation to a clean swap for the same
+ * three conditions. */
+@keyframes page-push-old {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(var(--page-push-drift));
+    opacity: var(--page-push-dim);
+  }
+}
+
+@keyframes page-push-new {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+::view-transition {
+  background-color: var(--page-push-scrim);
+}
+
+::view-transition-group(root) {
+  animation-duration: var(--page-push-duration);
+  animation-timing-function: var(--page-push-ease);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--page-push-duration);
+  animation-timing-function: var(--page-push-ease);
+  animation-fill-mode: both;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  animation-name: page-push-old;
+}
+
+::view-transition-new(root) {
+  animation-name: page-push-new;
+}
+
+@media (prefers-reduced-motion: reduce), (max-width: 767px) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  ::view-transition {
+    background-color: transparent;
+  }
+}

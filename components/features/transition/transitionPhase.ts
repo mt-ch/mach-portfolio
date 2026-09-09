@@ -1,74 +1,56 @@
-// Framework-free decision core for the page-transition system: no React,
-// GSAP, or DOM globals. PageTransitionProvider drives this reducer and
-// acts on its intent flags; it owns all animation and timing itself.
+// Framework-free decision core for the first-load transition panel: no React,
+// GSAP, or DOM globals. PageTransitionProvider drives this reducer and acts
+// on its intent flag; it owns all animation and timing itself.
+//
+// Route-to-route navigation no longer runs through here — the view-transition
+// page push (docs/adr/0014-motion-system.md) is a native CSS View Transition
+// with no reducer state. This machine is reduced to the one path that
+// survives: the server-opaque first-load panel and its fonts-gated lift,
+// plus the safety net over that.
 
-export type TransitionPhase = "idle" | "covering" | "covered" | "uncovering";
-
-// Which kind of navigation opened the current covered/uncovering sequence.
-// Carried until the machine returns to idle so shouldResetScroll can stay
-// correct for every event on the path, not just the one that started it.
-type TransitionPath = "nav" | "popstate" | "firstload" | null;
+export type TransitionPhase = "idle" | "covered" | "uncovering";
 
 export interface TransitionState {
   phase: TransitionPhase;
-  path: TransitionPath;
 }
 
 export type TransitionEvent =
-  | { type: "NAV_REQUESTED" }
-  | { type: "POPSTATE" }
-  | { type: "COVER_DONE" }
+  | { type: "FIRST_LOAD_READY" }
   | { type: "ROUTE_COMMITTED" }
   | { type: "UNCOVER_DONE" }
-  | { type: "SAFETY_TIMEOUT" }
-  | { type: "FIRST_LOAD_READY" };
+  | { type: "SAFETY_TIMEOUT" };
 
 export interface TransitionResult {
   state: TransitionState;
-  shouldResetScroll: boolean;
   shouldFadeCursor: boolean;
 }
 
-export const initialTransitionState: TransitionState = { phase: "idle", path: null };
+export const initialTransitionState: TransitionState = { phase: "idle" };
 
-// Seed for a fresh page load: the machine starts already `covered` (path
-// `firstload`) so the server-rendered overlay is accounted for before any
-// JavaScript runs. After hydration the provider dispatches ROUTE_COMMITTED
-// once — gated on fonts being ready — to lift it.
+// Seed for a fresh page load: the machine starts already `covered` so the
+// server-rendered overlay is accounted for before any JavaScript runs. After
+// hydration the provider dispatches ROUTE_COMMITTED once — gated on fonts
+// being ready — to lift it.
 export const firstLoadTransitionResult: TransitionResult = transitionPhase(initialTransitionState, {
   type: "FIRST_LOAD_READY",
 });
 
 function nextPhase(state: TransitionState, event: TransitionEvent): TransitionState {
   switch (event.type) {
-    case "NAV_REQUESTED":
-      return state.phase === "idle" ? { phase: "covering", path: "nav" } : state;
-
-    case "POPSTATE":
-      return { phase: "covered", path: "popstate" };
-
     case "FIRST_LOAD_READY":
-      return { phase: "covered", path: "firstload" };
-
-    case "COVER_DONE":
-      return state.phase === "covering" ? { phase: "covered", path: state.path } : state;
+      return { phase: "covered" };
 
     case "ROUTE_COMMITTED":
-      return state.phase === "covered" ? { phase: "uncovering", path: state.path } : state;
+      return state.phase === "covered" ? { phase: "uncovering" } : state;
 
     case "UNCOVER_DONE":
-      return state.phase === "uncovering" ? { phase: "idle", path: null } : state;
+      return state.phase === "uncovering" ? { phase: "idle" } : state;
 
     case "SAFETY_TIMEOUT":
-      if (state.phase === "covering" || state.phase === "covered") {
-        return { phase: "uncovering", path: state.path };
-      }
-      // Last-resort net: if the uncover animation's completion callback
-      // never fires, force back to idle so the cursor reappears and later
-      // navigations are not permanently dead.
-      if (state.phase === "uncovering") {
-        return { phase: "idle", path: null };
-      }
+      if (state.phase === "covered") return { phase: "uncovering" };
+      // Last-resort net: if the uncover animation's completion callback never
+      // fires, force back to idle so the cursor reappears.
+      if (state.phase === "uncovering") return { phase: "idle" };
       return state;
 
     default:
@@ -81,10 +63,9 @@ export function transitionPhase(state: TransitionState, event: TransitionEvent):
 
   return {
     state: next,
-    shouldResetScroll: next.path === "nav",
-    // Faded for the whole covered stretch — from the moment the panel
-    // starts covering until it has fully lifted and the machine is idle
-    // again — so the cursor is never visible over the opaque panel.
+    // Faded for the whole covered stretch — from first paint until the panel
+    // has fully lifted and the machine is idle again — so the cursor is never
+    // visible alone over the opaque panel.
     shouldFadeCursor: next.phase !== "idle",
   };
 }

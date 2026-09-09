@@ -5,7 +5,10 @@ import { forwardRef, type ComponentProps, type MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { usePageTransition } from "./PageTransitionProvider";
+import { useTransitionRouter } from "next-view-transitions";
+
+import { useMotionEnvironment } from "@/lib/motion/environment";
+import { resolvePageTransitionMode } from "@/lib/motion/resolvePageTransitionMode";
 
 type TransitionLinkProps = ComponentProps<typeof Link>;
 
@@ -26,23 +29,28 @@ function isModifiedClick(event: MouseEvent): boolean {
   return event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 }
 
-// Wraps next/link so that an in-site forward navigation plays the
-// full-motion page transition instead of swapping the route instantly.
-// Anything that isn't a plain left-click to a different in-site path —
-// external URLs, new-tab links, modified clicks, and hash/query-only
-// changes — falls through to normal link behaviour untouched, so the
-// site still works with JavaScript disabled.
+// Wraps next/link so an in-site forward navigation plays the view-transition
+// page push (docs/adr/0014-motion-system.md) instead of a hard route swap.
+// The click-eligibility rules are unchanged from ADR 0008: only a plain
+// left-click to a different in-site path is intercepted — external URLs,
+// new-tab links, modified clicks, and hash/query-only changes fall through
+// to normal link behaviour, so the site still works with JavaScript
+// disabled. When `resolvePageTransitionMode` returns `"instant"` (no View
+// Transitions support, reduce-motion, or a narrow viewport) the click falls
+// through to `next/link`'s own client-side navigation — a clean route swap
+// with no View Transition snapshot taken.
 export const TransitionLink = forwardRef<HTMLAnchorElement, TransitionLinkProps>(function TransitionLink(
   { href, target, onClick, ...props },
   ref,
 ) {
   const pathname = usePathname();
-  const transition = usePageTransition();
+  const transitionRouter = useTransitionRouter();
+  const env = useMotionEnvironment();
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
 
-    if (!transition || event.defaultPrevented || isModifiedClick(event) || opensNewContext(target)) return;
+    if (event.defaultPrevented || isModifiedClick(event) || opensNewContext(target)) return;
 
     const hrefString = hrefToString(href);
     if (isExternal(hrefString)) return;
@@ -50,8 +58,12 @@ export const TransitionLink = forwardRef<HTMLAnchorElement, TransitionLinkProps>
     const targetPath = hrefString.split(/[?#]/)[0];
     if (targetPath === "" || targetPath === pathname) return;
 
+    // Instant mode: leave the event alone so `next/link` runs its own
+    // client-side navigation with no View Transition.
+    if (resolvePageTransitionMode(env) === "instant") return;
+
     event.preventDefault();
-    transition.startTransition(hrefString);
+    transitionRouter.push(hrefString);
   };
 
   return <Link ref={ref} href={href} target={target} onClick={handleClick} {...props} />;
