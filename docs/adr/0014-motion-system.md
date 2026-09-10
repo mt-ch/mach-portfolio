@@ -73,13 +73,43 @@ verified manually.
 reverted in PR #94 (feature no longer wanted at the time), now on the shared
 `lib/motion/` foundation and wired into `ScrollTrigger`.
 
-## Scroll reveals and heading reveal (#228)
+## Scroll reveals (#226)
 
-*Filled in by #228.*
+*(#225 anticipated this as the `#228` section and the page push as `#226`; the
+two shipped the other way round. This section is the reveal work, built by
+#226; the page push below was built by #228.)*
 
-## View-transition page push (#226)
+**Below-the-fold content reveals once as it scrolls into view.** Content
+Blocks in a Project Story, the homepage sections below the hero
+(`WhatIDoSection`, `HowIWorkSection`, `ExperienceSection`, `FeaturedProjectRow`),
+`OtherProjects`, and the project-card grid fade from 0 to full opacity and rise
+`REVEAL_RISE_PX` (24) as their top passes `REVEAL_THRESHOLD_RATIO` (0.85) of the
+viewport height. Each element reveals once and is unobserved — scrolling back up
+and down does not replay it.
 
-*Filled in by #226. This section supersedes the route-transition mechanism of
+**`planSectionReveal({ childCount, env })` is the pure decision seam** — in
+`lib/motion/revealPlan.ts`, returning `{ enabled, staggerMs, risePx,
+thresholdRatio }`. `enabled` is `false` under OS "reduce motion" (nothing is
+hidden, all content is simply present). A single element animates as one block
+with `staggerMs: 0`; a multi-item group (experience rows, project cards, the
+other-projects list) cascades its children by `REVEAL_STAGGER_MS` (80) each.
+
+**`useSectionReveal` is the imperative shell.** It hides the target(s), wires
+one `IntersectionObserver` with a bottom root-margin of `-(1 - ratio) * 100%`,
+and on intersection drives a CSS transition (`REVEAL_DURATION_MS` 600ms,
+`REVEAL_EASE` — `power2.out` expressed as its cubic-bezier equivalent, since
+these run as CSS transitions not a GSAP timeline) then unobserves the element.
+`stagger` treats the wrapper's direct children as the group. The `Reveal`
+client component is the boundary server sections wrap themselves in; it carries
+no reveal markup or classes, only the ref.
+
+**Timing and easing are single-sourced** in `lib/motion/constants.ts`
+alongside the smooth-scroll token. Nothing hardcodes a duration, distance, or
+easing.
+
+## View-transition page push (#228)
+
+*Filled in by #228. This section supersedes the route-transition mechanism of
 ADR 0008; ADR 0008's first-load opaque panel, its rationale, and
 `TransitionLink` as the single link entry point remain in force.*
 
@@ -89,7 +119,12 @@ Behaviour and pure-function decisions only — never markup, class names, or
 Lenis/GSAP call shapes. `resolveSmoothScroll` and `lib/motion/environment.ts`
 have unit tests (`matchMedia` stubbed); `SmoothScrollProvider` has a
 behaviour test with the `Lenis` constructor spied (not constructed under
-reduce-motion; constructed and bound to the scroll container otherwise). The
-scroll feel, the reveal timing, and the page push are visual — verified
+reduce-motion; constructed and bound to the scroll container otherwise).
+`planSectionReveal` has unit tests (`enabled` and `staggerMs` across child
+counts and reduced motion); `Reveal` has a behaviour test with
+`IntersectionObserver` stubbed — an intersected element ends revealed and is
+not re-animated on a second intersection, and under reduced motion no observer
+is created and nothing is hidden. The scroll feel, the reveal timing, and the
+page push are visual — verified
 manually, exactly as the cursor (0007), the page transition (0008), and chat
 motion (0009) are.

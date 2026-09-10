@@ -6,6 +6,7 @@ import {
   OG_IMAGE_WIDTH,
   resolveSeo,
 } from "@/lib/seo/resolveSeo";
+import { Reveal } from "@/components/features/motion/Reveal";
 import { ExperienceSection } from "@/components/features/home/ExperienceSection";
 import { FeaturedProjectRow } from "@/components/features/home/FeaturedProjectRow";
 import { HeroSection } from "@/components/features/home/HeroSection";
@@ -95,11 +96,9 @@ export default async function Home() {
         {projects.length > 0 && (
           <div className="gap-xl lg:px-md relative flex flex-col">
             {projects.map((project, index) => (
-              <FeaturedProjectRow
-                key={project._id}
-                project={project}
-                priority={index === 0}
-              />
+              <Reveal key={project._id}>
+                <FeaturedProjectRow project={project} priority={index === 0} />
+              </Reveal>
             ))}
           </div>
         )}

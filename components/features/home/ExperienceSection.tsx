@@ -2,6 +2,7 @@ import { ArrowUpRightIcon } from "lucide-react";
 
 import type { ExperienceEntry, ExperienceRole } from "@/lib/sanity";
 import { HomeSection } from "@/components/features/home/HomeSection";
+import { Reveal } from "@/components/features/motion/Reveal";
 
 function formatPeriod(role: ExperienceRole): string {
   const start = role.startDate.slice(0, 4);
@@ -31,7 +32,7 @@ export function ExperienceSection({ entries }: { entries: ExperienceEntry[] }) {
             <th />
           </tr>
         </thead>
-        <tbody>
+        <Reveal as="tbody" stagger>
           {entries.map((entry) =>
             entry.roles.map((role, roleIndex) => (
               <tr
@@ -69,7 +70,7 @@ export function ExperienceSection({ entries }: { entries: ExperienceEntry[] }) {
               </tr>
             )),
           )}
-        </tbody>
+        </Reveal>
       </table>
     </HomeSection>
   );

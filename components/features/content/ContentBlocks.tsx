@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 
+import { Reveal } from "@/components/features/motion/Reveal";
 import {
   CONTENT_BLOCK_RATIO,
   CONTENT_BLOCK_SIZES,
@@ -234,8 +235,16 @@ function gapClassBetween(
 
 export function ContentBlocks({
   blocks,
+  revealItems = false,
 }: {
   blocks: ContentBlockList | null | undefined;
+  /**
+   * Reveal each Content Block on scroll, once, as its top enters the viewport
+   * (#226). Used by the Project Story, whose blocks are spread down a long
+   * page; the "How I work" homepage section leaves this off and reveals as one
+   * block from its section wrapper instead.
+   */
+  revealItems?: boolean;
 }) {
   const renderableBlocks = blocks?.filter(hasRenderableContent) ?? [];
   if (renderableBlocks.length === 0) return null;
@@ -247,13 +256,19 @@ export function ContentBlocks({
         const gapClass = previous
           ? gapClassBetween(previous._type, block._type)
           : "";
-        return (
+        const view =
+          block._type === "textBlock" ? (
+            <TextBlockView block={block} />
+          ) : (
+            <ImageBlockView block={block} />
+          );
+        return revealItems ? (
+          <Reveal key={block._key} className={gapClass}>
+            {view}
+          </Reveal>
+        ) : (
           <div key={block._key} className={gapClass}>
-            {block._type === "textBlock" ? (
-              <TextBlockView block={block} />
-            ) : (
-              <ImageBlockView block={block} />
-            )}
+            {view}
           </div>
         );
       })}

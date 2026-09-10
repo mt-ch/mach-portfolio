@@ -13,5 +13,5 @@ type StoryBlocks = NonNullable<ProjectDetail["story"]>;
 export function ProjectStory({ blocks }: { blocks: StoryBlocks | null | undefined }) {
   if (!hasRenderableBlocks(blocks)) return null;
 
-  return <ContentBlocks blocks={blocks} />;
+  return <ContentBlocks blocks={blocks} revealItems />;
 }

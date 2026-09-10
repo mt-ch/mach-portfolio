@@ -18,3 +18,20 @@ export const SMOOTH_SCROLL_LERP = 0.2;
 export const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 
 export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+// Reveal-on-scroll for below-the-fold sections (#226). A section fades from 0
+// to 1 opacity and rises REVEAL_RISE_PX over REVEAL_DURATION_MS. The brief
+// calls for `power2.out`; these reveals run as CSS transitions rather than a
+// GSAP timeline, so the easing is expressed as its cubic-bezier equivalent
+// (quad-out). Tuned to match — see docs/adr/0014-motion-system.md.
+export const REVEAL_RISE_PX = 24;
+export const REVEAL_DURATION_MS = 600;
+export const REVEAL_EASE = "cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+
+// Multi-item groups (experience rows, project cards, the other-projects list)
+// cascade their children by this much; single elements animate as one block.
+export const REVEAL_STAGGER_MS = 80;
+
+// A section reveals when its top passes this fraction of the viewport height —
+// i.e. an IntersectionObserver bottom root-margin of -(1 - ratio) * 100%.
+export const REVEAL_THRESHOLD_RATIO = 0.85;
