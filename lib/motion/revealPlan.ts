@@ -1,4 +1,6 @@
 import {
+  REVEAL_DURATION_MS,
+  REVEAL_EASE,
   REVEAL_RISE_PX,
   REVEAL_STAGGER_MS,
   REVEAL_THRESHOLD_RATIO,
@@ -12,6 +14,10 @@ export interface SectionRevealPlan {
   staggerMs: number;
   /** How far, in px, the content rises into place. */
   risePx: number;
+  /** How long the fade/rise runs, in ms. */
+  durationMs: number;
+  /** The transition easing (a CSS timing function). */
+  ease: string;
   /** Viewport-height fraction the section's top crosses before it reveals. */
   thresholdRatio: number;
 }
@@ -39,6 +45,8 @@ export function planSectionReveal({
     enabled,
     staggerMs: enabled && childCount > 1 ? REVEAL_STAGGER_MS : 0,
     risePx: REVEAL_RISE_PX,
+    durationMs: REVEAL_DURATION_MS,
+    ease: REVEAL_EASE,
     thresholdRatio: REVEAL_THRESHOLD_RATIO,
   };
 }

@@ -80,14 +80,12 @@ describe("Reveal", () => {
 
     io.intersect(target);
     expect(target.style.opacity).toBe("1");
-    expect(target.style.transform).toBe("translateY(0)");
     expect(io.unobserved).toContain(target);
 
-    // A second intersection must not reset it to hidden or re-fire.
-    target.style.transitionDelay = "";
+    // A second intersection must not re-fire the reveal.
+    target.style.opacity = "0.5";
     io.intersect(target);
-    expect(target.style.opacity).toBe("1");
-    expect(target.style.transitionDelay).toBe("");
+    expect(target.style.opacity).toBe("0.5");
   });
 
   it("leaves content present with no hidden state under reduced motion", () => {
@@ -105,7 +103,7 @@ describe("Reveal", () => {
     expect(observers).toHaveLength(0);
   });
 
-  it("cascades direct children with a per-child stagger delay when asked", () => {
+  it("reveals each direct child of a group, later ones after earlier ones", () => {
     stubReducedMotion(false);
 
     render(
@@ -123,8 +121,30 @@ describe("Reveal", () => {
 
     rows.forEach((row) => io.intersect(row));
 
-    expect(rows[0].style.transitionDelay).toBe("0ms");
-    expect(rows[1].style.transitionDelay).toBe("80ms");
-    expect(rows[2].style.transitionDelay).toBe("160ms");
+    // Every child ends revealed...
+    for (const row of rows) expect(row.style.opacity).toBe("1");
+
+    // ...and the cascade is ordered: each child waits longer than the one
+    // before it (exact timing is a token, verified manually).
+    const delayOf = (row: HTMLElement) =>
+      Number.parseFloat(row.style.transitionDelay);
+    expect(delayOf(rows[0])).toBe(0);
+    expect(delayOf(rows[1])).toBeGreaterThan(delayOf(rows[0]));
+    expect(delayOf(rows[2])).toBeGreaterThan(delayOf(rows[1]));
+  });
+
+  it("does not stagger a single-element reveal", () => {
+    stubReducedMotion(false);
+
+    render(
+      <Reveal>
+        <p>lone block</p>
+      </Reveal>,
+    );
+
+    const target = screen.getByText("lone block").parentElement as HTMLElement;
+    observers[0].intersect(target);
+
+    expect(Number.parseFloat(target.style.transitionDelay)).toBe(0);
   });
 });

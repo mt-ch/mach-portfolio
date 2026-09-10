@@ -23,10 +23,11 @@ export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 // to 1 opacity and rises REVEAL_RISE_PX over REVEAL_DURATION_MS. The brief
 // calls for `power2.out`; these reveals run as CSS transitions rather than a
 // GSAP timeline, so the easing is expressed as its cubic-bezier equivalent
-// (quad-out). Tuned to match — see docs/adr/0014-motion-system.md.
+// (ease-out cubic, which is what GSAP's `power2.out` is). See
+// docs/adr/0014-motion-system.md.
 export const REVEAL_RISE_PX = 24;
 export const REVEAL_DURATION_MS = 600;
-export const REVEAL_EASE = "cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+export const REVEAL_EASE = "cubic-bezier(0.215, 0.61, 0.355, 1)";
 
 // Multi-item groups (experience rows, project cards, the other-projects list)
 // cascade their children by this much; single elements animate as one block.

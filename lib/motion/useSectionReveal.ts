@@ -2,10 +2,6 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-import {
-  REVEAL_DURATION_MS,
-  REVEAL_EASE,
-} from "./constants";
 import { useMotionEnvironment } from "./environment";
 import { planSectionReveal } from "./revealPlan";
 
@@ -21,11 +17,11 @@ import { planSectionReveal } from "./revealPlan";
  * block. Under OS "reduce motion" the plan is disabled: nothing is hidden and
  * all content is simply present.
  */
-export function useSectionReveal<T extends HTMLElement = HTMLElement>({
+export function useSectionReveal({
   stagger = false,
 }: { stagger?: boolean } = {}) {
   const { prefersReducedMotion } = useMotionEnvironment();
-  const nodeRef = useRef<T | null>(null);
+  const nodeRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const container = nodeRef.current;
@@ -56,7 +52,7 @@ export function useSectionReveal<T extends HTMLElement = HTMLElement>({
           if (!entry.isIntersecting) continue;
           const el = entry.target as HTMLElement;
           const index = Math.max(targets.indexOf(el), 0);
-          el.style.transition = `opacity ${REVEAL_DURATION_MS}ms ${REVEAL_EASE}, transform ${REVEAL_DURATION_MS}ms ${REVEAL_EASE}`;
+          el.style.transition = `opacity ${plan.durationMs}ms ${plan.ease}, transform ${plan.durationMs}ms ${plan.ease}`;
           el.style.transitionDelay = `${index * plan.staggerMs}ms`;
           el.style.opacity = "1";
           el.style.transform = "translateY(0)";
@@ -72,7 +68,7 @@ export function useSectionReveal<T extends HTMLElement = HTMLElement>({
     return () => observer.disconnect();
   }, [prefersReducedMotion, stagger]);
 
-  return useCallback((node: T | null) => {
+  return useCallback((node: HTMLElement | null) => {
     nodeRef.current = node;
   }, []);
 }

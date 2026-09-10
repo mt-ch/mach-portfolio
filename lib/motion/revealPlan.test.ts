@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  REVEAL_DURATION_MS,
+  REVEAL_EASE,
   REVEAL_RISE_PX,
   REVEAL_STAGGER_MS,
   REVEAL_THRESHOLD_RATIO,
@@ -38,9 +40,11 @@ describe("planSectionReveal", () => {
     expect(planSectionReveal({ childCount: 9, env: REDUCED }).staggerMs).toBe(0);
   });
 
-  it("reports the rise distance and threshold from the spec", () => {
+  it("carries the rise, threshold, and animation timing tokens", () => {
     const plan = planSectionReveal({ childCount: 3, env: MOVING });
     expect(plan.risePx).toBe(REVEAL_RISE_PX);
     expect(plan.thresholdRatio).toBe(REVEAL_THRESHOLD_RATIO);
+    expect(plan.durationMs).toBe(REVEAL_DURATION_MS);
+    expect(plan.ease).toBe(REVEAL_EASE);
   });
 });

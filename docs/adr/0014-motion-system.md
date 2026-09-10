@@ -81,11 +81,14 @@ two shipped the other way round. This section is the reveal work, built by
 
 **Below-the-fold content reveals once as it scrolls into view.** Content
 Blocks in a Project Story, the homepage sections below the hero
-(`WhatIDoSection`, `HowIWorkSection`, `ExperienceSection`, `FeaturedProjectRow`),
-`OtherProjects`, and the project-card grid fade from 0 to full opacity and rise
+(`WhatIDoSection`, `HowIWorkSection`, `ExperienceSection`, and every
+`FeaturedProjectRow` bar the first, which carries the LCP image and must paint
+immediately), and `OtherProjects` fade from 0 to full opacity and rise
 `REVEAL_RISE_PX` (24) as their top passes `REVEAL_THRESHOLD_RATIO` (0.85) of the
 viewport height. Each element reveals once and is unobserved — scrolling back up
-and down does not replay it.
+and down does not replay it. The project-card grid (`ProjectCard`) is not
+mounted in any route today; when a listing page reintroduces it, wrap the grid
+in `<Reveal stagger>` the same way `OtherProjects` does.
 
 **`planSectionReveal({ childCount, env })` is the pure decision seam** — in
 `lib/motion/revealPlan.ts`, returning `{ enabled, staggerMs, risePx,
