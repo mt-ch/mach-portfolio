@@ -36,3 +36,13 @@ export const REVEAL_STAGGER_MS = 80;
 // A section reveals when its top passes this fraction of the viewport height —
 // i.e. an IntersectionObserver bottom root-margin of -(1 - ratio) * 100%.
 export const REVEAL_THRESHOLD_RATIO = 0.85;
+
+// How long the view-transition page push runs. The animation itself is
+// CSS — `--page-push-duration` in styles/tokens.scss — and this value MUST
+// match it. It is mirrored here only so `TransitionLink` can hold a lock
+// for the length of a push: a second navigation fired mid-transition would
+// start an overlapping `startViewTransition`, which the browser aborts with
+// `InvalidStateError` and can leave the router wedged. While the lock is up
+// further navigations run instantly (no snapshot), which is also the nicer
+// behaviour for someone clicking quickly through the site.
+export const PAGE_PUSH_DURATION_MS = 800;

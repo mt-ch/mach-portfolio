@@ -112,9 +112,83 @@ easing.
 
 ## View-transition page push (#228)
 
-*Filled in by #228. This section supersedes the route-transition mechanism of
-ADR 0008; ADR 0008's first-load opaque panel, its rationale, and
-`TransitionLink` as the single link entry point remain in force.*
+*Delivered by issue #228 (the spec's PR 3). This section supersedes the
+route-transition mechanism of ADR 0008; ADR 0008's first-load opaque panel,
+its rationale, and `TransitionLink` as the single link entry point remain in
+force.*
+
+**Route-to-route navigation is a native CSS View Transition, not the overlay
+panel.** Navigating pushes the incoming page up over the outgoing one: the
+new page slides `translateY(100% → 0)` while the old page drifts
+`translateY(0 → -15vh)` and dims `opacity(1 → 0.5)` into a dark scrim shown
+in both themes. ~800ms, `cubic-bezier(0.5, 0.55, 0, 1)`, no `clip-path`. The
+whole page — nav, `ThemeToggle`, the Ask launcher — rides the default `root`
+snapshot and moves as one plane; none of them take a per-element
+`view-transition-name`. **This reverses ADR 0008's z-index arrangement that
+held the chrome stationary above the panel.** The `::view-transition-*` rules
+and their tokens (`--page-push-*`) live in `app/globals.scss` /
+`styles/tokens.scss`; the feel is verified manually, as with the cursor
+(0007) and the old transition (0008).
+
+**Mechanism: `next-view-transitions`.** Its `<ViewTransitions>` provider
+(mounted in the `(site)` layout) and `useTransitionRouter` solve the
+App-Router timing problem — the snapshot is taken after React commits the new
+route. `TransitionLink` is rewritten to delegate an eligible click to
+`useTransitionRouter().push`; its click-eligibility rules are unchanged from
+ADR 0008 (plain in-site left-click to a different path transitions; external
+/ new-tab / modified / hash-only fall through). It proved compatible with
+Next 16 / React 19, so the `unstable_ViewTransition` fallback the spec allowed
+for was not needed.
+
+**`resolvePageTransitionMode(env)` → `"view-transition" | "instant"`** is the
+one new pure seam (`lib/motion/resolvePageTransitionMode.ts`). `"instant"`
+when any of: no View Transitions support (e.g. Firefox), `prefersReducedMotion`,
+or `isNarrowViewport` (≤767px). In `"instant"` mode `TransitionLink` leaves
+the click to `next/link`'s own client navigation — no snapshot. `popstate`
+navigations are captured by `next-view-transitions` regardless of mode, so a
+`@media (prefers-reduced-motion: reduce), (max-width: 767px)` block in
+`globals.scss` neutralises the `::view-transition` animation to a clean swap
+for the same conditions.
+
+**One push at a time.** Starting a second `startViewTransition` before the
+first settles makes the browser abort it with `InvalidStateError`, and
+`next-view-transitions` does not guard against this — an aborted transition
+can leave the router wedged so a later navigation silently does nothing or
+lands without its scroll reset. `TransitionLink` therefore holds a shared
+lock for the length of a push (`PAGE_PUSH_DURATION_MS`, mirrored from the
+CSS token); clicks during that window fall through to `next/link`'s instant
+navigation, which is also the better feel for someone clicking quickly.
+
+**`transitionPhase.ts` shrank to the `firstload` path.** The `nav` and
+`popstate` cover/uncover sequences, the `covering` phase, the
+`TransitionPath` discriminant, and `shouldResetScroll` are gone.
+`PageTransitionProvider` lost its forward-nav and popstate machinery and
+keeps only the server-opaque first-load panel (`z-[5]`, fonts-gated lift).
+The reducer stays the one decision core for what remains.
+
+**Scroll reset.** The nested `[data-scroll-container]` reset to top lives in
+`RouteScrollReset`, a layout-level client component whose `useLayoutEffect`
+runs inside `next-view-transitions`' transition — the same React commit that
+renders the new route, before the new-state snapshot is taken. If it ran
+outside that window the "old" snapshot would capture the wrong scroll offset
+and the push would visibly jump. Two complications it has to handle:
+Next skips its own scroll handling entirely when a navigation reuses route
+segments from the client cache (returning to a page visited earlier), and
+Lenis eases `scrollTop` on its own RAF loop so a raw `scrollTo` issued
+mid-momentum is overwritten a frame later. So `RouteScrollReset` drives
+Lenis directly when it is running (`SmoothScrollProvider` exposes the
+instance via `getSmoothScroll()`) and re-asserts for a few frames to outlast
+Lenis and Next's post-navigation `focus()` / `scrollIntoView()`. `popstate`
+skips the reset so the browser's scroll restoration stands, matching ADR
+0008; `SmoothScrollProvider` still syncs Lenis to the restored offset on
+back/forward.
+
+**Chat drawer exclusion (dormant).** ADR 0013 has Ask disabled, so there is
+no drawer to handle now. On the re-enable path: an open drawer must take its
+own `view-transition-name` (e.g. `chat-drawer`) with no transition rule, so
+it holds static while the page pushes behind it; its backdrop scrim, if any,
+holds with it. This is a documented constraint only — nothing is built or
+tested for it here.
 
 ## Testing
 
@@ -127,7 +201,11 @@ reduce-motion; constructed and bound to the scroll container otherwise).
 counts and reduced motion); `Reveal` has a behaviour test with
 `IntersectionObserver` stubbed — an intersected element ends revealed and is
 not re-animated on a second intersection, and under reduced motion no observer
-is created and nothing is hidden. The scroll feel, the reveal timing, and the
-page push are visual — verified
-manually, exactly as the cursor (0007), the page transition (0008), and chat
-motion (0009) are.
+is created and nothing is hidden. `resolvePageTransitionMode` has pure unit
+tests (`"instant"` for each of the three conditions in isolation,
+`"view-transition"` only when all permit); `transitionPhase` and
+`TransitionLink` keep their reducer / behaviour tests, cut down to what
+survives the shrink. The `::view-transition-*` CSS, the parallax/dim amounts,
+the scroll feel, the reveal timing, and cursor behaviour during the push are
+visual — verified manually, exactly as the cursor (0007), the page transition
+(0008), and chat motion (0009) are.

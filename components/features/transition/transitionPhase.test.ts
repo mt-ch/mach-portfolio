@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { initialTransitionState, transitionPhase } from "./transitionPhase";
+import { firstLoadTransitionResult, initialTransitionState, transitionPhase } from "./transitionPhase";
 import type { TransitionState } from "./transitionPhase";
 
 function run(events: Array<Parameters<typeof transitionPhase>[1]>) {
@@ -14,110 +14,59 @@ function run(events: Array<Parameters<typeof transitionPhase>[1]>) {
 }
 
 describe("transitionPhase", () => {
-  it("drives idle -> covering -> covered -> uncovering -> idle on forward navigation", () => {
+  it("starts idle", () => {
+    const state: TransitionState = initialTransitionState;
+    expect(state).toEqual({ phase: "idle" });
+  });
+
+  it("seeds the first load already covered", () => {
+    expect(firstLoadTransitionResult.state.phase).toBe("covered");
+    expect(firstLoadTransitionResult.shouldFadeCursor).toBe(true);
+  });
+
+  it("drives covered -> uncovering -> idle on the first-load path", () => {
     const results = run([
-      { type: "NAV_REQUESTED" },
-      { type: "COVER_DONE" },
+      { type: "FIRST_LOAD_READY" },
       { type: "ROUTE_COMMITTED" },
       { type: "UNCOVER_DONE" },
     ]);
-
-    expect(results.map((r) => r.state.phase)).toEqual(["covering", "covered", "uncovering", "idle"]);
-  });
-
-  it("drives covered -> uncovering -> idle on browser back/forward", () => {
-    const results = run([{ type: "POPSTATE" }, { type: "ROUTE_COMMITTED" }, { type: "UNCOVER_DONE" }]);
 
     expect(results.map((r) => r.state.phase)).toEqual(["covered", "uncovering", "idle"]);
   });
 
-  it("drives covered -> uncovering -> idle on first load", () => {
-    const results = run([{ type: "FIRST_LOAD_READY" }, { type: "ROUTE_COMMITTED" }, { type: "UNCOVER_DONE" }]);
-
-    expect(results.map((r) => r.state.phase)).toEqual(["covered", "uncovering", "idle"]);
-  });
-
-  it("terminates at idle when SAFETY_TIMEOUT fires while covering", () => {
-    const results = run([{ type: "NAV_REQUESTED" }, { type: "SAFETY_TIMEOUT" }, { type: "UNCOVER_DONE" }]);
-
-    expect(results.map((r) => r.state.phase)).toEqual(["covering", "uncovering", "idle"]);
-  });
-
-  it("terminates at idle when SAFETY_TIMEOUT fires while covered", () => {
+  it("keeps the cursor faded until back at idle", () => {
     const results = run([
-      { type: "NAV_REQUESTED" },
-      { type: "COVER_DONE" },
-      { type: "SAFETY_TIMEOUT" },
-      { type: "UNCOVER_DONE" },
-    ]);
-
-    expect(results.map((r) => r.state.phase)).toEqual(["covering", "covered", "uncovering", "idle"]);
-  });
-
-  it("ignores SAFETY_TIMEOUT while idle", () => {
-    const idleResult = transitionPhase(initialTransitionState, { type: "SAFETY_TIMEOUT" });
-    expect(idleResult.state.phase).toBe("idle");
-  });
-
-  it("forces uncovering -> idle on SAFETY_TIMEOUT as a last-resort net", () => {
-    const results = run([
-      { type: "NAV_REQUESTED" },
-      { type: "COVER_DONE" },
-      { type: "ROUTE_COMMITTED" },
-      { type: "SAFETY_TIMEOUT" },
-    ]);
-    expect(results.map((r) => r.state.phase)).toEqual(["covering", "covered", "uncovering", "idle"]);
-    expect(results.at(-1)?.shouldFadeCursor).toBe(false);
-  });
-
-  it("ignores NAV_REQUESTED unless idle", () => {
-    const results = run([{ type: "NAV_REQUESTED" }, { type: "NAV_REQUESTED" }]);
-
-    expect(results.map((r) => r.state.phase)).toEqual(["covering", "covering"]);
-  });
-
-  it("sets shouldResetScroll true throughout the forward-nav path", () => {
-    const results = run([
-      { type: "NAV_REQUESTED" },
-      { type: "COVER_DONE" },
+      { type: "FIRST_LOAD_READY" },
       { type: "ROUTE_COMMITTED" },
       { type: "UNCOVER_DONE" },
     ]);
-
-    expect(results.map((r) => r.shouldResetScroll)).toEqual([true, true, true, false]);
-  });
-
-  it("sets shouldResetScroll false throughout the back/forward path", () => {
-    const results = run([{ type: "POPSTATE" }, { type: "ROUTE_COMMITTED" }, { type: "UNCOVER_DONE" }]);
-
-    expect(results.every((r) => r.shouldResetScroll === false)).toBe(true);
-  });
-
-  it("sets shouldResetScroll false throughout the first-load path", () => {
-    const results = run([{ type: "FIRST_LOAD_READY" }, { type: "ROUTE_COMMITTED" }, { type: "UNCOVER_DONE" }]);
-
-    expect(results.every((r) => r.shouldResetScroll === false)).toBe(true);
-  });
-
-  it("sets shouldFadeCursor from the start of covering until back at idle", () => {
-    const results = run([
-      { type: "NAV_REQUESTED" },
-      { type: "COVER_DONE" },
-      { type: "ROUTE_COMMITTED" },
-      { type: "UNCOVER_DONE" },
-    ]);
-
-    expect(results.map((r) => r.shouldFadeCursor)).toEqual([true, true, true, false]);
-  });
-
-  it("sets shouldFadeCursor across the back/forward uncover-only path", () => {
-    const results = run([{ type: "POPSTATE" }, { type: "ROUTE_COMMITTED" }, { type: "UNCOVER_DONE" }]);
 
     expect(results.map((r) => r.shouldFadeCursor)).toEqual([true, true, false]);
   });
 
-  it("starts idle with no path", () => {
-    const state: TransitionState = initialTransitionState;
-    expect(state).toEqual({ phase: "idle", path: null });
+  it("forces covered -> uncovering on SAFETY_TIMEOUT", () => {
+    const results = run([{ type: "FIRST_LOAD_READY" }, { type: "SAFETY_TIMEOUT" }, { type: "UNCOVER_DONE" }]);
+
+    expect(results.map((r) => r.state.phase)).toEqual(["covered", "uncovering", "idle"]);
+  });
+
+  it("forces uncovering -> idle on SAFETY_TIMEOUT as a last-resort net", () => {
+    const results = run([
+      { type: "FIRST_LOAD_READY" },
+      { type: "ROUTE_COMMITTED" },
+      { type: "SAFETY_TIMEOUT" },
+    ]);
+
+    expect(results.at(-1)?.state.phase).toBe("idle");
+    expect(results.at(-1)?.shouldFadeCursor).toBe(false);
+  });
+
+  it("ignores SAFETY_TIMEOUT while idle", () => {
+    expect(transitionPhase(initialTransitionState, { type: "SAFETY_TIMEOUT" }).state.phase).toBe("idle");
+  });
+
+  it("ignores ROUTE_COMMITTED and UNCOVER_DONE out of sequence", () => {
+    expect(transitionPhase(initialTransitionState, { type: "ROUTE_COMMITTED" }).state.phase).toBe("idle");
+    expect(transitionPhase(initialTransitionState, { type: "UNCOVER_DONE" }).state.phase).toBe("idle");
   });
 });

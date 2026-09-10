@@ -97,6 +97,16 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
+  /* View-transition page push — the CSS-only route-to-route transition.
+   * Single source for its feel; see docs/adr/0014-motion-system.md. The
+   * scrim is deliberately dark in both light and dark themes (the outgoing
+   * page recedes into shadow). */
+  --page-push-duration: 800ms;
+  --page-push-ease: cubic-bezier(0.5, 0.55, 0, 1);
+  --page-push-drift: -15vh;
+  --page-push-dim: 0.5;
+  --page-push-scrim: #0a0a0a;
+
   /* Semantic */
   --background: var(--white);
   --foreground: var(--grey-900);

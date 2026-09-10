@@ -1,5 +1,15 @@
 # Page transitions: a cover/uncover overlay, no `template.tsx`
 
+> **Partially superseded by ADR 0014 (2026-09).** Route-to-route navigation is
+> now a native CSS View Transition page push, not the cover/uncover overlay
+> described below, and the chrome (nav, theme toggle, Ask launcher) now moves
+> *with* the page rather than staying stationary above the panel. What remains
+> in force from this ADR: the server-opaque **first-load** panel and its
+> fonts-gated lift, the timing tokens in `lib/transition/constants.ts`, the
+> cursor DOM-flag coordination, `transitionPhase` as the one pure test seam
+> (shrunk to the first-load path), and `TransitionLink` as the single
+> documented way to add a transitioning link.
+
 Navigating between pages was a hard cut — the old route's content was replaced by the new route's with no visual continuity. Issues #118–#124 add a short cover/uncover transition to every client-side route change. The model it landed on, and why.
 
 **An opaque overlay panel, not an animated page.** `PageTransitionProvider` (mounted once in the `app/(site)` route group layout, wrapping the chat shell and children) owns a single `fixed inset-0` panel. A forward navigation plays: **cover** (the panel sweeps down over the content area), then the route swaps *underneath* the stationary opaque panel and the scroll container is reset to the top, then a brief **hold**, then **uncover** (the panel lifts away while the incoming content rises ~16px and fades in, overlapping the tail of the lift). The panel sits at `z-[5]` — above page content but below the persistent chrome (`z-10`) and the chat drawer (`z-20`/`z-30`), so the logo, theme toggle, and "Ask" launcher stay visible and interactive throughout and the transition reads as the content area changing scene rather than the whole window flickering. While covering or covered the panel also captures pointer events, so links beneath it cannot be clicked mid-transition.
