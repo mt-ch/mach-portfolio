@@ -117,6 +117,15 @@ navigations are captured by `next-view-transitions` regardless of mode, so a
 `globals.scss` neutralises the `::view-transition` animation to a clean swap
 for the same conditions.
 
+**One push at a time.** Starting a second `startViewTransition` before the
+first settles makes the browser abort it with `InvalidStateError`, and
+`next-view-transitions` does not guard against this — an aborted transition
+can leave the router wedged so a later navigation silently does nothing or
+lands without its scroll reset. `TransitionLink` therefore holds a shared
+lock for the length of a push (`PAGE_PUSH_DURATION_MS`, mirrored from the
+CSS token); clicks during that window fall through to `next/link`'s instant
+navigation, which is also the better feel for someone clicking quickly.
+
 **`transitionPhase.ts` shrank to the `firstload` path.** The `nav` and
 `popstate` cover/uncover sequences, the `covering` phase, the
 `TransitionPath` discriminant, and `shouldResetScroll` are gone.
@@ -124,13 +133,22 @@ for the same conditions.
 keeps only the server-opaque first-load panel (`z-[5]`, fonts-gated lift).
 The reducer stays the one decision core for what remains.
 
-**Scroll reset.** The nested `[data-scroll-container]` reset to top moves to
+**Scroll reset.** The nested `[data-scroll-container]` reset to top lives in
 `RouteScrollReset`, a layout-level client component whose `useLayoutEffect`
-runs inside `next-view-transitions`' transition — as part of the same React
-commit that renders the new route, before the new-state snapshot is taken.
-If it ran outside that window the "old" snapshot would capture the wrong
-scroll offset and the push would visibly jump. `popstate` skips the reset so
-the browser's own scroll restoration stands, matching ADR 0008's behaviour.
+runs inside `next-view-transitions`' transition — the same React commit that
+renders the new route, before the new-state snapshot is taken. If it ran
+outside that window the "old" snapshot would capture the wrong scroll offset
+and the push would visibly jump. Two complications it has to handle:
+Next skips its own scroll handling entirely when a navigation reuses route
+segments from the client cache (returning to a page visited earlier), and
+Lenis eases `scrollTop` on its own RAF loop so a raw `scrollTo` issued
+mid-momentum is overwritten a frame later. So `RouteScrollReset` drives
+Lenis directly when it is running (`SmoothScrollProvider` exposes the
+instance via `getSmoothScroll()`) and re-asserts for a few frames to outlast
+Lenis and Next's post-navigation `focus()` / `scrollIntoView()`. `popstate`
+skips the reset so the browser's scroll restoration stands, matching ADR
+0008; `SmoothScrollProvider` still syncs Lenis to the restored offset on
+back/forward.
 
 **Chat drawer exclusion (dormant).** ADR 0013 has Ask disabled, so there is
 no drawer to handle now. On the re-enable path: an open drawer must take its

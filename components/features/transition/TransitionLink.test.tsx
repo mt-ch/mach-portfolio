@@ -23,10 +23,11 @@ vi.mock("@/lib/motion/environment", () => ({
   useMotionEnvironment: () => env,
 }));
 
-import { TransitionLink } from "./TransitionLink";
+import { TransitionLink, resetPushLockForTests } from "./TransitionLink";
 
 beforeEach(() => {
   transitionPush.mockClear();
+  resetPushLockForTests();
   env = { prefersReducedMotion: false, supportsViewTransitions: true, isNarrowViewport: false };
 });
 
@@ -44,6 +45,23 @@ describe("TransitionLink", () => {
 
     expect(notCancelled).toBe(false);
     expect(transitionPush).toHaveBeenCalledWith("/projects/next");
+  });
+
+  it("does not start a second view transition while one is in flight", () => {
+    render(
+      <>
+        <TransitionLink href="/projects/a">A</TransitionLink>
+        <TransitionLink href="/projects/b">B</TransitionLink>
+      </>,
+    );
+
+    const first = fireEvent.click(screen.getByRole("link", { name: "A" }));
+    const second = fireEvent.click(screen.getByRole("link", { name: "B" }));
+
+    expect(first).toBe(false); // first click intercepted
+    expect(second).toBe(true); // second falls through to a plain navigation
+    expect(transitionPush).toHaveBeenCalledTimes(1);
+    expect(transitionPush).toHaveBeenCalledWith("/projects/a");
   });
 
   it("lets next/link handle the navigation with no view transition when the mode is instant", () => {

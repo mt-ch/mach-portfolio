@@ -15,6 +15,17 @@ import { resolveSmoothScroll } from "@/lib/motion/resolveSmoothScroll";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// The live Lenis instance, exposed so the route scroll-reset
+// (`RouteScrollReset`) can drive the smoothed position directly rather than
+// setting `scrollTop` behind Lenis's back — a raw `scrollTo` mid-momentum
+// gets overwritten on Lenis's next frame. `null` whenever smooth scroll is
+// off (reduce-motion) or before the provider has mounted.
+let activeLenis: Lenis | null = null;
+
+export function getSmoothScroll(): Lenis | null {
+  return activeLenis;
+}
+
 /**
  * Site-wide smooth scrolling. Mounted once in the `(site)` layout — above the
  * route, so it never remounts on navigation. Binds a core `Lenis` instance
@@ -54,6 +65,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       lerp: SMOOTH_SCROLL_LERP,
     });
     lenisRef.current = lenis;
+    activeLenis = lenis;
 
     const update = () => ScrollTrigger.update();
     lenis.on("scroll", update);
@@ -73,6 +85,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       gsap.ticker.lagSmoothing(500, 33);
       lenis.destroy();
       lenisRef.current = null;
+      activeLenis = null;
     };
   }, [enabled]);
 
@@ -89,16 +102,18 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // After a client navigation: re-measure, reconcile the smoothed position
-  // with the container (snapped to the top on a forward nav, left where the
-  // browser restored it on back/forward), and let ScrollTrigger re-measure
-  // against the new layout.
+  // with the container, and let ScrollTrigger re-measure against the new
+  // layout. On a forward nav `RouteScrollReset` already drove Lenis to the
+  // top (before the View Transition snapshot); here we only need to catch
+  // the back/forward case, syncing Lenis to wherever the browser restored
+  // the container's scroll.
   useEffect(() => {
     const lenis = lenisRef.current;
     if (lenis) {
       lenis.resize();
-      const isPopstate = popstateRef.current;
-      const target = isPopstate ? (getScrollContainer()?.scrollTop ?? 0) : 0;
-      lenis.scrollTo(target, { immediate: true, force: true });
+      if (popstateRef.current) {
+        lenis.scrollTo(getScrollContainer()?.scrollTop ?? 0, { immediate: true, force: true });
+      }
     }
     popstateRef.current = false;
     ScrollTrigger.refresh();

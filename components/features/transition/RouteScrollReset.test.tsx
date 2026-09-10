@@ -6,6 +6,11 @@ vi.mock("next/navigation", () => ({
   usePathname: () => currentPathname,
 }));
 
+let lenis: { scrollTo: ReturnType<typeof vi.fn> } | null = null;
+vi.mock("@/components/features/motion/SmoothScrollProvider", () => ({
+  getSmoothScroll: () => lenis,
+}));
+
 import { RouteScrollReset } from "./RouteScrollReset";
 
 const scrollTo = vi.fn();
@@ -25,6 +30,7 @@ function tree() {
 
 beforeEach(() => {
   currentPathname = "/";
+  lenis = null;
   scrollTo.mockClear();
   window.history.replaceState({}, "", "/");
 });
@@ -46,6 +52,17 @@ describe("RouteScrollReset", () => {
     rerender(tree());
 
     expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+  });
+
+  it("drives Lenis to the top instead of the raw container when smooth scroll is running", () => {
+    lenis = { scrollTo: vi.fn() };
+    const { rerender } = render(tree());
+
+    currentPathname = "/projects/one";
+    rerender(tree());
+
+    expect(lenis.scrollTo).toHaveBeenCalledWith(0, { immediate: true, force: true });
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it("leaves the scroll position alone on a back/forward navigation", () => {

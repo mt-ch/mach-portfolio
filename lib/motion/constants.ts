@@ -18,3 +18,13 @@ export const SMOOTH_SCROLL_LERP = 0.2;
 export const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 
 export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+// How long the view-transition page push runs. The animation itself is
+// CSS — `--page-push-duration` in styles/tokens.scss — and this value MUST
+// match it. It is mirrored here only so `TransitionLink` can hold a lock
+// for the length of a push: a second navigation fired mid-transition would
+// start an overlapping `startViewTransition`, which the browser aborts with
+// `InvalidStateError` and can leave the router wedged. While the lock is up
+// further navigations run instantly (no snapshot), which is also the nicer
+// behaviour for someone clicking quickly through the site.
+export const PAGE_PUSH_DURATION_MS = 800;

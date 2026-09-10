@@ -4,21 +4,40 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { usePathname } from "next/navigation";
 
+import { getSmoothScroll } from "@/components/features/motion/SmoothScrollProvider";
+
 import { getScrollContainer } from "./PageTransitionProvider";
 
-// Next's document-level scroll restoration does not reach the nested
-// `[data-scroll-container]` that `ChatShell` owns (the real scroller, since
-// `<body>` is `overflow-hidden`). On a forward navigation that container
-// must be snapped to the top *before* the View Transitions API takes its
-// snapshot of the new page — otherwise the "old" snapshot keeps the
-// outgoing scroll offset and the push visibly jumps (the primary risk
-// called out in docs/adr/0014-motion-system.md).
+// Snap the nested `[data-scroll-container]` that `ChatShell` owns (the real
+// scroller, since `<body>` is `overflow-hidden`) back to the top on a
+// forward navigation. Two things make this necessary and fiddly:
 //
-// This component lives in the `(site)` layout, above the route, so its
-// `useLayoutEffect` runs as part of the same React commit that renders the
-// new route — inside `next-view-transitions`' transition, before the new
-// snapshot resolves. `popstate` is skipped so the browser's own scroll
-// restoration stands, matching ADR 0008's back/forward behaviour.
+//  1. Next's own scroll handling targets the document scroller, and it
+//     skips scrolling entirely when a navigation reuses route segments from
+//     the client cache (returning to a page visited earlier) — so nothing
+//     built-in resets our container.
+//  2. Smooth scroll (Lenis) eases `scrollTop` on its own RAF loop. A raw
+//     `scrollTo` issued while Lenis still holds the old target gets
+//     overwritten on the next frame, which is why the reset intermittently
+//     "didn't take" after a few quick navigations.
+//
+// So: drive Lenis directly when it is running, and re-assert for a couple
+// of frames to outlast Lenis momentum and Next's post-navigation
+// `focus()` / `scrollIntoView()`. The first pass runs in `useLayoutEffect`
+// — the same React commit that renders the new route, inside
+// `next-view-transitions`' transition — so the View Transition's new-state
+// snapshot is taken with the container already at the top and the push
+// does not visibly jump. `popstate` is skipped: the browser's own scroll
+// restoration stands for back/forward, matching ADR 0008.
+function resetScrollToTop() {
+  const lenis = getSmoothScroll();
+  if (lenis) {
+    lenis.scrollTo(0, { immediate: true, force: true });
+    return;
+  }
+  getScrollContainer()?.scrollTo({ top: 0 });
+}
+
 export function RouteScrollReset() {
   const pathname = usePathname();
   const isFirstRun = useRef(true);
@@ -55,7 +74,20 @@ export function RouteScrollReset() {
       isPopstate.current = false;
       return;
     }
-    getScrollContainer()?.scrollTo({ top: 0 });
+
+    resetScrollToTop();
+
+    // Re-assert over the next few frames: Lenis can still write a stale
+    // eased position, and Next runs its own `focus()` / `scrollIntoView()`
+    // right after the navigation commits.
+    let frame = 0;
+    let raf = 0;
+    const reassert = () => {
+      resetScrollToTop();
+      if (++frame < 3) raf = requestAnimationFrame(reassert);
+    };
+    raf = requestAnimationFrame(reassert);
+    return () => cancelAnimationFrame(raf);
   }, [pathname]);
 
   return null;

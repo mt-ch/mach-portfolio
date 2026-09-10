@@ -7,10 +7,25 @@ import { usePathname } from "next/navigation";
 
 import { useTransitionRouter } from "next-view-transitions";
 
+import { PAGE_PUSH_DURATION_MS } from "@/lib/motion/constants";
 import { useMotionEnvironment } from "@/lib/motion/environment";
 import { resolvePageTransitionMode } from "@/lib/motion/resolvePageTransitionMode";
 
 type TransitionLinkProps = ComponentProps<typeof Link>;
+
+// Shared across every TransitionLink: a push is in flight until this
+// timestamp. Starting a second `startViewTransition` before the first
+// settles makes the browser abort with `InvalidStateError` and can wedge
+// the router (a later navigation then silently does nothing or lands
+// without resetting scroll). While a push is in flight, further clicks
+// navigate instantly instead.
+let pushLockedUntil = 0;
+const PUSH_LOCK_MS = PAGE_PUSH_DURATION_MS + 150;
+
+/** Test-only: clear the shared in-flight lock between cases. */
+export function resetPushLockForTests(): void {
+  pushLockedUntil = 0;
+}
 
 function hrefToString(href: TransitionLinkProps["href"]): string {
   if (typeof href === "string") return href;
@@ -58,11 +73,13 @@ export const TransitionLink = forwardRef<HTMLAnchorElement, TransitionLinkProps>
     const targetPath = hrefString.split(/[?#]/)[0];
     if (targetPath === "" || targetPath === pathname) return;
 
-    // Instant mode: leave the event alone so `next/link` runs its own
-    // client-side navigation with no View Transition.
-    if (resolvePageTransitionMode(env) === "instant") return;
+    // Instant mode, or a push already in flight: leave the event alone so
+    // `next/link` runs its own client-side navigation with no View
+    // Transition.
+    if (resolvePageTransitionMode(env) === "instant" || Date.now() < pushLockedUntil) return;
 
     event.preventDefault();
+    pushLockedUntil = Date.now() + PUSH_LOCK_MS;
     transitionRouter.push(hrefString);
   };
 
