@@ -3,6 +3,7 @@ import {
   hasRenderableBlocks,
 } from "@/components/features/content/ContentBlocks";
 import { HomeSection } from "@/components/features/home/HomeSection";
+import { Reveal } from "@/components/features/motion/Reveal";
 import type { About } from "@/lib/sanity";
 
 // The homepage "How I work" section: a Content Block array on the About
@@ -15,10 +16,10 @@ export function HowIWorkSection({ about }: { about: About }) {
   }
 
   return (
-    <div className="mb-3xl pb-3xl">
+    <Reveal className="mb-3xl pb-3xl">
       <HomeSection title="How I work">
         <ContentBlocks blocks={about.howIWork} />
       </HomeSection>
-    </div>
+    </Reveal>
   );
 }

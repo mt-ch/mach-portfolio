@@ -18,7 +18,7 @@ export function FeaturedProjectRow({
   return (
     <TransitionLink
       href={href}
-      className="gap-md inline-flex flex-col"
+      className="gap-md flex flex-col"
       aria-label={`${project.title}: ${project.summary}`}
       data-cursor="label"
       data-cursor-label="View Project"

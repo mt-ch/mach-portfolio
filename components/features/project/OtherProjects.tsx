@@ -1,5 +1,6 @@
 import type { OtherProjectListItem } from "@/lib/sanity";
 import { CoverImage } from "@/components/ui/CoverImage";
+import { Reveal } from "@/components/features/motion/Reveal";
 import { TransitionLink } from "@/components/features/transition/TransitionLink";
 
 export function OtherProjects({
@@ -12,7 +13,10 @@ export function OtherProjects({
       <h2 className="type-subheading px-md font-medium lg:px-0">
         Other Projects
       </h2>
-      <div className="gap-md lg:gap-sm grid grid-cols-1 lg:grid-cols-2">
+      <Reveal
+        stagger
+        className="gap-md lg:gap-sm grid grid-cols-1 lg:grid-cols-2"
+      >
         {projects.map((project) => (
           <TransitionLink
             key={project._id}
@@ -41,7 +45,7 @@ export function OtherProjects({
             </h2>
           </TransitionLink>
         ))}
-      </div>
+      </Reveal>
     </div>
   );
 }

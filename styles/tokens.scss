@@ -15,7 +15,7 @@
   --grey-900: #18181b;
   --grey-950: #09090b;
 
-  --brand: #FF3F0B;
+  --brand: #ff3f0b;
   --brand-mix-blend-difference: #00c9b1;
 
   /* Typography
@@ -101,8 +101,8 @@
    * Single source for its feel; see docs/adr/0014-motion-system.md. The
    * scrim is deliberately dark in both light and dark themes (the outgoing
    * page recedes into shadow). */
-  --page-push-duration: 800ms;
-  --page-push-ease: cubic-bezier(0.5, 0.55, 0, 1);
+  --page-push-duration: 1200ms;
+  --page-push-ease: cubic-bezier(0.15, 0.9, 0.1, 1);
   --page-push-drift: -15vh;
   --page-push-dim: 0.5;
   --page-push-scrim: #0a0a0a;

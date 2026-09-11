@@ -1,5 +1,6 @@
 import type { About } from "@/lib/sanity";
 
+import { Reveal } from "@/components/features/motion/Reveal";
 import { HomeSection } from "./HomeSection";
 
 export function WhatIDoSection({ about }: { about: About }) {
@@ -10,7 +11,7 @@ export function WhatIDoSection({ about }: { about: About }) {
   }
 
   return (
-    <div className="mb-3xl pb-3xl">
+    <Reveal className="mb-3xl pb-3xl">
       <HomeSection title="What I do">
         {items.map((item) => (
           <div key={item._key} className="gap-xs relative flex flex-col">
@@ -21,6 +22,6 @@ export function WhatIDoSection({ about }: { about: About }) {
           </div>
         ))}
       </HomeSection>
-    </div>
+    </Reveal>
   );
 }
