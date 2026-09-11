@@ -45,4 +45,4 @@ export const REVEAL_THRESHOLD_RATIO = 0.85;
 // `InvalidStateError` and can leave the router wedged. While the lock is up
 // further navigations run instantly (no snapshot), which is also the nicer
 // behaviour for someone clicking quickly through the site.
-export const PAGE_PUSH_DURATION_MS = 800;
+export const PAGE_PUSH_DURATION_MS = 1200;
